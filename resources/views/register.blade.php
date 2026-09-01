@@ -1,0 +1,53 @@
+@extends('layouts.app')
+
+@section('title', 'Daftar sekarang')
+@section('content')
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Pendaftaran</p>
+    <h1>Daftar sekarang</h1>
+    <p>Isi data jamaah. Tim kami konfirmasi seat dan dokumen via WhatsApp.</p>
+  </div>
+</section>
+<section class="wrap split">
+  <div class="prose">
+    <h2>Yang perlu disiapkan</h2>
+    <ul class="checks">
+      <li>Paspor masih berlaku minimal 6 bulan</li>
+      <li>Vaksin meningitis (jika diminta musim itu)</li>
+      <li>DP untuk mengunci seat</li>
+      <li>Nama sesuai KTP untuk manifes</li>
+    </ul>
+  </div>
+  <form class="form" method="post" action="{{ route('register.store') }}">
+    @csrf
+    @if(session('ok'))
+      <div class="alert ok">{{ session('ok') }}</div>
+      @if(session('wa_url'))<a class="btn full" href="{{ session('wa_url') }}" target="_blank" rel="noopener">Lanjut ke WhatsApp</a>@endif
+    @endif
+    @if($errors->any())<div class="alert err">{{ $errors->first() }}</div>@endif
+    <label>Nama lengkap<input name="name" value="{{ old('name') }}" required></label>
+    <label>WhatsApp<input name="phone" value="{{ old('phone') }}" required></label>
+    <label>Email<input type="email" name="email" value="{{ old('email') }}"></label>
+    <label>Kota asal
+      @include('partials.city-select', [
+        'name' => 'city',
+        'empty' => 'Pilih kota',
+        'required' => true,
+        'placeholder' => 'Cari kota asal…',
+      ])
+    </label>
+    <label>Paket
+      <select name="package_id">
+        <option value="">Belum tentukan</option>
+        @foreach($packages as $package)
+          <option value="{{ $package->id }}" @selected((string) old('package_id', request('package_id')) === (string) $package->id)>{{ $package->title }} — {{ $package->formattedPrice() }}</option>
+        @endforeach
+      </select>
+    </label>
+    <label>Jumlah jamaah<input type="number" name="pax" value="{{ old('pax', 1) }}" min="1" max="20" required></label>
+    <label>Catatan<textarea name="notes" rows="3">{{ old('notes') }}</textarea></label>
+    <button class="btn" type="submit">Kirim pendaftaran</button>
+  </form>
+</section>
+@endsection
