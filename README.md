@@ -14,7 +14,8 @@ Brand placeholder: **SafarHaramin**. Bukan merek Arminareka.
 ## Jalankan lokal
 
 ```bash
-cd ~/bukalapak/Noted/safarharamin
+git clone git@github.com:pribadisendiri84/safarharamin.git
+cd safarharamin
 composer install
 cp .env.example .env
 php artisan key:generate
@@ -22,6 +23,8 @@ php artisan migrate --seed
 php artisan storage:link
 php artisan serve --port=8011
 ```
+
+HTTPS: `git clone https://github.com/pribadisendiri84/safarharamin.git`
 
 - Website: http://127.0.0.1:8011
 - Admin: http://127.0.0.1:8011/admin/login
@@ -45,32 +48,33 @@ php artisan serve --port=8011
 
 ## Deploy ke Sumopod (VPS)
 
-Pola sama seperti ALZena: Ubuntu, Nginx, MySQL, PHP-FPM. Kode di `/var/www/safarharamin`.
+Alzena dan SafarHaramin **satu VPS**. Yang dipakai bersama: Nginx, PHP-FPM, MySQL server. Yang **wajib terpisah**: folder, `.env`, dan database.
 
-Repo ada di **GitHub** (bukan GitLab):
+| | Alzena | SafarHaramin |
+|---|---|---|
+| Folder | `/var/www/fashiondialzena` (atau path Alzena yang sudah ada) | `/var/www/safarharamin` |
+| Database / user | punya Alzena, jangan disentuh | `safarharamin` / `safarharamin` |
+| Akses | domain Alzena | `http://IP_VPS` (site ini `default_server`) |
 
-`git@github.com:pribadisendiri84/safarharamin.git`
+Repo: `git@github.com:pribadisendiri84/safarharamin.git` (GitHub, bukan GitLab).
 
-Sementara **tanpa domain** — akses lewat IP publik VPS (`http://IP_VPS`). SSL/Certbot ditunda sampai ada domain.
+Sementara **tanpa domain**. SSL/Certbot ditunda sampai ada domain.
 
-Kalau Alzena sudah jalan di VPS yang sama: database, folder, dan `.env` **jangan digabung**. Supaya `http://IP` membuka situs ini (bukan Alzena), jadikan Nginx site SafarHaramin sebagai `default_server`. Alzena tetap lewat domainnya.
+### 1. Stack (hanya jika VPS masih kosong)
 
-### 1. Stack (lewati jika VPS sudah dipakai Alzena)
+Kalau Alzena sudah jalan, **lewati install** di bawah. Lanjut ke buat database.
 
 ```bash
 apt update
 apt install -y nginx mysql-server unzip git curl
-```
-
-PHP 8.3+ (di VPS Alzena biasanya sudah **8.4**):
-
-```bash
 apt install -y php8.4-fpm php8.4-cli php8.4-mysql php8.4-xml php8.4-mbstring php8.4-curl php8.4-gd php8.4-zip php8.4-bcmath
 ```
 
 Composer: https://getcomposer.org/download/
 
-MySQL — user/database **baru** (ganti password):
+### 1b. Database baru (jangan dilewati)
+
+Jangan pakai `DB_DATABASE` / user Alzena. Ganti `PASSWORD_KUAT`:
 
 ```sql
 CREATE DATABASE safarharamin CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -81,14 +85,20 @@ FLUSH PRIVILEGES;
 
 ### 2. Deploy key + clone / pull
 
-Di VPS, jika belum ada kunci SSH:
+Kalau VPS sudah clone Alzena via SSH, **jangan** `ssh-keygen` lagi. Tampilkan key yang ada:
+
+```bash
+cat /root/.ssh/id_ed25519.pub
+```
+
+Kalau belum ada kunci:
 
 ```bash
 ssh-keygen -t ed25519 -C "vps-safarharamin" -f /root/.ssh/id_ed25519 -N ""
 cat /root/.ssh/id_ed25519.pub
 ```
 
-Tempel public key di GitHub → repo **safarharamin** → **Settings → Deploy keys → Add** (read-only cukup).
+Tempel public key di GitHub → repo **safarharamin** → **Settings → Deploy keys → Add** (read-only cukup). Key yang sama boleh dipakai di dua repo.
 
 Clone pertama (ketik `yes` saat host key GitHub, bukan `y`):
 
