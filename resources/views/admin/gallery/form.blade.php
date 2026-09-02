@@ -30,8 +30,10 @@
     <img class="thumb large" src="{{ $item->image }}" alt="{{ $item->title }}">
   @endif
   <label>Unggah foto
-    <input type="file" name="photo" accept="image/*">
+    <input type="file" id="gallery-upload" name="photo" accept="image/*" data-upload-preview="gallery-upload">
   </label>
+  <p class="sub">Foto otomatis dikecilkan saat disimpan. Pratinjau muncul setelah memilih file.</p>
+  @include('admin.partials.image-upload-preview', ['inputId' => 'gallery-upload', 'hint' => 'Pratinjau foto baru'])
   <label>Atau URL foto
     <input name="image_url" value="{{ old('image_url', str_starts_with((string) $item->image, 'http') ? $item->image : '') }}" placeholder="https://…">
   </label>

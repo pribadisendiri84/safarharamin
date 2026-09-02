@@ -14,17 +14,28 @@
 <form class="form panel form-pad" method="post" enctype="multipart/form-data" action="{{ $package->exists ? route('admin.packages.update', $package) : route('admin.packages.store') }}">
   @csrf
   @if($package->exists) @method('PUT') @endif
-  @if(($package->images ?? []) !== [])
-    <p class="sub">Flyer sekarang</p>
-    <div class="flyer-previews">
-      @foreach($package->images as $src)
-        <img class="thumb large" src="{{ $src }}" alt="Flyer {{ $package->title }}">
-      @endforeach
-    </div>
-  @endif
   <label>Unggah flyer
-    <input type="file" name="photos[]" accept="image/*" multiple>
+    <input type="file" id="flyer-upload" name="photos[]" accept="image/*" multiple data-upload-preview="flyer-upload">
   </label>
+  <p class="sub">Foto otomatis dikecilkan saat disimpan (maks. 1200×1700 px).</p>
+  <div class="flyer-compare">
+    <div class="flyer-compare-col">
+      <p class="flyer-compare-label">Flyer sekarang</p>
+      <div class="flyer-previews">
+        @forelse($package->images ?? [] as $src)
+          <img class="thumb large" src="{{ $src }}" alt="Flyer {{ $package->title }}">
+        @empty
+          <p class="flyer-empty">Belum ada flyer</p>
+        @endforelse
+      </div>
+    </div>
+    <div class="flyer-compare-col">
+      <p class="flyer-compare-label">Flyer baru</p>
+      <div class="flyer-previews" id="flyer-upload-preview-grid"></div>
+      <p class="flyer-empty" id="flyer-upload-empty">Pilih file di atas</p>
+    </div>
+  </div>
+  @include('admin.partials.image-upload-preview', ['inputId' => 'flyer-upload', 'embedded' => true])
   <label>Judul paket<input name="title" value="{{ old('title', $package->title) }}" required></label>
   <div class="row2">
     <label>Jenis
