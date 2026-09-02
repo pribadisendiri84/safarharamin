@@ -18,23 +18,25 @@
     <input type="file" id="flyer-upload" name="photos[]" accept="image/*" multiple data-upload-preview="flyer-upload">
   </label>
   <p class="sub">Foto otomatis dikecilkan saat disimpan (maks. 1200×1700 px).</p>
-  <div class="flyer-compare">
-    <div class="flyer-compare-col">
-      <p class="flyer-compare-label">Flyer sekarang</p>
-      <div class="flyer-previews">
-        @forelse($package->images ?? [] as $src)
-          <img class="thumb large" src="{{ $src }}" alt="Flyer {{ $package->title }}">
-        @empty
-          <p class="flyer-empty">Belum ada flyer</p>
-        @endforelse
+  <div class="flyer-strip">
+    @if(($package->images ?? []) !== [])
+      <div class="flyer-block">
+        <p class="flyer-label">Flyer sekarang <span class="flyer-hint">· klik untuk zoom</span></p>
+        <div class="flyer-previews">
+          @foreach($package->images as $src)
+            <button type="button" class="flyer-zoom" data-src="{{ $src }}">
+              <img class="thumb flyer" src="{{ $src }}" alt="Flyer {{ $package->title }}">
+            </button>
+          @endforeach
+        </div>
       </div>
-    </div>
-    <div class="flyer-compare-col">
-      <p class="flyer-compare-label">Flyer baru</p>
+    @endif
+    <div class="flyer-block" id="flyer-upload-preview-col" hidden>
+      <p class="flyer-label">Flyer baru <span class="flyer-hint">· klik untuk zoom</span></p>
       <div class="flyer-previews" id="flyer-upload-preview-grid"></div>
-      <p class="flyer-empty" id="flyer-upload-empty">Pilih file di atas</p>
     </div>
   </div>
+  @include('admin.partials.flyer-zoom')
   @include('admin.partials.image-upload-preview', ['inputId' => 'flyer-upload', 'embedded' => true])
   <label>Judul paket<input name="title" value="{{ old('title', $package->title) }}" required></label>
   <div class="row2">
@@ -92,8 +94,12 @@
   <label>Tidak termasuk (satu baris satu item)<textarea name="exclusions_text" rows="4">{{ old('exclusions_text', implode("\n", $package->exclusions ?? [])) }}</textarea></label>
   <label>Deskripsi (opsional)<textarea name="description" rows="3">{{ old('description', $package->description) }}</textarea></label>
   <label>Itinerary (opsional)<textarea name="itinerary" rows="4">{{ old('itinerary', $package->itinerary) }}</textarea></label>
-  <label class="check"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $package->is_featured))> Unggulan</label>
-  <label class="check"><input type="checkbox" name="is_hot" value="1" @checked(old('is_hot', $package->is_hot))> Kuota terbatas</label>
-  <button class="btn" type="submit">Simpan</button>
+  <div class="check-row">
+    <label class="check"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $package->is_featured))> Unggulan</label>
+    <label class="check"><input type="checkbox" name="is_hot" value="1" @checked(old('is_hot', $package->is_hot))> Kuota terbatas</label>
+  </div>
+  <div class="form-actions">
+    <button class="btn" type="submit">Simpan</button>
+  </div>
 </form>
 @endsection

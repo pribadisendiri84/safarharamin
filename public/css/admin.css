@@ -115,13 +115,19 @@ td b { display: block; }
 td small { display: block; color: var(--muted); margin-top: 3px; }
 tr.is-deleted { background: #fdf6f6; }
 .thumb { width: 54px; height: 76px; object-fit: contain; border-radius: 8px; background: #eef1f6; display: block; }
-.thumb.large { width: 180px; height: 255px; margin-bottom: 0; }
-.flyer-previews { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 4px; min-height: 255px; align-items: flex-start; align-content: flex-start; }
-.flyer-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 8px 0 16px; }
-.flyer-compare-col { min-width: 0; background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
-.flyer-compare-label { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #3d4a63; }
-.flyer-empty { color: var(--muted); font-size: 13px; margin: 0; padding: 8px 0; }
-.flyer-compare-col .flyer-empty { min-height: 255px; display: flex; align-items: center; justify-content: center; text-align: center; }
+.thumb.large { width: 120px; height: 168px; margin-bottom: 0; }
+.thumb.flyer { width: 100px; max-height: 140px; height: auto; margin-bottom: 0; }
+.flyer-zoom { border: 0; padding: 0; background: none; cursor: zoom-in; border-radius: 8px; line-height: 0; display: block; }
+.flyer-zoom:hover .thumb.flyer, .flyer-zoom:focus-visible .thumb.flyer { outline: 2px solid var(--brand); outline-offset: 2px; }
+.flyer-hint { font-weight: 500; color: var(--muted); }
+.flyer-lightbox { position: fixed; inset: 0; background: rgba(10, 20, 18, .9); z-index: 80; display: grid; place-items: center; padding: 24px; }
+.flyer-lightbox[hidden] { display: none; }
+.flyer-lightbox img { max-width: min(960px, 100%); max-height: 90vh; border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, .35); }
+.flyer-lightbox-close { position: absolute; top: 16px; right: 20px; background: none; border: 0; color: #fff; font-size: 36px; cursor: pointer; line-height: 1; }
+.flyer-previews { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; align-items: flex-start; }
+.flyer-strip { display: flex; flex-wrap: wrap; gap: 12px; margin: 6px 0 12px; }
+.flyer-block { min-width: 0; }
+.flyer-label { margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #3d4a63; }
 .empty-state { text-align: center !important; color: var(--muted); padding: 36px 16px !important; }
 
 /* actions / pills */
@@ -147,9 +153,12 @@ tr.is-deleted { background: #fdf6f6; }
 .form label { display: grid; gap: 6px; font-size: 12px; font-weight: 700; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-.check { display: flex !important; align-items: center; gap: 8px; font-weight: 600; }
+.check { display: inline-flex !important; align-items: center; gap: 8px; font-weight: 600; width: auto; cursor: pointer; }
+.check-row { display: flex; flex-wrap: wrap; gap: 16px 24px; margin-top: 2px; }
+.form input[type="checkbox"], .form input[type="radio"] { width: auto; margin: 0; accent-color: var(--brand); }
+.form-actions { display: flex; gap: 10px; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.form-actions .btn { width: auto; min-width: 120px; }
 .form-narrow { max-width: 640px; }
-.form-actions { display: flex; gap: 10px; }
 .filter-bar input, .filter-bar select, .form input, .form select, .form textarea, td select {
   width: 100%;
   border: 1px solid #d8deea;
@@ -220,7 +229,7 @@ tr.is-deleted { background: #fdf6f6; }
   .mobile-bar { display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--line); padding: 12px 16px; position: sticky; top: 0; z-index: 20; }
   .mobile-bar .brand-logo { height: 36px; }
   .wrap { padding: 18px 16px 50px; }
-  .two, .row2, .row3, .user-edit, .flyer-compare { grid-template-columns: 1fr; }
+  .two, .row2, .row3, .user-edit { grid-template-columns: 1fr; }
   .filter-bar input { width: 100%; min-width: 0; }
   .head-actions, .head-actions .btn { width: 100%; }
   .head-actions .btn { justify-content: center; }

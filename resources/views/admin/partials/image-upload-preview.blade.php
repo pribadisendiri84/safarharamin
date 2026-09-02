@@ -17,8 +17,8 @@
   document.querySelectorAll('[data-upload-preview]').forEach(function (input) {
     var previewId = input.dataset.uploadPreview;
     var box = document.getElementById(previewId + '-preview');
+    var col = document.getElementById(previewId + '-preview-col');
     var grid = document.getElementById(previewId + '-preview-grid');
-    var empty = document.getElementById(previewId + '-empty');
     if (!grid) return;
 
     var urls = [];
@@ -28,7 +28,7 @@
       urls = [];
       grid.innerHTML = '';
       if (box) box.hidden = true;
-      if (empty) empty.hidden = false;
+      if (col) col.hidden = true;
     }
 
     input.addEventListener('change', function () {
@@ -40,16 +40,21 @@
         if (!file.type.startsWith('image/')) return;
         var url = URL.createObjectURL(file);
         urls.push(url);
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'flyer-zoom';
+        btn.dataset.src = url;
         var img = document.createElement('img');
-        img.className = 'thumb large';
+        img.className = 'thumb flyer';
         img.alt = file.name;
         img.src = url;
-        grid.appendChild(img);
+        btn.appendChild(img);
+        grid.appendChild(btn);
       });
 
       var hasPreview = grid.children.length > 0;
       if (box) box.hidden = !hasPreview;
-      if (empty) empty.hidden = hasPreview;
+      if (col) col.hidden = !hasPreview;
     });
   });
   </script>
