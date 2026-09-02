@@ -28,30 +28,55 @@
       <h1>{{ $package->title }}</h1>
       <p class="loc">{{ $package->departureLine() }} · {{ $package->seatsLine() }}</p>
       <div class="price-row">
-        <strong>{{ $package->formattedPrice() }}</strong>
+        <strong>{{ $package->formattedStartingPrice() }}</strong>
         @if($package->formattedOriginalPrice())
           <s>{{ $package->formattedOriginalPrice() }}</s>
           <span class="badge disc">-{{ $package->discountPercent() }}%</span>
         @endif
       </div>
+      @if($package->price_note)
+        <p class="price-note">{{ $package->price_note }}</p>
+      @endif
+      @if($package->roomPriceList() !== [])
+        <ul class="room-prices">
+          @foreach($package->roomPriceList() as $row)
+            <li>
+              <span>{{ $row['label'] }}</span>
+              <b>{{ $package->formattedMoney($row['price']) }}</b>
+            </li>
+          @endforeach
+        </ul>
+      @endif
       <ul class="spec-grid">
         <li><span>Durasi</span><b>{{ $package->duration_days }} hari</b></li>
-        <li><span>Kamar</span><b>{{ $package->roomLabel() }}</b></li>
         <li><span>Maskapai</span><b>{{ $package->airline ?: '-' }}</b></li>
         <li><span>Hotel Makkah</span><b>{{ $package->hotel_makkah ?: '-' }}</b></li>
         <li><span>Hotel Madinah</span><b>{{ $package->hotel_madinah ?: '-' }}</b></li>
         <li><span>Bintang</span><b>{{ $package->hotel_stars }}★</b></li>
+        <li><span>Seat</span><b>{{ $package->seatsLine() }}</b></li>
       </ul>
 
       <div class="prose">
-        <h2>Fasilitas</h2>
-        <ul class="checks">
-          @foreach($package->facilities ?? [] as $item)
-            <li>{{ $item }}</li>
-          @endforeach
-        </ul>
-        <h2>Deskripsi</h2>
-        <p>{{ $package->description }}</p>
+        @if(($package->facilities ?? []) !== [])
+          <h2>Fasilitas</h2>
+          <ul class="checks">
+            @foreach($package->facilities as $item)
+              <li>{{ $item }}</li>
+            @endforeach
+          </ul>
+        @endif
+        @if(($package->exclusions ?? []) !== [])
+          <h2>Tidak termasuk</h2>
+          <ul class="checks excludes">
+            @foreach($package->exclusions as $item)
+              <li>{{ $item }}</li>
+            @endforeach
+          </ul>
+        @endif
+        @if($package->description)
+          <h2>Deskripsi</h2>
+          <p>{{ $package->description }}</p>
+        @endif
         @if($package->itinerary)
           <h2>Itinerary</h2>
           <p style="white-space:pre-line">{{ $package->itinerary }}</p>

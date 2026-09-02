@@ -172,6 +172,10 @@ img { max-width: 100%; display: block; }
 .ask-form input, .ask-form textarea { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; font: inherit; }
 .detail-grid { display: grid; grid-template-columns: 1fr 300px; gap: 28px; }
 .price-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+.price-note { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+.room-prices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; list-style: none; padding: 0; margin: 0 0 18px; }
+.room-prices li { background: var(--soft); border-radius: 12px; padding: 12px; }
+.room-prices span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
 .spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; list-style: none; padding: 0; margin: 18px 0; }
 .spec-grid li { background: var(--soft); border-radius: 12px; padding: 12px; }
 .spec-grid span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
@@ -185,6 +189,7 @@ img { max-width: 100%; display: block; }
 .form { display: grid; gap: 12px; background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .checks { padding-left: 18px; color: #3d4a63; line-height: 1.7; }
+.checks.excludes { color: #6b4a4a; }
 .alert { padding: 10px 12px; border-radius: 10px; font-size: 14px; }
 .alert.ok { background: #e7f6ee; color: #1b6b3a; }
 .alert.err { background: #fdeeee; color: #a33; }
@@ -282,13 +287,13 @@ img { max-width: 100%; display: block; }
   .bar .btn.ghost { margin-left: 0; }
   .search { grid-template-columns: 1fr; }
   .picks-bar { margin-top: 16px; }
-  .grid, .why-grid, .quote-grid, .gallery-home, .stats-row, .split-pick, .trust-row, .steps, .scheme-flow { grid-template-columns: 1fr 1fr; }
+  .grid, .why-grid, .quote-grid, .gallery-home, .stats-row, .split-pick, .trust-row, .steps, .scheme-flow, .room-prices { grid-template-columns: 1fr 1fr; }
   .scheme-row { grid-template-columns: 1fr 1fr; }
   .listing-layout, .detail-grid, .split, .cta-box, .foot-grid { grid-template-columns: 1fr; }
   .filters, .ask { position: static; }
   .gallery img { max-width: 100%; max-height: 520px; }
 }
 @media (max-width: 560px) {
-  .grid, .why-grid, .quote-grid, .gallery-home, .stats-row, .split-pick, .trust-row, .steps, .scheme-flow, .scheme-row { grid-template-columns: 1fr; }
+  .grid, .why-grid, .quote-grid, .gallery-home, .stats-row, .split-pick, .trust-row, .steps, .scheme-flow, .scheme-row, .room-prices { grid-template-columns: 1fr; }
   .bar .btn.ghost { display: none; }
 }

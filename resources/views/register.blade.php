@@ -41,7 +41,7 @@
       <select name="package_id">
         <option value="">Belum tentukan</option>
         @foreach($packages as $package)
-          <option value="{{ $package->id }}" @selected((string) old('package_id', request('package_id')) === (string) $package->id)>{{ $package->title }} — {{ $package->formattedPrice() }}</option>
+          <option value="{{ $package->id }}" @selected((string) old('package_id', request('package_id')) === (string) $package->id)>{{ $package->title }} — {{ $package->formattedStartingPrice() }}</option>
         @endforeach
       </select>
     </label>

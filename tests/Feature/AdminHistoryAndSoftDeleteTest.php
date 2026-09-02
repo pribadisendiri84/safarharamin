@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Package;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminHistoryAndSoftDeleteTest extends TestCase
@@ -55,18 +57,22 @@ class AdminHistoryAndSoftDeleteTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
 
+        Storage::fake('public');
+
         $this->actingAs($admin)
             ->post('/admin/packages', [
                 'title' => 'Paket Riwayat',
                 'type' => 'umroh',
                 'departure_city' => 'medan',
                 'duration_days' => 10,
-                'price' => 35000000,
+                'price_quad' => 35000000,
+                'price_triple' => 36100000,
+                'price_double' => 38400000,
                 'hotel_stars' => 4,
-                'room_type' => 'quad',
                 'seats_total' => 25,
                 'seats_left' => 25,
                 'status' => 'published',
+                'photos' => [UploadedFile::fake()->image('flyer.jpg', 400, 560)],
             ])
             ->assertRedirect(route('admin.packages.index'));
 

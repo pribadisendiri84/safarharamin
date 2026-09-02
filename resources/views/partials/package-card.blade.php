@@ -10,7 +10,7 @@
   </div>
   <div class="card-body">
     <div class="price">
-      <strong>{{ $package->formattedPrice() }}</strong>
+      <strong>{{ $package->formattedStartingPrice() }}</strong>
       @if($package->formattedOriginalPrice())
         <s>{{ $package->formattedOriginalPrice() }}</s>
       @endif
@@ -19,7 +19,7 @@
     <p class="loc">{{ $package->departureLine() }}</p>
     <ul class="specs">
       <li>{{ $package->duration_days }} hari</li>
-      <li>{{ $package->roomLabel() }}</li>
+      <li>{{ $package->roomRangeLabel() }}</li>
       <li>{{ $package->airline ?: 'Maskapai berizin' }}</li>
       <li>{{ $package->seatsLine() }}</li>
     </ul>

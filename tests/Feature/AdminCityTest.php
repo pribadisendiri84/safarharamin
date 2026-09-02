@@ -6,6 +6,8 @@ use App\Models\City;
 use App\Models\Package;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminCityTest extends TestCase
@@ -45,25 +47,32 @@ class AdminCityTest extends TestCase
 
         $this->assertDatabaseHas('cities', ['slug' => 'kota-uji', 'name' => 'Kota Uji']);
 
+        Storage::fake('public');
+
         $this->actingAs($admin)
             ->post('/admin/packages', [
                 'title' => 'Umroh Kota Uji',
                 'type' => 'umroh',
                 'departure_city' => 'kota-uji',
                 'duration_days' => 9,
-                'price' => 30000000,
+                'price_quad' => 30000000,
+                'price_triple' => 31100000,
+                'price_double' => 33400000,
                 'hotel_stars' => 4,
-                'room_type' => 'quad',
                 'seats_total' => 20,
                 'seats_left' => 20,
                 'status' => 'published',
+                'photos' => [UploadedFile::fake()->image('flyer.jpg', 400, 560)],
             ])
             ->assertRedirect(route('admin.packages.index'));
 
         $this->assertDatabaseHas('packages', ['title' => 'Umroh Kota Uji', 'departure_city' => 'kota-uji']);
 
         $this->get('/daftar')->assertOk()->assertSee('Kota Uji');
-        $this->get('/admin/packages/create')->assertOk()->assertSee('js-searchable');
+        $this->get('/admin/packages/create')
+            ->assertOk()
+            ->assertSee('js-searchable')
+            ->assertDontSee('URL flyer');
     }
 
     public function test_city_in_use_cannot_be_deleted(): void

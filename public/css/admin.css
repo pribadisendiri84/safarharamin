@@ -115,6 +115,7 @@ td small { display: block; color: var(--muted); margin-top: 3px; }
 tr.is-deleted { background: #fdf6f6; }
 .thumb { width: 54px; height: 76px; object-fit: contain; border-radius: 8px; background: #eef1f6; display: block; }
 .thumb.large { width: 180px; height: 255px; margin-bottom: 8px; }
+.flyer-previews { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 4px; }
 .empty-state { text-align: center !important; color: var(--muted); padding: 36px 16px !important; }
 
 /* actions / pills */

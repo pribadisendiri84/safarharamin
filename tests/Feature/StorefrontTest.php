@@ -8,6 +8,8 @@ use App\Models\Setting;
 use App\Models\Testimonial;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class StorefrontTest extends TestCase
@@ -28,11 +30,17 @@ class StorefrontTest extends TestCase
             'departure_date' => '2026-10-12',
             'duration_days' => 9,
             'price' => 29500000,
+            'price_quad' => 29500000,
+            'price_triple' => 30600000,
+            'price_double' => 32900000,
+            'price_note' => 'Harga dapat berubah sesuai kebijakan',
+            'exclusions' => ['Paspor', 'Vaksin'],
             'hotel_stars' => 4,
             'room_type' => 'quad',
             'seats_total' => 40,
             'seats_left' => 12,
             'status' => 'published',
+            'images' => ['/images/placeholder-kaaba.svg'],
         ]);
     }
 
@@ -68,7 +76,13 @@ class StorefrontTest extends TestCase
     {
         $this->get('/paket/umroh-hemat-contoh')
             ->assertOk()
-            ->assertSee('Jakarta');
+            ->assertSee('Jakarta')
+            ->assertSee('Tidak termasuk')
+            ->assertSee('Paspor')
+            ->assertSee('Mulai Rp')
+            ->assertSee('29.500.000')
+            ->assertSee('Triple')
+            ->assertSee('Harga dapat berubah sesuai kebijakan');
 
         $this->get('/galeri')->assertOk()->assertSee('Gallery');
         $this->get('/testimoni')->assertOk()->assertSee('Testimoni');
@@ -100,22 +114,58 @@ class StorefrontTest extends TestCase
 
         $user = User::factory()->create(['email' => 'admin@safarharamin.id']);
 
+        Storage::fake('public');
+
         $this->actingAs($user)
             ->post('/admin/packages', [
                 'title' => 'Umroh Plus Baru',
                 'type' => 'umroh_plus',
                 'departure_city' => 'medan',
                 'duration_days' => 14,
-                'price' => 42000000,
+                'price_quad' => 42000000,
+                'price_triple' => 43100000,
+                'price_double' => 45400000,
                 'hotel_stars' => 4,
-                'room_type' => 'quad',
                 'seats_total' => 30,
                 'seats_left' => 30,
                 'status' => 'published',
+                'photos' => [UploadedFile::fake()->image('flyer.jpg', 400, 560)],
+                'exclusions_text' => "Paspor\nVaksin",
+                'price_note' => 'Harga dapat berubah sesuai kebijakan',
             ])
             ->assertRedirect(route('admin.packages.index'));
 
-        $this->assertDatabaseHas('packages', ['title' => 'Umroh Plus Baru', 'departure_city' => 'medan']);
+        $this->assertDatabaseHas('packages', [
+            'title' => 'Umroh Plus Baru',
+            'departure_city' => 'medan',
+            'price' => 42000000,
+            'price_quad' => 42000000,
+            'price_triple' => 43100000,
+            'price_double' => 45400000,
+        ]);
+    }
+
+    public function test_admin_cannot_create_package_without_flyer(): void
+    {
+        $user = User::factory()->create(['email' => 'admin@safarharamin.id']);
+
+        $this->actingAs($user)
+            ->from(route('admin.packages.create'))
+            ->post('/admin/packages', [
+                'title' => 'Tanpa Flyer',
+                'type' => 'umroh',
+                'departure_city' => 'jakarta',
+                'duration_days' => 9,
+                'price_quad' => 35100000,
+                'price_triple' => 36200000,
+                'price_double' => 38500000,
+                'hotel_stars' => 4,
+                'seats_total' => 40,
+                'seats_left' => 40,
+                'status' => 'published',
+            ])
+            ->assertRedirect(route('admin.packages.create'))
+            ->assertSessionHasErrors('photos');
     }
 
     public function test_admin_can_manage_gallery(): void

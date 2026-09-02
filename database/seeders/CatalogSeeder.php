@@ -28,6 +28,13 @@ class CatalogSeeder extends Seeder
             'Air zamzam 5L (ketentuan maskapai)',
         ];
 
+        $exclusions = [
+            'Paspor',
+            'Vaksin',
+            'Pengeluaran pribadi',
+            'Tiket add-on PP',
+        ];
+
         $rows = [
             ['Umroh Hemat 9 Hari Jakarta', 'umroh', 'jakarta', '2026-10-12', 9, 29500000, 32500000, 'Maysan Al Maqam', 'Odsyl', 4, 'Saudia', 'quad', 45, 12, true, true],
             ['Umroh Reguler 12 Hari Jakarta', 'umroh', 'jakarta', '2026-11-03', 12, 34500000, null, 'Azka Al Huda', 'Al Haram', 4, 'Garuda Indonesia', 'quad', 40, 18, true, false],
@@ -45,6 +52,7 @@ class CatalogSeeder extends Seeder
 
         foreach ($rows as $i => $row) {
             [$title, $type, $city, $date, $days, $price, $original, $makkah, $madinah, $stars, $airline, $room, $total, $left, $featured, $hot] = $row;
+            $rooms = $this->roomPrices($price);
 
             Package::query()->updateOrCreate(
                 ['slug' => Str::slug($title)],
@@ -55,7 +63,11 @@ class CatalogSeeder extends Seeder
                     'departure_date' => $date,
                     'duration_days' => $days,
                     'price' => $price,
+                    'price_quad' => $rooms['quad'],
+                    'price_triple' => $rooms['triple'],
+                    'price_double' => $rooms['double'],
                     'original_price' => $original,
+                    'price_note' => 'Harga dapat berubah sesuai kebijakan perusahaan.',
                     'hotel_makkah' => $makkah,
                     'hotel_madinah' => $madinah,
                     'hotel_stars' => $stars,
@@ -64,6 +76,7 @@ class CatalogSeeder extends Seeder
                     'seats_total' => $total,
                     'seats_left' => $left,
                     'facilities' => $defaults,
+                    'exclusions' => $exclusions,
                     'description' => 'Paket '.$title.' dengan hotel bintang '.$stars.', maskapai '.$airline.', dan pendampingan muthawwif berbahasa Indonesia.',
                     'itinerary' => "Hari 1: Berkumpul embarkasi & terbang ke Jeddah/Madinah.\nHari 2-3: Ibadah di Madinah.\nHari 4: Menuju Makkah, umroh.\nHari 5-7: Ibadah di Masjidil Haram.\nHari terakhir: Kepulangan sesuai jadwal maskapai.",
                     'images' => [$photos[$i % count($photos)]],
@@ -112,5 +125,17 @@ class CatalogSeeder extends Seeder
                 ]
             );
         }
+    }
+
+    /**
+     * @return array{quad: int, triple: int, double: int}
+     */
+    private function roomPrices(int $quad): array
+    {
+        return [
+            'quad' => $quad,
+            'triple' => $quad + 1100000,
+            'double' => $quad + 3400000,
+        ];
     }
 }

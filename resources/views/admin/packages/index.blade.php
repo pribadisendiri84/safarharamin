@@ -34,7 +34,7 @@
           <tr class="{{ $package->trashed() ? 'is-deleted' : '' }}">
             <td><b>{{ $package->title }}</b><small>{{ $package->typeLabel() }} · {{ $package->duration_days }} hari</small></td>
             <td>{{ $package->departureLine() }}</td>
-            <td>{{ $package->formattedPrice() }}<small>{{ $package->seatsLine() }}</small></td>
+            <td>{{ $package->formattedStartingPrice() }}<small>{{ $package->seatsLine() }}</small></td>
             <td>{{ (int) $package->sold_pax }} jamaah</td>
             <td><span class="badge {{ $package->status }}">{{ \App\Models\Package::STATUSES[$package->status] ?? $package->status }}</span></td>
             <td>@include('admin.partials.timestamps', ['model' => $package])</td>

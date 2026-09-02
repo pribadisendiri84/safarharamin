@@ -19,7 +19,11 @@ use Illuminate\Support\Str;
     'departure_date',
     'duration_days',
     'price',
+    'price_quad',
+    'price_triple',
+    'price_double',
     'original_price',
+    'price_note',
     'hotel_makkah',
     'hotel_madinah',
     'hotel_stars',
@@ -28,6 +32,7 @@ use Illuminate\Support\Str;
     'seats_total',
     'seats_left',
     'facilities',
+    'exclusions',
     'itinerary',
     'description',
     'images',
@@ -68,9 +73,13 @@ class Package extends Model
         return [
             'images' => 'array',
             'facilities' => 'array',
+            'exclusions' => 'array',
             'is_featured' => 'boolean',
             'is_hot' => 'boolean',
             'price' => 'integer',
+            'price_quad' => 'integer',
+            'price_triple' => 'integer',
+            'price_double' => 'integer',
             'original_price' => 'integer',
             'departure_date' => 'date',
         ];
@@ -81,6 +90,10 @@ class Package extends Model
         static::saving(function (Package $package) {
             if ($package->slug === null || $package->slug === '') {
                 $package->slug = static::uniqueSlug($package->title, $package->id);
+            }
+
+            if ($package->price_quad) {
+                $package->price = $package->price_quad;
             }
         });
     }
@@ -110,6 +123,42 @@ class Package extends Model
         return self::ROOM_TYPES[$this->room_type] ?? $this->room_type;
     }
 
+    /**
+     * @return list<array{key: string, label: string, price: int}>
+     */
+    public function roomPriceList(): array
+    {
+        $rows = [];
+
+        foreach (self::ROOM_TYPES as $key => $label) {
+            $value = $this->{'price_'.$key};
+            if ($value) {
+                $rows[] = [
+                    'key' => $key,
+                    'label' => $label,
+                    'price' => (int) $value,
+                ];
+            }
+        }
+
+        return $rows;
+    }
+
+    public function roomRangeLabel(): string
+    {
+        $rows = $this->roomPriceList();
+        if (count($rows) >= 2) {
+            return collect($rows)->pluck('label')->implode(' · ');
+        }
+
+        return $this->roomLabel();
+    }
+
+    public function formattedMoney(int $amount): string
+    {
+        return 'Rp '.number_format($amount, 0, ',', '.');
+    }
+
     public function coverImage(): string
     {
         return ($this->images ?? [])[0] ?? '/images/placeholder-kaaba.svg';
@@ -124,7 +173,14 @@ class Package extends Model
 
     public function formattedPrice(): string
     {
-        return 'Rp '.number_format($this->price, 0, ',', '.');
+        return $this->formattedMoney((int) $this->price);
+    }
+
+    public function formattedStartingPrice(): string
+    {
+        $prefix = count($this->roomPriceList()) > 1 ? 'Mulai ' : '';
+
+        return $prefix.$this->formattedPrice();
     }
 
     public function formattedOriginalPrice(): ?string
@@ -159,7 +215,12 @@ class Package extends Model
 
     public function whatsappMessage(): string
     {
-        return 'Halo '.SiteProfile::current()->name.", saya tertarik paket {$this->title} ({$this->formattedPrice()}, {$this->duration_days} hari, berangkat {$this->departureLine()}). Mohon info seat & cara daftar.";
+        $rooms = collect($this->roomPriceList())
+            ->map(fn (array $row) => $row['label'].' '.$this->formattedMoney($row['price']))
+            ->implode(', ');
+        $pricePart = $rooms !== '' ? $rooms : $this->formattedStartingPrice();
+
+        return 'Halo '.SiteProfile::current()->name.", saya tertarik paket {$this->title} ({$pricePart}, {$this->duration_days} hari, berangkat {$this->departureLine()}). Mohon info seat & cara daftar.";
     }
 
     public static function uniqueSlug(string $title, ?int $ignoreId = null): string

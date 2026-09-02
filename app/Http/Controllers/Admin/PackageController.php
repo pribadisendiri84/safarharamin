@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\FiltersTrashed;
 use App\Http\Controllers\Controller;
+use App\Models\Inquiry;
 use App\Models\Package;
 use App\Services\PackageImageStore;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PackageController extends Controller
 {
@@ -18,7 +20,7 @@ class PackageController extends Controller
         $query = $this->applyTrashFilter(
             Package::query()
                 ->with('creator')
-                ->withSum(['inquiries as sold_pax' => fn ($q) => $q->where('status', \App\Models\Inquiry::STATUS_SOLD)], 'sold_pax')
+                ->withSum(['inquiries as sold_pax' => fn ($q) => $q->where('status', Inquiry::STATUS_SOLD)], 'sold_pax')
                 ->latest(),
             $request
         );
@@ -44,10 +46,12 @@ class PackageController extends Controller
 
     public function store(Request $request, PackageImageStore $images)
     {
-        $data = $this->validated($request);
+        $data = $this->validated($request, requireFlyer: true);
         $data['slug'] = Package::uniqueSlug($data['title']);
         $data['images'] = $this->collectImages($request, $images, $data['title']);
+        $this->assertFlyerPresent($data['images']);
         $data['facilities'] = $this->lines($request->input('facilities_text'));
+        $data['exclusions'] = $this->lines($request->input('exclusions_text'));
 
         Package::query()->create($data);
 
@@ -63,7 +67,9 @@ class PackageController extends Controller
     {
         $data = $this->validated($request);
         $data['images'] = $this->collectImages($request, $images, $data['title'], $package->images ?? []);
+        $this->assertFlyerPresent($data['images']);
         $data['facilities'] = $this->lines($request->input('facilities_text'));
+        $data['exclusions'] = $this->lines($request->input('exclusions_text'));
 
         $package->update($data);
 
@@ -87,7 +93,7 @@ class PackageController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function validated(Request $request): array
+    private function validated(Request $request, bool $requireFlyer = false): array
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
@@ -95,23 +101,29 @@ class PackageController extends Controller
             'departure_city' => ['required', Rule::exists('cities', 'slug')->whereNull('deleted_at')],
             'departure_date' => ['nullable', 'date'],
             'duration_days' => ['required', 'integer', 'min:7', 'max:45'],
-            'price' => ['required', 'integer', 'min:1'],
+            'price_quad' => ['required', 'integer', 'min:1'],
+            'price_triple' => ['required', 'integer', 'min:1'],
+            'price_double' => ['required', 'integer', 'min:1'],
             'original_price' => ['nullable', 'integer', 'min:1'],
+            'price_note' => ['nullable', 'string', 'max:180'],
             'hotel_makkah' => ['nullable', 'string', 'max:120'],
             'hotel_madinah' => ['nullable', 'string', 'max:120'],
             'hotel_stars' => ['required', 'integer', 'min:3', 'max:5'],
             'airline' => ['nullable', 'string', 'max:80'],
-            'room_type' => ['required', Rule::in(array_keys(Package::ROOM_TYPES))],
             'seats_total' => ['required', 'integer', 'min:1'],
             'seats_left' => ['required', 'integer', 'min:0'],
             'itinerary' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
             'status' => ['required', Rule::in(array_keys(Package::STATUSES))],
-            'image_urls' => ['nullable', 'string'],
+            'photos' => $requireFlyer ? ['required', 'array', 'min:1'] : ['nullable', 'array'],
+            'photos.*' => ['image', 'max:5120'],
             'facilities_text' => ['nullable', 'string'],
+            'exclusions_text' => ['nullable', 'string'],
         ]);
 
-        unset($data['image_urls'], $data['facilities_text']);
+        unset($data['facilities_text'], $data['exclusions_text'], $data['photos']);
+        $data['price'] = $data['price_quad'];
+        $data['room_type'] = 'quad';
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_hot'] = $request->boolean('is_hot');
 
@@ -124,7 +136,7 @@ class PackageController extends Controller
      */
     private function collectImages(Request $request, PackageImageStore $store, string $title, array $existing = []): array
     {
-        $urls = $this->lines($request->input('image_urls'));
+        $urls = [];
 
         foreach ($request->file('photos', []) as $file) {
             if ($file && $file->isValid()) {
@@ -133,6 +145,18 @@ class PackageController extends Controller
         }
 
         return $urls !== [] ? $urls : $existing;
+    }
+
+    /**
+     * @param  list<string>  $images
+     */
+    private function assertFlyerPresent(array $images): void
+    {
+        if ($images === []) {
+            throw ValidationException::withMessages([
+                'photos' => 'Unggah flyer paket. Flyer wajib jadi cover.',
+            ]);
+        }
     }
 
     /**

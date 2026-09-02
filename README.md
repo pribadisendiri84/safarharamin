@@ -53,7 +53,7 @@ Alzena dan SafarHaramin **satu VPS**. Yang dipakai bersama: Nginx, PHP-FPM, MySQ
 | | Alzena | SafarHaramin |
 |---|---|---|
 | Folder | `/var/www/fashiondialzena` (atau path Alzena yang sudah ada) | `/var/www/safarharamin` |
-| Database / user | punya Alzena, jangan disentuh | `safarharamin` / `safarharamin` |
+| Database / user | punya Alzena, jangan disentuh | `arminareka` / `arminareka` |
 | Akses | domain Alzena | `http://IP_VPS` (site ini `default_server`) |
 
 Repo: `git@github.com:pribadisendiri84/safarharamin.git` (GitHub, bukan GitLab).
@@ -77,9 +77,9 @@ Composer: https://getcomposer.org/download/
 Jangan pakai `DB_DATABASE` / user Alzena. Ganti `PASSWORD_KUAT`:
 
 ```sql
-CREATE DATABASE safarharamin CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'safarharamin'@'localhost' IDENTIFIED BY 'PASSWORD_KUAT';
-GRANT ALL PRIVILEGES ON safarharamin.* TO 'safarharamin'@'localhost';
+CREATE DATABASE arminareka CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'arminareka'@'localhost' IDENTIFIED BY 'PASSWORD_KUAT';
+GRANT ALL PRIVILEGES ON arminareka.* TO 'arminareka'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
@@ -136,7 +136,7 @@ Ganti `IP_VPS` dengan IP publik Sumopod (contoh `103.x.x.x`):
 | `APP_URL` | `http://IP_VPS` |
 | `DB_CONNECTION` | `mysql` |
 | `DB_HOST` | `127.0.0.1` |
-| `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | sesuai langkah 1 |
+| `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | `arminareka` / `arminareka` / password langkah 1b |
 | `SESSION_DOMAIN` | `null` |
 
 ```bash
