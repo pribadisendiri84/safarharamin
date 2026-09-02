@@ -28,7 +28,7 @@
       <h1>{{ $package->title }}</h1>
       <p class="loc">{{ $package->departureLine() }} · {{ $package->seatsLine() }}</p>
       <div class="price-row">
-        <strong>{{ $package->formattedStartingPrice() }}</strong>
+        <strong>{{ $package->formattedStartingPrice() }}<small class="price-unit">/jamaah</small></strong>
         @if($package->formattedOriginalPrice())
           <s>{{ $package->formattedOriginalPrice() }}</s>
           <span class="badge disc">-{{ $package->discountPercent() }}%</span>
@@ -38,11 +38,13 @@
         <p class="price-note">{{ $package->price_note }}</p>
       @endif
       @if($package->roomPriceList() !== [])
+        <h2 class="room-prices-head">Harga per jamaah</h2>
+        <p class="room-prices-note">Tergantung isi kamar (jumlah orang per kamar).</p>
         <ul class="room-prices">
           @foreach($package->roomPriceList() as $row)
             <li>
-              <span>{{ $row['label'] }}</span>
-              <b>{{ $package->formattedMoney($row['price']) }}</b>
+              <span>{{ $row['full_label'] }}</span>
+              <b>{{ $package->formattedMoney($row['price']) }}<small>/jamaah</small></b>
             </li>
           @endforeach
         </ul>

@@ -10,7 +10,7 @@
   </div>
   <div class="card-body">
     <div class="price">
-      <strong>{{ $package->formattedStartingPrice() }}</strong>
+      <strong>{{ $package->formattedStartingPrice() }}<small class="price-unit">/jamaah</small></strong>
       @if($package->formattedOriginalPrice())
         <s>{{ $package->formattedOriginalPrice() }}</s>
       @endif

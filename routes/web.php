@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\HistoryController;
 use App\Http\Controllers\Admin\InquiryController;
 use App\Http\Controllers\Admin\PackageController as AdminPackageController;
+use App\Http\Controllers\Admin\PackageImportController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\TrafficController;
@@ -40,7 +41,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::middleware('can:manage-catalog')->group(function () {
+            Route::get('packages/import', [PackageImportController::class, 'create'])->name('packages.import');
+            Route::post('packages/import', [PackageImportController::class, 'store'])->name('packages.import.store');
+            Route::get('packages/import/template', [PackageImportController::class, 'template'])->name('packages.import.template');
             Route::resource('packages', AdminPackageController::class)->except(['show']);
+            Route::get('packages/{package}/duplicate', [AdminPackageController::class, 'duplicate'])->name('packages.duplicate');
             Route::post('packages/{package}/restore', [AdminPackageController::class, 'restore'])->withTrashed()->name('packages.restore');
             Route::resource('gallery', GalleryController::class)->except(['show']);
             Route::post('gallery/{gallery}/restore', [GalleryController::class, 'restore'])->withTrashed()->name('gallery.restore');

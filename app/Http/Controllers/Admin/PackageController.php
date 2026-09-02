@@ -29,6 +29,10 @@ class PackageController extends Controller
             $query->where('status', $status);
         }
 
+        if ($request->boolean('needs_flyer')) {
+            $query->needsFlyer();
+        }
+
         if ($q = trim((string) $request->input('q'))) {
             $query->where('title', 'like', '%'.$q.'%');
         }
@@ -46,10 +50,10 @@ class PackageController extends Controller
 
     public function store(Request $request, PackageImageStore $images)
     {
-        $data = $this->validated($request, requireFlyer: true);
+        $data = $this->validated($request);
         $data['slug'] = Package::uniqueSlug($data['title']);
         $data['images'] = $this->collectImages($request, $images, $data['title']);
-        $this->assertFlyerPresent($data['images']);
+        $this->assertFlyerForPublish($data['images'], $data['status']);
         $data['facilities'] = $this->lines($request->input('facilities_text'));
         $data['exclusions'] = $this->lines($request->input('exclusions_text'));
 
@@ -67,7 +71,7 @@ class PackageController extends Controller
     {
         $data = $this->validated($request);
         $data['images'] = $this->collectImages($request, $images, $data['title'], $package->images ?? []);
-        $this->assertFlyerPresent($data['images']);
+        $this->assertFlyerForPublish($data['images'], $data['status']);
         $data['facilities'] = $this->lines($request->input('facilities_text'));
         $data['exclusions'] = $this->lines($request->input('exclusions_text'));
 
@@ -90,10 +94,24 @@ class PackageController extends Controller
         return redirect()->route('admin.packages.index', ['trashed' => 1])->with('ok', 'Paket dipulihkan.');
     }
 
+    public function duplicate(Package $package)
+    {
+        $copy = $package->replicate(['slug']);
+        $copy->title = $package->title.' (salinan)';
+        $copy->departure_date = null;
+        $copy->images = [];
+        $copy->status = 'draft';
+
+        return view('admin.packages.form', [
+            'package' => $copy,
+            'isDuplicate' => true,
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
-    private function validated(Request $request, bool $requireFlyer = false): array
+    private function validated(Request $request): array
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
@@ -115,7 +133,7 @@ class PackageController extends Controller
             'itinerary' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
             'status' => ['required', Rule::in(array_keys(Package::STATUSES))],
-            'photos' => $requireFlyer ? ['required', 'array', 'min:1'] : ['nullable', 'array'],
+            'photos' => ['nullable', 'array'],
             'photos.*' => ['image', 'max:5120'],
             'facilities_text' => ['nullable', 'string'],
             'exclusions_text' => ['nullable', 'string'],
@@ -150,11 +168,15 @@ class PackageController extends Controller
     /**
      * @param  list<string>  $images
      */
-    private function assertFlyerPresent(array $images): void
+    private function assertFlyerForPublish(array $images, string $status): void
     {
+        if ($status !== 'published') {
+            return;
+        }
+
         if ($images === []) {
             throw ValidationException::withMessages([
-                'photos' => 'Unggah flyer paket. Flyer wajib jadi cover.',
+                'photos' => 'Unggah flyer paket sebelum menayangkan.',
             ]);
         }
     }

@@ -50,6 +50,7 @@ class StorefrontTest extends TestCase
             ->assertOk()
             ->assertSee('Perjalanan spiritual')
             ->assertSee('Umroh Hemat Contoh')
+            ->assertSee('Quad · Triple · Double')
             ->assertSee('Jakarta')
             ->assertDontSee('98%');
 
@@ -81,7 +82,8 @@ class StorefrontTest extends TestCase
             ->assertSee('Paspor')
             ->assertSee('Mulai Rp')
             ->assertSee('29.500.000')
-            ->assertSee('Triple')
+            ->assertSee('Harga per jamaah')
+            ->assertSee('3 org/kamar')
             ->assertSee('Harga dapat berubah sesuai kebijakan');
 
         $this->get('/galeri')->assertOk()->assertSee('Gallery');
@@ -145,7 +147,7 @@ class StorefrontTest extends TestCase
         ]);
     }
 
-    public function test_admin_cannot_create_package_without_flyer(): void
+    public function test_admin_cannot_publish_package_without_flyer(): void
     {
         $user = User::factory()->create(['email' => 'admin@safarharamin.id']);
 
@@ -166,6 +168,24 @@ class StorefrontTest extends TestCase
             ])
             ->assertRedirect(route('admin.packages.create'))
             ->assertSessionHasErrors('photos');
+
+        $this->actingAs($user)
+            ->post('/admin/packages', [
+                'title' => 'Draft Tanpa Flyer Baru',
+                'type' => 'umroh',
+                'departure_city' => 'jakarta',
+                'duration_days' => 9,
+                'price_quad' => 35100000,
+                'price_triple' => 36200000,
+                'price_double' => 38500000,
+                'hotel_stars' => 4,
+                'seats_total' => 40,
+                'seats_left' => 40,
+                'status' => 'draft',
+            ])
+            ->assertRedirect(route('admin.packages.index'));
+
+        $this->assertDatabaseHas('packages', ['title' => 'Draft Tanpa Flyer Baru', 'status' => 'draft']);
     }
 
     public function test_admin_can_manage_gallery(): void

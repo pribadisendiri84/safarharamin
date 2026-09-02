@@ -62,6 +62,13 @@ class Package extends Model
         'double' => 'Double',
     ];
 
+    /** @var array<string, int> */
+    public const ROOM_OCCUPANCY = [
+        'quad' => 4,
+        'triple' => 3,
+        'double' => 2,
+    ];
+
     public const STATUSES = [
         'published' => 'Tayang',
         'draft' => 'Draft',
@@ -108,6 +115,20 @@ class Package extends Model
         return $query->where('status', 'published');
     }
 
+    public function scopeNeedsFlyer(Builder $query): Builder
+    {
+        return $query->where(function (Builder $builder) {
+            $builder->whereNull('images')
+                ->orWhere('images', '[]')
+                ->orWhere('images', 'null');
+        });
+    }
+
+    public function needsFlyer(): bool
+    {
+        return ($this->images ?? []) === [];
+    }
+
     public function typeLabel(): string
     {
         return self::TYPES[$this->type] ?? Str::headline($this->type);
@@ -120,11 +141,26 @@ class Package extends Model
 
     public function roomLabel(): string
     {
-        return self::ROOM_TYPES[$this->room_type] ?? $this->room_type;
+        return $this->roomTypeLabel($this->room_type);
+    }
+
+    public function roomTypeLabel(string $key): string
+    {
+        $name = self::ROOM_TYPES[$key] ?? $key;
+        $pax = self::ROOM_OCCUPANCY[$key] ?? null;
+
+        return $pax ? "{$name} ({$pax} org/kamar)" : $name;
+    }
+
+    public function roomOccupancyLabel(string $key): string
+    {
+        $pax = self::ROOM_OCCUPANCY[$key] ?? null;
+
+        return $pax ? "{$pax} org/kamar" : '';
     }
 
     /**
-     * @return list<array{key: string, label: string, price: int}>
+     * @return list<array{key: string, label: string, occupancy: int, occupancy_label: string, full_label: string, price: int}>
      */
     public function roomPriceList(): array
     {
@@ -133,9 +169,13 @@ class Package extends Model
         foreach (self::ROOM_TYPES as $key => $label) {
             $value = $this->{'price_'.$key};
             if ($value) {
+                $occupancy = self::ROOM_OCCUPANCY[$key] ?? 0;
                 $rows[] = [
                     'key' => $key,
                     'label' => $label,
+                    'occupancy' => $occupancy,
+                    'occupancy_label' => $this->roomOccupancyLabel($key),
+                    'full_label' => $this->roomTypeLabel($key),
                     'price' => (int) $value,
                 ];
             }
@@ -147,11 +187,11 @@ class Package extends Model
     public function roomRangeLabel(): string
     {
         $rows = $this->roomPriceList();
-        if (count($rows) >= 2) {
+        if ($rows !== []) {
             return collect($rows)->pluck('label')->implode(' · ');
         }
 
-        return $this->roomLabel();
+        return self::ROOM_TYPES[$this->room_type] ?? $this->room_type;
     }
 
     public function formattedMoney(int $amount): string
@@ -216,7 +256,7 @@ class Package extends Model
     public function whatsappMessage(): string
     {
         $rooms = collect($this->roomPriceList())
-            ->map(fn (array $row) => $row['label'].' '.$this->formattedMoney($row['price']))
+            ->map(fn (array $row) => $row['full_label'].' '.$this->formattedMoney($row['price']).'/jamaah')
             ->implode(', ');
         $pricePart = $rooms !== '' ? $rooms : $this->formattedStartingPrice();
 

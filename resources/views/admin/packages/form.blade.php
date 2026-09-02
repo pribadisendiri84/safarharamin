@@ -1,11 +1,11 @@
 @extends('layouts.admin')
 
-@section('title', $package->exists ? 'Edit paket' : 'Tambah paket')
+@section('title', !empty($isDuplicate) ? 'Duplikat paket' : ($package->exists ? 'Edit paket' : 'Tambah paket'))
 @section('content')
 <div class="page-head">
   <div>
-    <h1>{{ $package->exists ? 'Edit paket' : 'Tambah paket' }}</h1>
-    <p class="sub">Unggah flyer dari komputer. Flyer jadi cover di website.</p>
+    <h1>{{ !empty($isDuplicate) ? 'Duplikat paket' : ($package->exists ? 'Edit paket' : 'Tambah paket') }}</h1>
+    <p class="sub">{{ !empty($isDuplicate) ? 'Data disalin dari paket lain. Ubah lalu Simpan — belum masuk katalog sebelum disimpan.' : 'Unggah flyer dari komputer. Flyer jadi cover di website.' }}</p>
   </div>
   <div class="actions head-actions">
     <a class="btn ghost" href="{{ route('admin.packages.index') }}">Kembali</a>
@@ -23,7 +23,7 @@
     </div>
   @endif
   <label>Unggah flyer
-    <input type="file" name="photos[]" accept="image/*" multiple {{ $package->exists ? '' : 'required' }}>
+    <input type="file" name="photos[]" accept="image/*" multiple>
   </label>
   <label>Judul paket<input name="title" value="{{ old('title', $package->title) }}" required></label>
   <div class="row2">
@@ -37,7 +37,7 @@
     <label>Status
       <select name="status" required>
         @foreach(\App\Models\Package::STATUSES as $key => $label)
-          <option value="{{ $key }}" @selected(old('status', $package->status ?? 'published') === $key)>{{ $label }}</option>
+          <option value="{{ $key }}" @selected(old('status', $package->status ?? (!empty($isDuplicate) ? 'draft' : 'published')) === $key)>{{ $label }}</option>
         @endforeach
       </select>
     </label>
@@ -55,10 +55,11 @@
     <label>Tanggal berangkat<input type="date" name="departure_date" value="{{ old('departure_date', optional($package->departure_date)->format('Y-m-d')) }}"></label>
   </div>
   <div class="row3">
-    <label>Harga Quad (Rp)<input type="number" name="price_quad" value="{{ old('price_quad', $package->price_quad ?? $package->price) }}" min="1" required></label>
-    <label>Harga Triple (Rp)<input type="number" name="price_triple" value="{{ old('price_triple', $package->price_triple) }}" min="1" required></label>
-    <label>Harga Double (Rp)<input type="number" name="price_double" value="{{ old('price_double', $package->price_double) }}" min="1" required></label>
+    <label>Quad — 4 org/kamar (Rp)<input type="number" name="price_quad" value="{{ old('price_quad', $package->price_quad ?? $package->price) }}" min="1" required></label>
+    <label>Triple — 3 org/kamar (Rp)<input type="number" name="price_triple" value="{{ old('price_triple', $package->price_triple) }}" min="1" required></label>
+    <label>Double — 2 org/kamar (Rp)<input type="number" name="price_double" value="{{ old('price_double', $package->price_double) }}" min="1" required></label>
   </div>
+  <p class="sub">Harga per jamaah. Semakin sedikit isi kamar, semakin mahal (Quad termurah).</p>
   <div class="row2">
     <label>Harga coret<input type="number" name="original_price" value="{{ old('original_price', $package->original_price) }}" min="1"></label>
     <label>Catatan harga<input name="price_note" value="{{ old('price_note', $package->price_note) }}" maxlength="180" placeholder="Harga dapat berubah sesuai kebijakan"></label>

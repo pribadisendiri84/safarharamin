@@ -13,6 +13,9 @@
     @isset($edit)
       <a class="btn gray compact" href="{{ $edit }}">{{ $editLabel ?? 'Edit' }}</a>
     @endisset
+    @if(! empty($duplicate))
+      <a class="btn gray compact" href="{{ $duplicate }}">Duplikat</a>
+    @endif
     @if(! empty($destroy))
     <form method="post" action="{{ $destroy }}" onsubmit="return confirm('{{ $confirm }}')">
       @csrf

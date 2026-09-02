@@ -17,6 +17,7 @@
     'phone' => '<path d="M7 3h4l1 5-3 2a12 12 0 006 6l2-3 5 1v4c0 1-1 3-8 3C7 21 3 12 3 8c0-7 2-5 4-5z"/>',
     'check' => '<path d="M20 6L9 17l-5-5"/>',
     'search' => '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-3.5-3.5"/>',
+    'upload' => '<path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 20h16"/>',
     'pin' => '<path d="M12 21s7-7.2 7-12a7 7 0 10-14 0c0 4.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.2"/>',
     'chart' => '<path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M21 19H3"/>',
   ];
