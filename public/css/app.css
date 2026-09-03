@@ -117,7 +117,39 @@ img { max-width: 100%; display: block; }
   font-weight: 600;
 }
 .card-meta-row span { display: inline-flex; align-items: center; gap: 5px; }
-.card-room-row { margin-top: -4px; margin-bottom: 8px; }
+.card-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+  flex: 1;
+}
+.card-details li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1.25;
+}
+.card-details li > span:last-child,
+.card-details li > .hotel-stars-rating {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.card .card-details .meta-ico {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+}
+.card .card-details .hotel-stars-rating .bi { font-size: 9px; }
+.card .price-stack { display: grid; gap: 1px; margin-bottom: 6px; }
 .card .meta-ico {
   width: 20px;
   height: 20px;
@@ -133,7 +165,21 @@ img { max-width: 100%; display: block; }
   line-height: 1;
   display: block;
 }
-.card .price-stack { display: grid; gap: 1px; margin-bottom: 6px; }
+.card-room-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 2px 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1.35;
+}
+.card-room-row > span:last-child {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+}
 .card .price-label { font-size: 11px; font-weight: 600; color: var(--muted); line-height: 1.2; }
 .card .price-line,
 .card .price-was {
@@ -165,7 +211,7 @@ img { max-width: 100%; display: block; }
 .card .specs-icons {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 5px;
+  gap: 6px 10px;
   flex: 1;
 }
 .card .specs-icons li {
@@ -173,13 +219,13 @@ img { max-width: 100%; display: block; }
   align-items: center;
   gap: 5px;
   min-width: 0;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 2px 7px 2px 2px;
-  font-size: 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  font-size: 11px;
   font-weight: 600;
-  color: #3d4a63;
+  color: var(--muted);
 }
 .card .specs-icons li > span:last-child {
   overflow: hidden;
@@ -189,7 +235,7 @@ img { max-width: 100%; display: block; }
 .card .specs-icons .spec-ico {
   width: 20px;
   height: 20px;
-  border-radius: 999px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -201,7 +247,7 @@ img { max-width: 100%; display: block; }
   line-height: 1;
   display: block;
 }
-.card .hotel-stars-rating .bi { font-size: 9px; }
+.card .specs-icons .hotel-stars-rating .bi { font-size: 9px; }
 .card-foot {
   margin: 8px 0 0;
   padding-top: 7px;
@@ -511,9 +557,10 @@ img { max-width: 100%; display: block; }
 .room-prices li { background: var(--soft); border-radius: 12px; padding: 12px; }
 .room-prices span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; line-height: 1.4; }
 .room-prices b small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-top: 2px; }
-.spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; list-style: none; padding: 0; margin: 18px 0; }
-.spec-grid li { background: var(--soft); border-radius: 12px; padding: 12px; }
-.spec-grid span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+.spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; list-style: none; padding: 0; margin: 18px 0; }
+.spec-grid li { padding: 0; }
+.spec-grid span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 2px; font-weight: 600; }
+.spec-grid b { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.35; }
 .prose h2 { margin: 0 0 8px; font-size: 20px; }
 .prose p { color: #3d4a63; line-height: 1.65; }
 .ask { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; position: sticky; top: 88px; display: grid; gap: 10px; height: fit-content; }

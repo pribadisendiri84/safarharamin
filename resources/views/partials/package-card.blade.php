@@ -1,6 +1,12 @@
 @php
   /** @var \App\Models\Package $package */
   $departureDate = $package->departure_date?->translatedFormat('d M Y') ?? 'Jadwal menyusul';
+  $startingRoom = $package->startingRoomLabel();
+  $roomOptions = $package->roomRangeLabel();
+  $priceUnit = '/jamaah';
+  if ($package->hasMultipleRoomPrices() && $startingRoom) {
+      $priceUnit .= ' - '.$startingRoom;
+  }
 @endphp
 
 <a class="card {{ $package->isFullbook() ? 'is-fullbook' : 'is-available' }}{{ $package->is_hot && ! $package->isFullbook() ? ' is-hot' : '' }}" href="{{ route('packages.show', $package) }}">
@@ -26,14 +32,13 @@
   </div>
   <div class="card-body">
     <div class="price-stack">
-      @if(count($package->roomPriceList()) > 1)
+      @if($package->hasMultipleRoomPrices())
         <span class="price-label">Mulai</span>
-        <p class="price-rooms">{{ $package->roomRangeLabel() }}</p>
       @endif
       <p class="price-line">
         <span class="price-currency">Rp</span>
         <span class="price-amount">{{ number_format((int) $package->price, 0, ',', '.') }}</span>
-        <span class="price-unit">/jamaah</span>
+        <span class="price-unit">{{ $priceUnit }}</span>
       </p>
       @if($package->formattedOriginalPrice())
         <p class="price-was">
@@ -43,13 +48,17 @@
       @endif
     </div>
     <h3>{{ $package->title }}</h3>
-    <p class="card-meta-row">
-      <span><span class="meta-ico tone-blue"><i class="bi bi-calendar3"></i></span> {{ $departureDate }}</span>
-      <span><span class="meta-ico tone-green"><i class="bi bi-geo-alt"></i></span> {{ $package->cityLabel() }}</span>
-    </p>
-    <ul class="specs specs-icons">
+    <ul class="card-details">
       <li>
-        <span class="spec-ico tone-gold"><i class="bi bi-buildings"></i></span>
+        <span class="meta-ico tone-blue"><i class="bi bi-calendar3"></i></span>
+        <span>{{ $departureDate }}</span>
+      </li>
+      <li>
+        <span class="meta-ico tone-green"><i class="bi bi-geo-alt"></i></span>
+        <span>{{ $package->cityLabel() }}</span>
+      </li>
+      <li>
+        <span class="meta-ico tone-gold"><i class="bi bi-buildings"></i></span>
         <span class="hotel-stars-rating" aria-label="{{ $package->hotel_stars }} dari 5 bintang">
           @for($i = 1; $i <= 5; $i++)
             <i class="bi {{ $i <= (int) $package->hotel_stars ? 'bi-star-fill is-filled' : 'bi-star' }}"></i>
@@ -57,28 +66,24 @@
         </span>
       </li>
       <li>
-        <span class="spec-ico tone-violet"><i class="bi bi-building"></i></span>
-        <span>{{ $package->typeLabel() }}</span>
-      </li>
-      <li>
-        <span class="spec-ico tone-blue"><i class="bi bi-calendar3"></i></span>
+        <span class="meta-ico tone-blue"><i class="bi bi-clock"></i></span>
         <span>{{ $package->duration_days }} hari</span>
       </li>
-      @if(count($package->roomPriceList()) === 1)
       <li>
-        <span class="spec-ico tone-amber"><i class="bi bi-people"></i></span>
-        <span>{{ $package->roomRangeLabel() }}</span>
-      </li>
-      @endif
-      <li>
-        <span class="spec-ico tone-blue"><i class="bi bi-airplane"></i></span>
+        <span class="meta-ico tone-blue"><i class="bi bi-airplane"></i></span>
         <span>{{ $package->airline ?: 'Maskapai berizin' }}</span>
       </li>
       <li>
-        <span class="spec-ico tone-rose"><i class="bi bi-ticket-perforated"></i></span>
+        <span class="meta-ico tone-rose"><i class="bi bi-ticket-perforated"></i></span>
         <span>{{ $package->seatsLine() }}</span>
       </li>
     </ul>
+    @if($roomOptions !== '')
+      <p class="card-room-row">
+        <span class="meta-ico tone-amber"><i class="bi bi-people"></i></span>
+        <span>{{ $roomOptions }}</span>
+      </p>
+    @endif
     <p class="card-foot">Lihat detail <i class="bi bi-chevron-right"></i></p>
   </div>
 </a>

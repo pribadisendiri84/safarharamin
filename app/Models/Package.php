@@ -380,6 +380,23 @@ class Package extends Model
         return $this->roomTypes()[$this->room_type] ?? self::ROOM_TYPES[$this->room_type] ?? $this->room_type;
     }
 
+    public function startingRoomLabel(): ?string
+    {
+        $rows = $this->roomPriceList();
+        if ($rows === []) {
+            return null;
+        }
+
+        $cheapest = collect($rows)->sortBy('price')->first();
+
+        return strtolower($cheapest['label']);
+    }
+
+    public function hasMultipleRoomPrices(): bool
+    {
+        return count($this->roomPriceList()) > 1;
+    }
+
     public function formattedMoney(int $amount): string
     {
         return 'Rp '.number_format($amount, 0, ',', '.');
