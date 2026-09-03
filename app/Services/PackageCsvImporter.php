@@ -196,10 +196,6 @@ class PackageCsvImporter
         $priceTriple = $this->parseMoney($data['harga_triple'] ?? '');
         $priceDouble = $this->parseMoney($data['harga_double'] ?? '');
 
-        if ($priceQuad === null || $priceTriple === null || $priceDouble === null) {
-            return 'Harga quad/triple/double harus angka positif.';
-        }
-
         $hotelStars = $this->parseRequiredInt($data['bintang_hotel'] ?? '', 3, 5);
         if ($hotelStars === null) {
             return 'Bintang hotel harus 3–5.';
@@ -237,7 +233,7 @@ class PackageCsvImporter
             'departure_city' => $city,
             'departure_date' => $departureDate,
             'duration_days' => $duration,
-            'price' => $priceQuad,
+            'price' => $priceQuad ?? $priceTriple ?? $priceDouble ?? 0,
             'price_quad' => $priceQuad,
             'price_triple' => $priceTriple,
             'price_double' => $priceDouble,
@@ -247,7 +243,7 @@ class PackageCsvImporter
             'hotel_madinah' => $this->optionalString($data['hotel_madinah'] ?? '', 120),
             'hotel_stars' => $hotelStars,
             'airline' => $this->optionalString($data['maskapai'] ?? '', 80),
-            'room_type' => 'quad',
+            'room_type' => $priceQuad !== null ? 'quad' : ($priceTriple !== null ? 'triple' : ($priceDouble !== null ? 'double' : 'quad')),
             'seats_total' => $seatsTotal,
             'seats_left' => $seatsLeft,
             'facilities' => $this->parseList($data['fasilitas'] ?? ''),

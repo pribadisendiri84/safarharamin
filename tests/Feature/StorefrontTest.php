@@ -177,6 +177,55 @@ class StorefrontTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_create_package_with_single_room_price(): void
+    {
+        $user = User::factory()->create(['email' => 'admin@safarharamin.id']);
+
+        Storage::fake('public');
+
+        $this->actingAs($user)
+            ->post('/admin/packages', [
+                'title' => 'Umroh Double Only',
+                'type' => 'umroh',
+                'departure_city' => 'jakarta',
+                'duration_days' => 9,
+                'price_double' => 38500000,
+                'hotel_stars' => 4,
+                'seats_total' => 20,
+                'seats_left' => 20,
+                'status' => 'published',
+                'photos' => [UploadedFile::fake()->image('flyer.jpg', 400, 560)],
+            ])
+            ->assertRedirect(route('admin.packages.index'));
+
+        $this->assertDatabaseHas('packages', [
+            'title' => 'Umroh Double Only',
+            'price' => 38500000,
+            'price_quad' => null,
+            'price_triple' => null,
+            'price_double' => 38500000,
+            'room_type' => 'double',
+        ]);
+    }
+
+    public function test_admin_package_requires_at_least_one_room_price(): void
+    {
+        $user = User::factory()->create(['email' => 'admin@safarharamin.id']);
+
+        $this->actingAs($user)
+            ->post('/admin/packages', [
+                'title' => 'Tanpa Harga Kamar',
+                'type' => 'umroh',
+                'departure_city' => 'jakarta',
+                'duration_days' => 9,
+                'hotel_stars' => 4,
+                'seats_total' => 20,
+                'seats_left' => 20,
+                'status' => 'draft',
+            ])
+            ->assertSessionHasErrors('price_quad');
+    }
+
     public function test_admin_cannot_publish_package_without_flyer(): void
     {
         $user = User::factory()->create(['email' => 'admin@safarharamin.id']);

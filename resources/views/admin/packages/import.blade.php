@@ -14,9 +14,8 @@
 </div>
 
 <div class="panel form-pad">
-  <p class="sub"><strong>Kolom wajib:</strong> judul, jenis, embarkasi, tanggal, durasi, harga_quad, harga_triple, harga_double, bintang_hotel, seat_total, seat_sisa.</p>
-  <p class="sub">Harga quad/triple/double = <strong>harga per jamaah</strong> untuk isi kamar 4 / 3 / 2 orang.</p>
-  <p class="sub"><strong>Opsional:</strong> maskapai, hotel_makkah, hotel_madinah, catatan_harga, fasilitas, exclude, deskripsi, itinerary, status, unggulan, kuota_terbatas.</p>
+  <p class="sub"><strong>Kolom wajib:</strong> judul, jenis, embarkasi, tanggal, durasi, bintang_hotel, seat_total, seat_sisa.</p>
+  <p class="sub"><strong>Opsional:</strong> harga_quad, harga_triple, harga_double (harga per jamaah per tipe kamar), maskapai, hotel_makkah, hotel_madinah, catatan_harga, fasilitas, exclude, deskripsi, itinerary, status, unggulan, kuota_terbatas.</p>
   <p class="sub">Fasilitas &amp; exclude: pisah dengan <code>|</code> (pipe). Embarkasi = slug kota, mis. <code>jakarta</code>.</p>
 </div>
 

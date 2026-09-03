@@ -270,15 +270,17 @@ class PackageController extends Controller
      */
     private function validated(Request $request, ?Package $existing = null): array
     {
+        $this->normalizeRoomPrices($request);
+
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
             'type' => ['required', Rule::in(array_keys(Package::TYPES))],
             'departure_city' => ['required', Rule::exists('cities', 'slug')->whereNull('deleted_at')],
             'departure_date' => ['nullable', 'date'],
             'duration_days' => ['required', 'integer', 'min:7', 'max:45'],
-            'price_quad' => ['required', 'integer', 'min:1'],
-            'price_triple' => ['required', 'integer', 'min:1'],
-            'price_double' => ['required', 'integer', 'min:1'],
+            'price_quad' => ['nullable', 'integer', 'min:1'],
+            'price_triple' => ['nullable', 'integer', 'min:1'],
+            'price_double' => ['nullable', 'integer', 'min:1'],
             'original_price' => ['nullable', 'integer', 'min:1'],
             'price_note' => ['nullable', 'string', 'max:180'],
             'hotel_makkah' => ['nullable', 'string', 'max:120'],
@@ -297,13 +299,26 @@ class PackageController extends Controller
         ]);
 
         unset($data['facilities_text'], $data['exclusions_text'], $data['photos']);
-        $data['price'] = $data['price_quad'];
-        $data['room_type'] = 'quad';
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_hot'] = $request->boolean('is_hot');
         $data['home_sort'] = $this->resolveHomeSort($data['is_featured'], $existing);
 
         return $data;
+    }
+
+    private function normalizeRoomPrices(Request $request): void
+    {
+        foreach (['price_quad', 'price_triple', 'price_double'] as $field) {
+            $raw = $request->input($field);
+            if ($raw === null || $raw === '') {
+                $request->merge([$field => null]);
+
+                continue;
+            }
+
+            $digits = preg_replace('/\D/', '', (string) $raw);
+            $request->merge([$field => $digits !== '' ? (int) $digits : null]);
+        }
     }
 
     private function resolveHomeSort(bool $isFeatured, ?Package $existing = null): ?int

@@ -106,10 +106,38 @@ class Package extends Model
                 $package->slug = static::uniqueSlug($package->title, $package->id);
             }
 
-            if ($package->price_quad) {
-                $package->price = $package->price_quad;
-            }
+            $package->syncPrimaryPrice();
         });
+    }
+
+    public function syncPrimaryPrice(): void
+    {
+        $filled = [];
+
+        foreach (array_keys(self::ROOM_TYPES) as $key) {
+            $value = $this->getAttribute('price_'.$key);
+            if ($value !== null && (int) $value > 0) {
+                $filled[$key] = (int) $value;
+                $this->setAttribute('price_'.$key, (int) $value);
+            } else {
+                $this->setAttribute('price_'.$key, null);
+            }
+        }
+
+        if ($filled === []) {
+            $this->price = 0;
+
+            return;
+        }
+
+        $this->price = min($filled);
+
+        foreach (array_keys(self::ROOM_TYPES) as $key) {
+            if (isset($filled[$key])) {
+                $this->room_type = $key;
+                break;
+            }
+        }
     }
 
     public function inquiries(): HasMany
