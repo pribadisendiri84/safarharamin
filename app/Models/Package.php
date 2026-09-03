@@ -154,6 +154,25 @@ class Package extends Model
         return in_array($this->type, self::HAJI_TYPES, true);
     }
 
+    /**
+     * Default values for operational departure forms sourced from catalog data.
+     *
+     * @return array<string, string|null>
+     */
+    public function departureDefaults(): array
+    {
+        return [
+            'program_name' => $this->title,
+            'program_kind' => $this->isHaji() ? 'haji' : 'umroh',
+            'departure_date' => $this->departure_date?->format('Y-m-d'),
+            'airline' => $this->airline,
+            'hotel_makkah' => $this->hotel_makkah,
+            'hotel_madinah' => $this->hotel_madinah,
+            'hotel_transit' => $this->hotel_transit,
+            'hotel_maktab' => $this->hotel_maktab,
+        ];
+    }
+
     /** @return array<string, string> */
     public function roomTypes(): array
     {

@@ -10,6 +10,9 @@
     </form>
     @endif
   @else
+    @isset($detailsEdit)
+      <a class="btn gray compact" href="{{ $detailsEdit }}">Edit</a>
+    @endisset
     @isset($edit)
       <a class="btn gray compact" href="{{ $edit }}">{{ $editLabel ?? 'Edit' }}</a>
     @endisset

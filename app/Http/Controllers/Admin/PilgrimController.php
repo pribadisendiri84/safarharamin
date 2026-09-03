@@ -93,7 +93,8 @@ class PilgrimController extends Controller
             'departures' => $departures = Departure::query()
                 ->orderBy('program_kind')
                 ->orderBy('program_name')
-                ->get(['id', 'program_name', 'program_kind', 'departure_date', 'hotel_makkah', 'hotel_madinah', 'hotel_transit', 'hotel_maktab']),
+                ->get(['id', 'program_name', 'program_kind', 'departure_date', 'airline', 'flight_number', 'hotel_makkah', 'hotel_madinah', 'hotel_transit', 'hotel_maktab']),
+            'departureInfos' => $this->departureInfos($departures),
         ]);
     }
 
@@ -101,7 +102,6 @@ class PilgrimController extends Controller
     {
         $data = $this->validated($request);
         $pilgrim = Pilgrim::query()->create($data);
-        $this->syncDepartureHotels($request, Departure::query()->findOrFail($data['departure_id']));
 
         return redirect()
             ->route('admin.operations.pilgrims.show', $pilgrim)
@@ -125,11 +125,12 @@ class PilgrimController extends Controller
         $departures = Departure::query()
             ->orderBy('program_kind')
             ->orderBy('program_name')
-            ->get(['id', 'program_name', 'program_kind', 'departure_date', 'hotel_makkah', 'hotel_madinah', 'hotel_transit', 'hotel_maktab']);
+            ->get(['id', 'program_name', 'program_kind', 'departure_date', 'airline', 'flight_number', 'hotel_makkah', 'hotel_madinah', 'hotel_transit', 'hotel_maktab']);
 
         return view('admin.operations.pilgrims.form', [
             'pilgrim' => $pilgrim,
             'departures' => $departures,
+            'departureInfos' => $this->departureInfos($departures),
         ]);
     }
 
@@ -147,7 +148,6 @@ class PilgrimController extends Controller
         }
 
         $pilgrim->update($data);
-        $this->syncDepartureHotels($request, Departure::query()->findOrFail($data['departure_id']));
 
         return redirect()
             ->route('admin.operations.pilgrims.show', $pilgrim)
@@ -193,17 +193,23 @@ class PilgrimController extends Controller
         return $request->validate($rules);
     }
 
-    private function syncDepartureHotels(Request $request, Departure $departure): void
+    /**
+     * @param  \Illuminate\Support\Collection<int, Departure>  $departures
+     * @return array<int, array<string, mixed>>
+     */
+    private function departureInfos($departures): array
     {
-        if (! $departure->isHaji()) {
-            return;
-        }
-
-        $departure->update($request->validate([
-            'hotel_makkah' => ['nullable', 'string', 'max:180'],
-            'hotel_madinah' => ['nullable', 'string', 'max:180'],
-            'hotel_transit' => ['nullable', 'string', 'max:180'],
-            'hotel_maktab' => ['nullable', 'string', 'max:180'],
-        ]));
+        return $departures->mapWithKeys(fn (Departure $departure) => [
+            $departure->id => [
+                'program_kind' => $departure->program_kind,
+                'airline' => $departure->airline,
+                'flight_number' => $departure->flight_number,
+                'hotel_makkah' => $departure->hotel_makkah,
+                'hotel_madinah' => $departure->hotel_madinah,
+                'hotel_transit' => $departure->hotel_transit,
+                'hotel_maktab' => $departure->hotel_maktab,
+                'edit_url' => route('admin.operations.departures.edit', $departure),
+            ],
+        ])->all();
     }
 }

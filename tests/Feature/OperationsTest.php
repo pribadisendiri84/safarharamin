@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Departure;
+use App\Models\Package;
 use App\Models\Pilgrim;
 use App\Models\Room;
 use App\Models\User;
@@ -78,6 +79,71 @@ class OperationsTest extends TestCase
             'departure_id' => $departure->id,
             'room_type' => 'quad',
         ]);
+    }
+
+    public function test_departure_create_prefills_defaults_from_catalog_package(): void
+    {
+        $admin = $this->admin();
+        $package = Package::query()->create([
+            'title' => 'Umroh Katalog April',
+            'slug' => 'umroh-katalog-april',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-04-20',
+            'duration_days' => 9,
+            'price_quad' => 29500000,
+            'hotel_stars' => 4,
+            'room_type' => 'quad',
+            'seats_total' => 20,
+            'seats_left' => 20,
+            'status' => 'published',
+            'airline' => 'Garuda Indonesia',
+            'hotel_makkah' => 'Swissotel Makkah',
+            'hotel_madinah' => 'Anwar Al Madinah Movenpick',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.operations.departures.create', ['package_id' => $package->id]))
+            ->assertOk()
+            ->assertSee('value="Umroh Katalog April"', false)
+            ->assertSee('value="2026-04-20"', false)
+            ->assertSee('value="Garuda Indonesia"', false)
+            ->assertSee('value="Swissotel Makkah"', false)
+            ->assertSee('value="Anwar Al Madinah Movenpick"', false)
+            ->assertSee('"program_kind":"umroh"', false);
+    }
+
+    public function test_departure_create_prefills_haji_hotels_from_catalog_package(): void
+    {
+        $admin = $this->admin();
+        $package = Package::query()->create([
+            'title' => 'Haji Plus Katalog',
+            'slug' => 'haji-plus-katalog',
+            'type' => 'haji_plus',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-06-01',
+            'duration_days' => 40,
+            'price_double_plus' => 95000000,
+            'hotel_stars' => 5,
+            'room_type' => 'double_plus',
+            'seats_total' => 10,
+            'seats_left' => 10,
+            'status' => 'published',
+            'airline' => 'Saudia',
+            'hotel_makkah' => 'Makkah Clock Tower',
+            'hotel_madinah' => 'Madinah Pullman',
+            'hotel_transit' => 'Transit Jeddah',
+            'hotel_maktab' => 'Maktab Mina 5',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.operations.departures.create', ['package_id' => $package->id]))
+            ->assertOk()
+            ->assertSee('value="Haji Plus Katalog"', false)
+            ->assertSee('value="Saudia"', false)
+            ->assertSee('value="Transit Jeddah"', false)
+            ->assertSee('value="Maktab Mina 5"', false)
+            ->assertSee('"program_kind":"haji"', false);
     }
 
     public function test_auto_grouping_respects_room_capacity(): void
@@ -512,18 +578,19 @@ class OperationsTest extends TestCase
             ->assertSessionHasErrors('room_type');
     }
 
-    public function test_haji_pilgrim_form_syncs_departure_hotels(): void
+    public function test_pilgrim_form_does_not_update_departure_hotels(): void
     {
         $admin = $this->admin();
         $departure = Departure::query()->create([
-            'program_name' => 'Haji Hotel Sync',
+            'program_name' => 'Haji Hotel Readonly',
             'program_kind' => 'haji',
+            'hotel_makkah' => 'Hotel Lama',
         ]);
 
         $this->actingAs($admin)
             ->post(route('admin.operations.pilgrims.store'), [
                 'departure_id' => $departure->id,
-                'full_name' => 'Jamaah Hotel Sync',
+                'full_name' => 'Jamaah Hotel Readonly',
                 'room_type' => 'double_plus',
                 'hotel_makkah' => 'Makkah Tower',
                 'hotel_madinah' => 'Madinah Oberoi',
@@ -534,10 +601,10 @@ class OperationsTest extends TestCase
 
         $this->assertDatabaseHas('departures', [
             'id' => $departure->id,
-            'hotel_makkah' => 'Makkah Tower',
-            'hotel_madinah' => 'Madinah Oberoi',
-            'hotel_transit' => 'Transit Dubai',
-            'hotel_maktab' => 'Maktab Mina 12',
+            'hotel_makkah' => 'Hotel Lama',
+            'hotel_madinah' => null,
+            'hotel_transit' => null,
+            'hotel_maktab' => null,
         ]);
     }
 
@@ -547,14 +614,45 @@ class OperationsTest extends TestCase
         Departure::query()->create([
             'program_name' => 'Haji Form UI',
             'program_kind' => 'haji',
+            'airline' => 'Saudia',
+            'hotel_makkah' => 'Makkah Tower',
         ]);
 
         $this->actingAs($admin)
             ->get(route('admin.operations.pilgrims.create', ['kind' => 'haji']))
             ->assertOk()
             ->assertSee('Double Plus', false)
-            ->assertSee('Hotel Transit', false)
-            ->assertSee('Maktab', false)
-            ->assertSee('Data khusus haji', false);
+            ->assertSee('Program keberangkatan', false)
+            ->assertSee('Ubah di Keberangkatan', false)
+            ->assertSee('Data khusus haji', false)
+            ->assertDontSee('name="hotel_makkah"', false);
+    }
+
+    public function test_umroh_pilgrim_show_displays_departure_flight_and_hotels(): void
+    {
+        $admin = $this->admin();
+        $departure = Departure::query()->create([
+            'program_name' => 'Umroh Maret',
+            'program_kind' => 'umroh',
+            'airline' => 'Garuda',
+            'flight_number' => 'GA-980',
+            'hotel_makkah' => 'Swissotel',
+            'hotel_madinah' => 'Anwar Al Madinah',
+        ]);
+        $pilgrim = Pilgrim::query()->create([
+            'departure_id' => $departure->id,
+            'full_name' => 'Jamaah Umroh Info',
+            'room_type' => 'quad',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.operations.pilgrims.show', $pilgrim))
+            ->assertOk()
+            ->assertSee('Program keberangkatan', false)
+            ->assertSee('Garuda', false)
+            ->assertSee('GA-980', false)
+            ->assertSee('Swissotel', false)
+            ->assertSee('Anwar Al Madinah', false)
+            ->assertSee('Edit keberangkatan', false);
     }
 }

@@ -55,7 +55,7 @@ class VisitorTrackingTest extends TestCase
         $this->withUnencryptedCookie(VisitorTracker::COOKIE_ID, $vid)
             ->withUnencryptedCookie(VisitorTracker::COOKIE_SRC, $src)
             ->get(route('go.whatsapp', ['from' => 'header']))
-            ->assertRedirect('https://wa.me/6281234567890');
+            ->assertRedirect('https://wa.me/6281234567890?text='.rawurlencode('Halo SafarHaramin, saya ingin tanya paket haji/umroh.'));
 
         $this->assertDatabaseHas('visitor_events', [
             'type' => VisitorEvent::TYPE_WA_CLICK,

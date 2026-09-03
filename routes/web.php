@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\AirlineController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\HistoryController;
+use App\Http\Controllers\Admin\HotelController;
 use App\Http\Controllers\Admin\InquiryController;
 use App\Http\Controllers\Admin\InquiryPilgrimImportController;
 use App\Http\Controllers\Admin\PackageController as AdminPackageController;
@@ -68,6 +70,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('cities/{city}', [CityController::class, 'update'])->name('cities.update');
             Route::delete('cities/{city}', [CityController::class, 'destroy'])->name('cities.destroy');
             Route::post('cities/{city}/restore', [CityController::class, 'restore'])->withTrashed()->name('cities.restore');
+            Route::get('hotels', [HotelController::class, 'index'])->name('hotels.index');
+            Route::post('hotels', [HotelController::class, 'store'])->name('hotels.store');
+            Route::put('hotels/{hotel}', [HotelController::class, 'update'])->name('hotels.update');
+            Route::delete('hotels/{hotel}', [HotelController::class, 'destroy'])->name('hotels.destroy');
+            Route::post('hotels/{hotel}/restore', [HotelController::class, 'restore'])->withTrashed()->name('hotels.restore');
+            Route::get('airlines', [AirlineController::class, 'index'])->name('airlines.index');
+            Route::post('airlines', [AirlineController::class, 'store'])->name('airlines.store');
+            Route::put('airlines/{airline}', [AirlineController::class, 'update'])->name('airlines.update');
+            Route::delete('airlines/{airline}', [AirlineController::class, 'destroy'])->name('airlines.destroy');
+            Route::post('airlines/{airline}/restore', [AirlineController::class, 'restore'])->withTrashed()->name('airlines.restore');
             Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
             Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
         });
@@ -75,6 +87,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('inquiries', [InquiryController::class, 'index'])->name('inquiries.index');
         Route::get('inquiries/create', [InquiryController::class, 'create'])->name('inquiries.create');
         Route::post('inquiries', [InquiryController::class, 'store'])->name('inquiries.store');
+        Route::get('inquiries/{inquiry}/edit', [InquiryController::class, 'edit'])->name('inquiries.edit');
+        Route::put('inquiries/{inquiry}/edit', [InquiryController::class, 'updateLead'])->name('inquiries.edit.update');
         Route::get('inquiries/{inquiry}', [InquiryController::class, 'show'])->withTrashed()->name('inquiries.show');
         Route::put('inquiries/{inquiry}', [InquiryController::class, 'update'])->name('inquiries.update');
         Route::post('inquiries/{inquiry}/notes', [InquiryController::class, 'storeNote'])->name('inquiries.notes.store');

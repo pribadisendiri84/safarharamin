@@ -66,7 +66,7 @@ class InquiryController extends Controller
 
     public function store(Request $request)
     {
-        $data = $this->validatedLead($request);
+        $data = $this->validatedLead($request, creating: true);
         $data['source'] = Inquiry::SOURCE_TEAM;
         $data['status'] = Inquiry::STATUS_NEW;
         if ($request->user()?->isStaff()) {
@@ -78,6 +78,42 @@ class InquiryController extends Controller
         $inquiry = Inquiry::query()->create($data);
 
         return redirect()->route('admin.inquiries.show', $inquiry)->with('ok', 'Pengajuan dicatat. PIC: '.$inquiry->picName().'.');
+    }
+
+    public function edit(Inquiry $inquiry)
+    {
+        $this->authorizeInquiry($inquiry);
+
+        if ($inquiry->trashed()) {
+            return redirect()->route('admin.inquiries.show', $inquiry);
+        }
+
+        return view('admin.inquiries.form', [
+            'inquiry' => $inquiry,
+            'packages' => Package::query()->published()->orderBy('title')->get(['id', 'title', 'price']),
+            'pics' => request()->user()?->canSeeLeadSources()
+                ? User::query()->orderBy('name')->get(['id', 'name'])
+                : collect(),
+        ]);
+    }
+
+    public function updateLead(Request $request, Inquiry $inquiry)
+    {
+        $this->authorizeInquiry($inquiry);
+
+        if ($inquiry->trashed()) {
+            return redirect()->route('admin.inquiries.show', $inquiry);
+        }
+
+        $data = $this->validatedLead($request, creating: false);
+
+        if ($request->user()?->isStaff()) {
+            unset($data['pic_id']);
+        }
+
+        $inquiry->update($data);
+
+        return redirect()->route('admin.inquiries.show', $inquiry)->with('ok', 'Data pengajuan diperbarui.');
     }
 
     public function show(Inquiry $inquiry)
@@ -212,9 +248,9 @@ class InquiryController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function validatedLead(Request $request): array
+    private function validatedLead(Request $request, bool $creating = true): array
     {
-        return $request->validate([
+        $rules = [
             'kind' => ['required', Rule::in(['daftar', 'tanya'])],
             'name' => ['required', 'string', 'max:120'],
             'phone' => ['required', 'string', 'max:30'],
@@ -223,7 +259,12 @@ class InquiryController extends Controller
             'package_id' => ['nullable', 'exists:packages,id'],
             'pax' => ['required', 'integer', 'min:1', 'max:20'],
             'notes' => ['nullable', 'string', 'max:2000'],
-            'pic_id' => ['required', 'exists:users,id'],
-        ]);
+        ];
+
+        if ($request->user()?->canSeeLeadSources()) {
+            $rules['pic_id'] = [$creating ? 'required' : 'nullable', 'exists:users,id'];
+        }
+
+        return $request->validate($rules);
     }
 }

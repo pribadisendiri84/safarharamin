@@ -106,6 +106,50 @@ class AdminInquiryFollowUpTest extends TestCase
         $this->assertSame(Inquiry::STATUS_NEW, $inquiry->fresh()->status);
     }
 
+    public function test_admin_can_edit_inquiry_lead_data(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $inquiry = $this->makeInquiry();
+
+        $this->actingAs($admin)
+            ->get(route('admin.inquiries.edit', $inquiry))
+            ->assertOk()
+            ->assertSee('Edit pengajuan')
+            ->assertSee($inquiry->name, false);
+
+        $this->actingAs($admin)
+            ->put(route('admin.inquiries.edit.update', $inquiry), [
+                'kind' => 'tanya',
+                'name' => 'Budi Baru',
+                'phone' => '08111111111',
+                'email' => 'budi@example.com',
+                'pax' => 3,
+                'notes' => 'Nomor sudah dikoreksi.',
+            ])
+            ->assertRedirect(route('admin.inquiries.show', $inquiry));
+
+        $inquiry->refresh();
+        $this->assertSame('tanya', $inquiry->kind);
+        $this->assertSame('Budi Baru', $inquiry->name);
+        $this->assertSame('08111111111', $inquiry->phone);
+        $this->assertSame('budi@example.com', $inquiry->email);
+        $this->assertSame(3, $inquiry->pax);
+        $this->assertSame('Nomor sudah dikoreksi.', $inquiry->notes);
+    }
+
+    public function test_inquiry_list_shows_edit_button(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $inquiry = $this->makeInquiry();
+
+        $this->actingAs($admin)
+            ->get(route('admin.inquiries.index'))
+            ->assertOk()
+            ->assertSee(route('admin.inquiries.edit', $inquiry), false)
+            ->assertSee('Edit', false)
+            ->assertSee('Follow up', false);
+    }
+
     /**
      * @param  array<string, mixed>  $overrides
      */

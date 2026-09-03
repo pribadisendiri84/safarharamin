@@ -10,6 +10,7 @@
   <div class="actions head-actions">
     <a class="btn ghost" href="{{ route('admin.inquiries.index') }}">Kembali</a>
     @unless($inquiry->trashed())
+      <a class="btn ghost" href="{{ route('admin.inquiries.edit', $inquiry) }}">Edit data</a>
       <a class="btn gray" href="{{ $inquiry->whatsappUrl() }}" target="_blank">@include('admin.partials.icon', ['name' => 'phone']) Chat WhatsApp</a>
     @endunless
   </div>

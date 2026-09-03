@@ -29,6 +29,7 @@ class SettingController extends Controller
             'wa_number' => ['required', 'string', 'max:20'],
             'wa_float_enabled' => ['nullable', 'boolean'],
             'wa_float_label' => ['required', 'string', 'max:80'],
+            'wa_msg_header' => ['required', 'string', 'max:2000'],
             'wa_msg_float' => ['required', 'string', 'max:2000'],
             'wa_msg_package' => ['required', 'string', 'max:2000'],
             'wa_msg_register' => ['required', 'string', 'max:2000'],
@@ -42,6 +43,7 @@ class SettingController extends Controller
         Setting::setValue('wa_number', preg_replace('/\D+/', '', $data['wa_number']) ?? '');
         Setting::setValue(WaMessages::KEY_FLOAT_ENABLED, $request->boolean('wa_float_enabled') ? '1' : '0');
         Setting::setValue(WaMessages::KEY_FLOAT_LABEL, trim($data['wa_float_label']));
+        Setting::setValue(WaMessages::KEY_HEADER, trim($data['wa_msg_header']));
         Setting::setValue(WaMessages::KEY_FLOAT, trim($data['wa_msg_float']));
         Setting::setValue(WaMessages::KEY_PACKAGE, trim($data['wa_msg_package']));
         Setting::setValue(WaMessages::KEY_REGISTER, trim($data['wa_msg_register']));

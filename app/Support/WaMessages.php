@@ -9,6 +9,8 @@ use App\Models\Setting;
 
 class WaMessages
 {
+    public const KEY_HEADER = 'wa_msg_header';
+
     public const KEY_FLOAT = 'wa_msg_float';
 
     public const KEY_FLOAT_LABEL = 'wa_float_label';
@@ -20,6 +22,8 @@ class WaMessages
     public const KEY_REGISTER = 'wa_msg_register';
 
     public const KEY_INQUIRY_REPLY = 'wa_msg_inquiry_reply';
+
+    public const DEFAULT_HEADER = 'Halo {site}, saya ingin tanya paket haji/umroh.';
 
     public const DEFAULT_FLOAT = 'Halo {site}, saya ingin tanya paket haji/umroh.';
 
@@ -33,6 +37,13 @@ WA: {phone}';
     public const DEFAULT_REGISTER = 'Halo {site}, saya {name} ingin daftar{package_part} ({pax} jamaah) dari {city}. Mohon dihubungi.';
 
     public const DEFAULT_INQUIRY_REPLY = 'Halo {name}, saya dari {site} terkait pengajuan paket Anda.';
+
+    public static function header(): string
+    {
+        return self::render(self::KEY_HEADER, self::DEFAULT_HEADER, [
+            'site' => SiteProfile::current()->name,
+        ]);
+    }
 
     public static function float(): string
     {
@@ -109,6 +120,7 @@ WA: {phone}';
     public static function adminTemplates(): array
     {
         return [
+            self::KEY_HEADER => self::template(self::KEY_HEADER, self::DEFAULT_HEADER),
             self::KEY_FLOAT_ENABLED => self::floatEnabled() ? '1' : '0',
             self::KEY_FLOAT_LABEL => self::floatLabel(),
             self::KEY_FLOAT => self::template(self::KEY_FLOAT, self::DEFAULT_FLOAT),

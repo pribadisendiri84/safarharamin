@@ -40,20 +40,19 @@ class DepartureController extends Controller
 
     public function create(Request $request)
     {
-        $package = null;
-        if ($request->filled('package_id')) {
-            $package = Package::query()->find($request->integer('package_id'));
-        }
+        $package = $request->filled('package_id')
+            ? Package::query()->find($request->integer('package_id'))
+            : null;
+
+        $defaults = $package?->departureDefaults() ?? [];
 
         return view('admin.operations.departures.form', [
-            'departure' => new Departure([
-                'program_kind' => $package && in_array($package->type, Package::HAJI_TYPES, true) ? 'haji' : 'umroh',
-                'program_name' => $package?->title,
-                'departure_date' => $package?->departure_date,
-                'airline' => $package?->airline,
-                'package_id' => $package?->id,
-            ]),
-            'packages' => Package::query()->orderBy('title')->get(['id', 'title', 'type', 'departure_date']),
+            'departure' => new Departure(array_merge(
+                ['program_kind' => 'umroh'],
+                $defaults,
+                ['package_id' => $package?->id],
+            )),
+            ...$this->departureFormData(),
         ]);
     }
 
@@ -70,7 +69,7 @@ class DepartureController extends Controller
     {
         return view('admin.operations.departures.form', [
             'departure' => $departure,
-            'packages' => Package::query()->orderBy('title')->get(['id', 'title', 'type', 'departure_date']),
+            ...$this->departureFormData(),
         ]);
     }
 
@@ -117,5 +116,18 @@ class DepartureController extends Controller
             'hotel_maktab' => ['nullable', 'string', 'max:180'],
             'notes' => ['nullable', 'string'],
         ]);
+    }
+
+    /** @return array{packages: \Illuminate\Support\Collection<int, Package>, packageCatalog: array<int, array<string, string|null>>} */
+    private function departureFormData(): array
+    {
+        $packages = Package::query()->orderBy('title')->get();
+
+        return [
+            'packages' => $packages,
+            'packageCatalog' => $packages
+                ->mapWithKeys(fn (Package $package) => [$package->id => $package->departureDefaults()])
+                ->all(),
+        ];
     }
 }

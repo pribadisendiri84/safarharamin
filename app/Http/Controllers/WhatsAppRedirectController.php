@@ -21,6 +21,7 @@ class WhatsAppRedirectController extends Controller
 
         $number = preg_replace('/\D+/', '', SiteProfile::current()->waNumber) ?: SiteProfile::DEFAULT_WA;
         $text = match ($from) {
+            'header' => WaMessages::header(),
             'float' => WaMessages::float(),
             'form' => (string) $request->session()->pull('wa_text', ''),
             default => '',

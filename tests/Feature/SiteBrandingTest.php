@@ -37,6 +37,15 @@ class SiteBrandingTest extends TestCase
             ->assertRedirect('https://wa.me/6281234567890?text='.rawurlencode('Assalamualaikum Arminareka Perdana, mau konsultasi umroh.'));
     }
 
+    public function test_whatsapp_header_message_can_be_customized_from_admin(): void
+    {
+        Setting::setValue('site_name', 'Arminareka Perdana');
+        Setting::setValue(WaMessages::KEY_HEADER, 'Halo {site}, saya mau tanya paket dari header.');
+
+        $this->get(route('go.whatsapp', ['from' => 'header']))
+            ->assertRedirect('https://wa.me/6281234567890?text='.rawurlencode('Halo Arminareka Perdana, saya mau tanya paket dari header.'));
+    }
+
     public function test_whatsapp_float_button_label_and_visibility_follow_settings(): void
     {
         Setting::setValue(WaMessages::KEY_FLOAT_LABEL, 'Chat Admin Sekarang');
@@ -62,6 +71,7 @@ class SiteBrandingTest extends TestCase
             'wa_number' => '6281111111111',
             'wa_float_enabled' => '1',
             'wa_float_label' => WaMessages::DEFAULT_FLOAT_LABEL,
+            'wa_msg_header' => WaMessages::DEFAULT_HEADER,
             'wa_msg_float' => WaMessages::DEFAULT_FLOAT,
             'wa_msg_package' => WaMessages::DEFAULT_PACKAGE,
             'wa_msg_register' => WaMessages::DEFAULT_REGISTER,

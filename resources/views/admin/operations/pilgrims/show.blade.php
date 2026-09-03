@@ -4,6 +4,7 @@
 @section('content')
 @php
   $isHaji = $pilgrim->departure?->isHaji() ?? false;
+  $departure = $pilgrim->departure;
   $transactionTypes = \App\Models\PilgrimTransaction::typesFor($isHaji);
 @endphp
 <div class="page-head">
@@ -15,6 +16,7 @@
   <div class="actions head-actions">
     <a class="btn gray" href="{{ route('admin.operations.pilgrims.edit', $pilgrim) }}">Edit</a>
     @if($pilgrim->departure)
+      <a class="btn gray" href="{{ route('admin.operations.departures.edit', $pilgrim->departure) }}">Edit keberangkatan</a>
       <a class="btn" href="{{ route('admin.operations.grouping.index', [$pilgrim->departure, 'tab' => $pilgrim->room_type]) }}">Grouping room</a>
     @endif
   </div>
@@ -32,18 +34,32 @@
       @if($isHaji)
         <div class="ops-spec-row"><dt>ID / catatan haji</dt><dd>{{ $pilgrim->haji_registration_id ?: '—' }}</dd></div>
         <div class="ops-spec-row"><dt>Nomor porsi</dt><dd>{{ $pilgrim->haji_portion_number ?: '—' }}</dd></div>
-        @if($pilgrim->departure)
-          <div class="ops-spec-row"><dt>Hotel Makkah</dt><dd>{{ $pilgrim->departure->hotel_makkah ?: '—' }}</dd></div>
-          <div class="ops-spec-row"><dt>Hotel Madinah</dt><dd>{{ $pilgrim->departure->hotel_madinah ?: '—' }}</dd></div>
-          <div class="ops-spec-row"><dt>Hotel Transit</dt><dd>{{ $pilgrim->departure->hotel_transit ?: '—' }}</dd></div>
-          <div class="ops-spec-row"><dt>Maktab</dt><dd>{{ $pilgrim->departure->hotel_maktab ?: '—' }}</dd></div>
-        @endif
       @endif
       @if($pilgrim->notes)
         <div class="ops-spec-row"><dt>Catatan</dt><dd>{{ $pilgrim->notes }}</dd></div>
       @endif
     </dl>
   </section>
+
+  @if($departure)
+  <section class="panel form-pad ops-panel">
+    <div class="departure-info-head">
+      <h2>Program keberangkatan</h2>
+      <a class="btn gray sm" href="{{ route('admin.operations.departures.edit', $departure) }}">Ubah</a>
+    </div>
+    <p class="sub">Hotel dan maskapai sama untuk semua jamaah di {{ $departure->program_name }}.</p>
+    <dl class="ops-spec-grid">
+      <div class="ops-spec-row"><dt>Maskapai</dt><dd>{{ $departure->airline ?: '—' }}</dd></div>
+      <div class="ops-spec-row"><dt>Penerbangan</dt><dd>{{ $departure->flight_number ?: '—' }}</dd></div>
+      <div class="ops-spec-row"><dt>Hotel Makkah</dt><dd>{{ $departure->hotel_makkah ?: '—' }}</dd></div>
+      <div class="ops-spec-row"><dt>Hotel Madinah</dt><dd>{{ $departure->hotel_madinah ?: '—' }}</dd></div>
+      @if($isHaji)
+        <div class="ops-spec-row"><dt>Hotel Transit</dt><dd>{{ $departure->hotel_transit ?: '—' }}</dd></div>
+        <div class="ops-spec-row"><dt>Maktab</dt><dd>{{ $departure->hotel_maktab ?: '—' }}</dd></div>
+      @endif
+    </dl>
+  </section>
+  @endif
 
   <section class="panel form-pad ops-panel">
     <h2>Pembukuan</h2>

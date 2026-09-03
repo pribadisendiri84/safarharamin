@@ -84,15 +84,43 @@
   <div class="row3">
     <label>Durasi (hari)<input type="number" name="duration_days" value="{{ old('duration_days', $package->duration_days ?? 9) }}" min="7" required></label>
     <label>Bintang hotel<input type="number" name="hotel_stars" value="{{ old('hotel_stars', $package->hotel_stars ?? 4) }}" min="3" max="5" required></label>
-    <label>Maskapai<input name="airline" value="{{ old('airline', $package->airline) }}"></label>
+    <label>Maskapai
+      @include('partials.airline-select', [
+        'selected' => old('airline', $package->airline),
+      ])
+    </label>
   </div>
   <div class="row2">
-    <label>Hotel Makkah<input name="hotel_makkah" value="{{ old('hotel_makkah', $package->hotel_makkah ?? '') }}"></label>
-    <label>Hotel Madinah<input name="hotel_madinah" value="{{ old('hotel_madinah', $package->hotel_madinah ?? '') }}"></label>
+    <label>Hotel Makkah
+      @include('partials.hotel-select', [
+        'name' => 'hotel_makkah',
+        'location' => \App\Models\Hotel::LOCATION_MAKKAH,
+        'selected' => old('hotel_makkah', $package->hotel_makkah ?? ''),
+      ])
+    </label>
+    <label>Hotel Madinah
+      @include('partials.hotel-select', [
+        'name' => 'hotel_madinah',
+        'location' => \App\Models\Hotel::LOCATION_MADINAH,
+        'selected' => old('hotel_madinah', $package->hotel_madinah ?? ''),
+      ])
+    </label>
   </div>
   <div class="row2 haji-extra-hotels" @unless($isHajiPackage) hidden @endunless>
-    <label>Hotel Transit<input name="hotel_transit" value="{{ old('hotel_transit', $package->hotel_transit ?? '') }}"></label>
-    <label>Maktab<input name="hotel_maktab" value="{{ old('hotel_maktab', $package->hotel_maktab ?? '') }}"></label>
+    <label>Hotel Transit
+      @include('partials.hotel-select', [
+        'name' => 'hotel_transit',
+        'location' => \App\Models\Hotel::LOCATION_TRANSIT,
+        'selected' => old('hotel_transit', $package->hotel_transit ?? ''),
+      ])
+    </label>
+    <label>Maktab
+      @include('partials.hotel-select', [
+        'name' => 'hotel_maktab',
+        'location' => \App\Models\Hotel::LOCATION_MAKTAB,
+        'selected' => old('hotel_maktab', $package->hotel_maktab ?? ''),
+      ])
+    </label>
   </div>
   <div class="row2">
     <label>Seat total<input type="number" name="seats_total" value="{{ old('seats_total', $package->seats_total ?? 40) }}" min="1" required></label>

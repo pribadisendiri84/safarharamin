@@ -100,6 +100,7 @@
                 'item' => $inquiry,
                 'edit' => route('admin.inquiries.show', $inquiry),
                 'editLabel' => 'Follow up',
+                'detailsEdit' => $inquiry->trashed() ? null : route('admin.inquiries.edit', $inquiry),
                 'showWhenTrashed' => true,
                 'destroy' => auth()->user()->can('manage-catalog') ? route('admin.inquiries.destroy', $inquiry) : null,
                 'restore' => route('admin.inquiries.restore', $inquiry),

@@ -37,6 +37,8 @@
       'label' => 'Master Data',
       'items' => [
         ['route' => 'admin.cities.*', 'href' => route('admin.cities.index'), 'label' => 'Kota Embarkasi', 'icon' => 'pin', 'ability' => 'manage-catalog'],
+        ['route' => 'admin.hotels.*', 'href' => route('admin.hotels.index'), 'label' => 'Hotel', 'icon' => 'pin', 'ability' => 'manage-catalog'],
+        ['route' => 'admin.airlines.*', 'href' => route('admin.airlines.index'), 'label' => 'Maskapai', 'icon' => 'plane', 'ability' => 'manage-catalog'],
       ],
     ],
     [
