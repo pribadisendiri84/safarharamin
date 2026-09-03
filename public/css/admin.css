@@ -223,7 +223,9 @@ tr.is-deleted { background: #fdf6f6; }
 .badge.warn { background: #fff4e8; color: #c56a10; }
 .badge.muted { background: #eef1f6; color: #5c6778; }
 .badge.pay-partial { background: #e8eef8; color: #013180; }
-.badge.pay-over { background: #fdeeee; color: #a33; }
+.badge.kind-umroh { background: #e8eef8; color: #013180; }
+.badge.kind-haji { background: #fff4e8; color: #c56a10; }
+.tabs--kind { margin-bottom: 14px; }
 .pay-over-note { margin: 0 0 14px; }
 .ops-pay-stat.pay-over-stat { background: #fdeeee; border-color: #f0c8c8; }
 .ops-pay-stat.pay-over-stat b { color: #a33; }
@@ -366,11 +368,14 @@ tr.is-deleted { background: #fdf6f6; }
 .room-member-pay .badge { font-size: 10px; padding: 2px 7px; }
 
 /* tabel jamaah */
-.pilgrim-table { table-layout: fixed; }
+.pilgrim-table { table-layout: fixed; width: 100%; min-width: 920px; }
 .pilgrim-table th,
-.pilgrim-table td { padding: 11px 12px; }
-.pilgrim-table .col-name { width: 14%; min-width: 120px; }
-.pilgrim-table .col-hp { width: 11%; min-width: 108px; }
+.pilgrim-table td { padding: 11px 12px; vertical-align: middle; }
+.pilgrim-table .col-name { width: 15%; min-width: 120px; }
+.pilgrim-table .col-kind { width: 72px; min-width: 72px; white-space: nowrap; text-align: center; }
+.pilgrim-table th.col-kind,
+.pilgrim-table td.col-kind { text-align: center; }
+.pilgrim-table .col-hp { width: 12%; min-width: 112px; }
 .pilgrim-table .col-departure { width: 22%; min-width: 140px; }
 .pilgrim-table .col-room { width: 10%; min-width: 88px; }
 .pilgrim-table .col-status { width: 9%; min-width: 76px; text-align: center; }
@@ -475,6 +480,9 @@ tr.is-deleted { background: #fdf6f6; }
 .check-row { display: flex; flex-wrap: wrap; gap: 16px 24px; margin-top: 2px; }
 .form input[type="checkbox"], .form input[type="radio"] { width: auto; margin: 0; accent-color: var(--brand); }
 .form-actions { display: flex; gap: 10px; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.form fieldset { margin: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; display: grid; gap: 12px; }
+.form fieldset legend { padding: 0 6px; font-size: 12px; font-weight: 800; color: var(--brand); }
+.form fieldset .sub { margin: 0; }
 .form-actions .btn { width: auto; min-width: 120px; }
 .form-narrow { max-width: 640px; }
 .table-check { margin: 0; }
@@ -603,6 +611,7 @@ tr.sortable-ghost { opacity: .45; }
   .filter-bar input { width: 100%; min-width: 0; }
   .head-actions, .head-actions .btn { width: 100%; }
   .head-actions .btn { justify-content: center; }
+  .pilgrim-table.pilgrim-table--kind-filtered { min-width: 840px; }
 }
 @media (max-width: 560px) {
   .stat-row { grid-template-columns: 1fr; }

@@ -20,12 +20,15 @@
   <div class="stat"><span>Quad</span><b>{{ $stats['total_quad'] }}</b></div>
   <div class="stat"><span>Triple</span><b>{{ $stats['total_triple'] }}</b></div>
   <div class="stat"><span>Double</span><b>{{ $stats['total_double'] }}</b></div>
+  @if($departure->isHaji())
+    <div class="stat"><span>Double Plus</span><b>{{ $stats['total_double_plus'] }}</b></div>
+  @endif
   <div class="stat"><span>Room full</span><b>{{ $stats['rooms_full'] }}</b></div>
   <div class="stat warn-stat"><span>Room belum full</span><b>{{ $stats['rooms_incomplete'] }}</b></div>
   <div class="stat warn-stat"><span>Belum group</span><b>{{ $stats['pilgrims_ungrouped'] }}</b></div>
 </div>
 
-@foreach(\App\Enums\RoomType::labels() as $typeKey => $typeLabel)
+@foreach(\App\Enums\RoomType::labelsFor($departure->program_kind) as $typeKey => $typeLabel)
   @php
     $typeRooms = $departure->rooms->where('room_type', $typeKey);
     $typeUngrouped = $departure->pilgrims->where('room_type', $typeKey)->whereNull('room_id');

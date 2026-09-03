@@ -143,19 +143,19 @@
         </p>
         <div class="row2">
           <label>Keberangkatan
-            <select name="departure_id" required class="js-searchable" data-placeholder="Pilih keberangkatan…">
+            <select name="departure_id" id="import-departure" required class="js-searchable" data-placeholder="Pilih keberangkatan…">
               <option value="">Pilih keberangkatan</option>
               @foreach($departures as $departure)
-                <option value="{{ $departure->id }}" @selected((string) old('departure_id') === (string) $departure->id)>
+                <option value="{{ $departure->id }}" data-kind="{{ $departure->program_kind }}" @selected((string) old('departure_id') === (string) $departure->id)>
                   {{ $departure->program_name }} · {{ $departure->formattedDepartureDate() }}
                 </option>
               @endforeach
             </select>
           </label>
           <label>Tipe kamar
-            <select name="room_type" required>
+            <select name="room_type" id="import-room-type" required>
               @foreach(\App\Enums\RoomType::labels() as $key => $label)
-                <option value="{{ $key }}" @selected(old('room_type', 'quad') === $key)>{{ $label }}</option>
+                <option value="{{ $key }}" data-haji-only="{{ $key === 'double_plus' ? '1' : '0' }}" @selected(old('room_type', 'quad') === $key)>{{ $label }}</option>
               @endforeach
             </select>
           </label>
@@ -180,3 +180,39 @@
   </section>
 @endif
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+  var departureSelect = document.getElementById('import-departure');
+  var roomSelect = document.getElementById('import-room-type');
+  if (!departureSelect || !roomSelect) return;
+
+  var hajiIds = @json($departures->where('program_kind', 'haji')->pluck('id')->values());
+
+  function syncRoomTypes() {
+    var id = parseInt(departureSelect.value || '0', 10);
+    var isHaji = hajiIds.includes(id);
+    var selected = roomSelect.value;
+
+    Array.from(roomSelect.options).forEach(function (option) {
+      if (option.dataset.hajiOnly === '1') {
+        option.hidden = !isHaji;
+        option.disabled = !isHaji;
+      }
+    });
+
+    var active = roomSelect.querySelector('option[value="' + selected + '"]');
+    if (active && (active.disabled || active.hidden)) {
+      var fallback = Array.from(roomSelect.options).find(function (option) {
+        return !option.disabled && !option.hidden;
+      });
+      if (fallback) roomSelect.value = fallback.value;
+    }
+  }
+
+  departureSelect.addEventListener('change', syncRoomTypes);
+  syncRoomTypes();
+})();
+</script>
+@endpush

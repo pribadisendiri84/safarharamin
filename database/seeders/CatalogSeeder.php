@@ -37,24 +37,24 @@ class CatalogSeeder extends Seeder
         ];
 
         $rows = [
-            ['Umroh Hemat 9 Hari Jakarta', 'umroh', 'jakarta', '2026-10-12', 9, 29500000, 32500000, 'Maysan Al Maqam', 'Odsyl', 4, 'Saudia', 'quad', 45, 12, true, true],
-            ['Umroh Reguler 12 Hari Jakarta', 'umroh', 'jakarta', '2026-11-03', 12, 34500000, null, 'Azka Al Huda', 'Al Haram', 4, 'Garuda Indonesia', 'quad', 40, 18, true, false],
-            ['Umroh Bintang 5 Ring 1', 'umroh', 'jakarta', '2026-12-08', 9, 45500000, 49900000, 'Makkah Clock Royal', 'Anwar Al Madinah', 5, 'Saudia', 'triple', 30, 6, true, true],
-            ['Umroh Plus Turki 16 Hari', 'umroh_plus', 'jakarta', '2026-10-28', 16, 42900000, null, 'Maysan Al Maqam', 'Concorde', 4, 'Turkish Airlines', 'quad', 36, 9, true, true],
-            ['Umroh Plus Dubai 14 Hari', 'umroh_plus', 'surabaya', '2026-11-18', 14, 39900000, 43500000, 'Ajyad Makkah', 'ODST', 4, 'Emirates', 'quad', 32, 14, true, false],
-            ['Umroh Ramadhan 12 Hari', 'umroh_ramadhan', 'jakarta', '2027-03-02', 12, 48900000, null, 'Marwa Rotana', 'Al Haram', 5, 'Saudia', 'triple', 28, 4, true, true],
-            ['Umroh Lailatul Qadar', 'umroh_ramadhan', 'medan', '2027-03-20', 10, 52500000, null, 'Hilton Suites', 'Anwar Al Madinah', 5, 'Saudia', 'double', 20, 3, true, true],
-            ['Haji Plus 27 Hari', 'haji_plus', 'jakarta', '2027-05-20', 27, 275000000, null, 'Fairmont Makkah', 'Shaza Al Madina', 5, 'Garuda Indonesia', 'double', 20, 8, true, true],
-            ['Haji Furoda 26 Hari', 'haji_furoda', 'jakarta', '2027-05-18', 26, 320000000, null, 'Raffles Makkah Palace', 'The Oberoi', 5, 'Saudia', 'double', 12, 5, true, false],
-            ['Umroh 9 Hari Surabaya', 'umroh', 'surabaya', '2026-10-20', 9, 31200000, null, 'Ajyad Makkah', 'ODST', 4, 'Garuda Indonesia', 'quad', 40, 22, false, false],
-            ['Umroh 9 Hari Medan', 'umroh', 'medan', '2026-11-09', 9, 32800000, 35000000, 'Maysan Al Maqam', 'Concorde', 4, 'Saudia', 'quad', 36, 16, false, false],
-            ['Umroh Hemat Yogyakarta', 'umroh', 'yogyakarta', '2026-12-14', 9, 28900000, 31000000, 'Winner Inn Ajyad', 'ODST', 3, 'Lion Air', 'quad', 40, 25, true, false],
+            ['Umroh Hemat 9 Hari Jakarta', 'umroh', 'jakarta', '2026-10-12', 9, 29500000, 32500000, 4, 'Saudia', 'quad', 45, 12, true, true],
+            ['Umroh Reguler 12 Hari Jakarta', 'umroh', 'jakarta', '2026-11-03', 12, 34500000, null, 4, 'Garuda Indonesia', 'quad', 40, 18, true, false],
+            ['Umroh Bintang 5 Ring 1', 'umroh', 'jakarta', '2026-12-08', 9, 45500000, 49900000, 5, 'Saudia', 'triple', 30, 6, true, true],
+            ['Umroh Plus Turki 16 Hari', 'umroh_plus', 'jakarta', '2026-10-28', 16, 42900000, null, 4, 'Turkish Airlines', 'quad', 36, 9, true, true],
+            ['Umroh Plus Dubai 14 Hari', 'umroh_plus', 'surabaya', '2026-11-18', 14, 39900000, 43500000, 4, 'Emirates', 'quad', 32, 14, true, false],
+            ['Umroh Ramadhan 12 Hari', 'umroh_ramadhan', 'jakarta', '2027-03-02', 12, 48900000, null, 5, 'Saudia', 'triple', 28, 4, true, true],
+            ['Umroh Lailatul Qadar', 'umroh_ramadhan', 'medan', '2027-03-20', 10, 52500000, null, 5, 'Saudia', 'double', 20, 3, true, true],
+            ['Haji Plus 27 Hari', 'haji_plus', 'jakarta', '2027-05-20', 27, 275000000, null, 5, 'Garuda Indonesia', 'double', 20, 8, true, true],
+            ['Haji Furoda 26 Hari', 'haji_furoda', 'jakarta', '2027-05-18', 26, 320000000, null, 5, 'Saudia', 'double', 12, 5, true, false],
+            ['Umroh 9 Hari Surabaya', 'umroh', 'surabaya', '2026-10-20', 9, 31200000, null, 4, 'Garuda Indonesia', 'quad', 40, 22, false, false],
+            ['Umroh 9 Hari Medan', 'umroh', 'medan', '2026-11-09', 9, 32800000, 35000000, 4, 'Saudia', 'quad', 36, 16, false, false],
+            ['Umroh Hemat Yogyakarta', 'umroh', 'yogyakarta', '2026-12-14', 9, 28900000, 31000000, 3, 'Lion Air', 'quad', 40, 25, true, false],
         ];
 
         $featuredSlot = 0;
 
         foreach ($rows as $i => $row) {
-            [$title, $type, $city, $date, $days, $price, $original, $makkah, $madinah, $stars, $airline, $room, $total, $left, $featured, $hot] = $row;
+            [$title, $type, $city, $date, $days, $price, $original, $stars, $airline, $room, $total, $left, $featured, $hot] = $row;
             $rooms = $this->roomPrices($price);
             $homeSort = null;
             if ($featured) {
@@ -76,8 +76,10 @@ class CatalogSeeder extends Seeder
                     'price_double' => $rooms['double'],
                     'original_price' => $original,
                     'price_note' => 'Harga dapat berubah sesuai kebijakan perusahaan.',
-                    'hotel_makkah' => $makkah,
-                    'hotel_madinah' => $madinah,
+                    'hotel_makkah' => null,
+                    'hotel_madinah' => null,
+                    'hotel_transit' => null,
+                    'hotel_maktab' => null,
                     'hotel_stars' => $stars,
                     'airline' => $airline,
                     'room_type' => $room,

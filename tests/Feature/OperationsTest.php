@@ -196,6 +196,43 @@ class OperationsTest extends TestCase
         $this->assertSame(0, $pilgrim->remainingBalance());
     }
 
+    public function test_pilgrims_index_filters_by_program_kind(): void
+    {
+        $admin = $this->admin();
+
+        $umrohDeparture = Departure::query()->create([
+            'program_name' => 'Umroh Filter Test',
+            'program_kind' => 'umroh',
+        ]);
+        $hajiDeparture = Departure::query()->create([
+            'program_name' => 'Haji Filter Test',
+            'program_kind' => 'haji',
+        ]);
+
+        Pilgrim::query()->create([
+            'departure_id' => $umrohDeparture->id,
+            'full_name' => 'Jamaah Umroh Filter',
+            'room_type' => 'quad',
+        ]);
+        Pilgrim::query()->create([
+            'departure_id' => $hajiDeparture->id,
+            'full_name' => 'Jamaah Haji Filter',
+            'room_type' => 'double',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.operations.pilgrims.index', ['kind' => 'umroh']))
+            ->assertOk()
+            ->assertSee('Jamaah Umroh Filter')
+            ->assertDontSee('Jamaah Haji Filter');
+
+        $this->actingAs($admin)
+            ->get(route('admin.operations.pilgrims.index', ['kind' => 'haji']))
+            ->assertOk()
+            ->assertSee('Jamaah Haji Filter')
+            ->assertDontSee('Jamaah Umroh Filter');
+    }
+
     public function test_pilgrims_index_shows_payment_status(): void
     {
         $this->seed(\Database\Seeders\OperationsSeeder::class);
@@ -408,5 +445,116 @@ class OperationsTest extends TestCase
             ->assertOk()
             ->assertSee('Jamaah lebih bayar')
             ->assertSee('Overpay Jamaah');
+    }
+
+    public function test_haji_departure_stores_transit_and_maktab_hotels(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->post(route('admin.operations.departures.store'), [
+                'program_name' => 'Haji 2026',
+                'program_kind' => 'haji',
+                'departure_date' => '2026-06-01',
+                'hotel_makkah' => 'Makkah Tower',
+                'hotel_madinah' => 'Madinah Oberoi',
+                'hotel_transit' => 'Transit Jeddah',
+                'hotel_maktab' => 'Maktab Arafah',
+            ])
+            ->assertRedirect(route('admin.operations.departures.index'));
+
+        $this->assertDatabaseHas('departures', [
+            'program_name' => 'Haji 2026',
+            'program_kind' => 'haji',
+            'hotel_transit' => 'Transit Jeddah',
+            'hotel_maktab' => 'Maktab Arafah',
+        ]);
+    }
+
+    public function test_haji_pilgrim_accepts_double_plus_room_type(): void
+    {
+        $admin = $this->admin();
+        $departure = Departure::query()->create([
+            'program_name' => 'Haji Double Plus',
+            'program_kind' => 'haji',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.operations.pilgrims.store'), [
+                'departure_id' => $departure->id,
+                'full_name' => 'Jamaah Double Plus',
+                'room_type' => 'double_plus',
+                'package_price' => 55000000,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('pilgrims', [
+            'full_name' => 'Jamaah Double Plus',
+            'departure_id' => $departure->id,
+            'room_type' => 'double_plus',
+        ]);
+    }
+
+    public function test_umroh_pilgrim_rejects_double_plus_room_type(): void
+    {
+        $admin = $this->admin();
+        $departure = Departure::query()->create([
+            'program_name' => 'Umroh No DP',
+            'program_kind' => 'umroh',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.operations.pilgrims.store'), [
+                'departure_id' => $departure->id,
+                'full_name' => 'Jamaah Umroh',
+                'room_type' => 'double_plus',
+            ])
+            ->assertSessionHasErrors('room_type');
+    }
+
+    public function test_haji_pilgrim_form_syncs_departure_hotels(): void
+    {
+        $admin = $this->admin();
+        $departure = Departure::query()->create([
+            'program_name' => 'Haji Hotel Sync',
+            'program_kind' => 'haji',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.operations.pilgrims.store'), [
+                'departure_id' => $departure->id,
+                'full_name' => 'Jamaah Hotel Sync',
+                'room_type' => 'double_plus',
+                'hotel_makkah' => 'Makkah Tower',
+                'hotel_madinah' => 'Madinah Oberoi',
+                'hotel_transit' => 'Transit Dubai',
+                'hotel_maktab' => 'Maktab Mina 12',
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('departures', [
+            'id' => $departure->id,
+            'hotel_makkah' => 'Makkah Tower',
+            'hotel_madinah' => 'Madinah Oberoi',
+            'hotel_transit' => 'Transit Dubai',
+            'hotel_maktab' => 'Maktab Mina 12',
+        ]);
+    }
+
+    public function test_haji_pilgrim_create_form_shows_double_plus_option(): void
+    {
+        $admin = $this->admin();
+        Departure::query()->create([
+            'program_name' => 'Haji Form UI',
+            'program_kind' => 'haji',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.operations.pilgrims.create', ['kind' => 'haji']))
+            ->assertOk()
+            ->assertSee('Double Plus', false)
+            ->assertSee('Hotel Transit', false)
+            ->assertSee('Maktab', false)
+            ->assertSee('Data khusus haji', false);
     }
 }

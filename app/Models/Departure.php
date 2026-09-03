@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'flight_number',
     'hotel_makkah',
     'hotel_madinah',
+    'hotel_transit',
+    'hotel_maktab',
     'notes',
 ])]
 class Departure extends Model
@@ -84,6 +86,7 @@ class Departure extends Model
             'total_quad' => $pilgrims->where('room_type', 'quad')->count(),
             'total_triple' => $pilgrims->where('room_type', 'triple')->count(),
             'total_double' => $pilgrims->where('room_type', 'double')->count(),
+            'total_double_plus' => $pilgrims->where('room_type', 'double_plus')->count(),
             'total_rooms' => $rooms->count(),
             'rooms_full' => $fullRooms,
             'rooms_partial' => $partialRooms,

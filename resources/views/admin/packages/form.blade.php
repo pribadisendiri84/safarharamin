@@ -2,6 +2,9 @@
 
 @section('title', !empty($isDuplicate) ? 'Duplikat paket' : ($package->exists ? 'Edit paket' : 'Tambah paket'))
 @section('content')
+@php
+  $isHajiPackage = in_array(old('type', $package->type), \App\Models\Package::HAJI_TYPES, true);
+@endphp
 <div class="page-head">
   <div>
     <h1>{{ !empty($isDuplicate) ? 'Duplikat paket' : ($package->exists ? 'Edit paket' : 'Tambah paket') }}</h1>
@@ -41,7 +44,7 @@
   <label>Judul paket<input name="title" value="{{ old('title', $package->title) }}" required></label>
   <div class="row2">
     <label>Jenis
-      <select name="type" required>
+      <select name="type" id="package-type" required>
         @foreach(\App\Models\Package::TYPES as $key => $label)
           <option value="{{ $key }}" @selected(old('type', $package->type) === $key)>{{ $label }}</option>
         @endforeach
@@ -72,7 +75,8 @@
     <label>Triple — 3 org/kamar (Rp)<input type="text" class="js-rupiah" name="price_triple" value="{{ old('price_triple', $package->price_triple) }}"></label>
     <label>Double — 2 org/kamar (Rp)<input type="text" class="js-rupiah" name="price_double" value="{{ old('price_double', $package->price_double) }}"></label>
   </div>
-  <p class="sub">Harga per jamaah. Opsional — isi saja tipe kamar yang tersedia di paket ini.</p>
+  <label id="package-double-plus-wrap" @unless($isHajiPackage) hidden @endunless>Double Plus — 2 org/kamar (Rp)<input type="text" class="js-rupiah" name="price_double_plus" value="{{ old('price_double_plus', $package->price_double_plus) }}"></label>
+  <p class="sub">Harga per jamaah. Opsional — isi saja tipe kamar yang tersedia di paket ini. Double Plus khusus paket haji.</p>
   <div class="row2">
     <label>Harga coret<input type="text" class="js-rupiah" name="original_price" value="{{ old('original_price', $package->original_price) }}"></label>
     <label>Catatan harga<input name="price_note" value="{{ old('price_note', $package->price_note) }}" maxlength="180" placeholder="Harga dapat berubah sesuai kebijakan"></label>
@@ -83,8 +87,12 @@
     <label>Maskapai<input name="airline" value="{{ old('airline', $package->airline) }}"></label>
   </div>
   <div class="row2">
-    <label>Hotel Makkah<input name="hotel_makkah" value="{{ old('hotel_makkah', $package->hotel_makkah) }}"></label>
-    <label>Hotel Madinah<input name="hotel_madinah" value="{{ old('hotel_madinah', $package->hotel_madinah) }}"></label>
+    <label>Hotel Makkah<input name="hotel_makkah" value="{{ old('hotel_makkah', $package->hotel_makkah ?? '') }}"></label>
+    <label>Hotel Madinah<input name="hotel_madinah" value="{{ old('hotel_madinah', $package->hotel_madinah ?? '') }}"></label>
+  </div>
+  <div class="row2 haji-extra-hotels" @unless($isHajiPackage) hidden @endunless>
+    <label>Hotel Transit<input name="hotel_transit" value="{{ old('hotel_transit', $package->hotel_transit ?? '') }}"></label>
+    <label>Maktab<input name="hotel_maktab" value="{{ old('hotel_maktab', $package->hotel_maktab ?? '') }}"></label>
   </div>
   <div class="row2">
     <label>Seat total<input type="number" name="seats_total" value="{{ old('seats_total', $package->seats_total ?? 40) }}" min="1" required></label>
@@ -104,3 +112,25 @@
   </div>
 </form>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+  var typeSelect = document.getElementById('package-type');
+  var doublePlusWrap = document.getElementById('package-double-plus-wrap');
+  var hajiExtraHotels = document.querySelector('.haji-extra-hotels');
+  if (!typeSelect) return;
+
+  var hajiTypes = @json(\App\Models\Package::HAJI_TYPES);
+
+  function syncPackageKind() {
+    var isHaji = hajiTypes.includes(typeSelect.value);
+    if (doublePlusWrap) doublePlusWrap.hidden = !isHaji;
+    if (hajiExtraHotels) hajiExtraHotels.hidden = !isHaji;
+  }
+
+  typeSelect.addEventListener('change', syncPackageKind);
+  syncPackageKind();
+})();
+</script>
+@endpush

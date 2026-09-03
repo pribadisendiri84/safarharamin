@@ -35,6 +35,12 @@ class PilgrimController extends Controller
             $query->where('departure_id', $departureId);
         }
 
+        if ($kind = $request->string('kind')->toString()) {
+            if (array_key_exists($kind, Departure::KINDS)) {
+                $query->whereHas('departure', fn ($builder) => $builder->where('program_kind', $kind));
+            }
+        }
+
         if ($roomType = $request->string('room_type')->toString()) {
             $query->where('room_type', $roomType);
         }
@@ -63,25 +69,39 @@ class PilgrimController extends Controller
 
         return view('admin.operations.pilgrims.index', [
             'pilgrims' => $query->paginate(30)->withQueryString(),
-            'departures' => Departure::query()->orderBy('program_name')->get(['id', 'program_name', 'departure_date']),
+            'departures' => Departure::query()->orderBy('program_kind')->orderBy('program_name')->get(['id', 'program_name', 'program_kind', 'departure_date']),
             ...$this->trashViewData(Pilgrim::class, $request),
         ]);
     }
 
     public function create(Request $request)
     {
+        $departureId = $request->integer('departure_id') ?: null;
+
+        if (! $departureId && ($kind = $request->string('kind')->toString()) && array_key_exists($kind, Departure::KINDS)) {
+            $departureId = Departure::query()
+                ->where('program_kind', $kind)
+                ->orderBy('program_name')
+                ->value('id');
+        }
+
         return view('admin.operations.pilgrims.form', [
             'pilgrim' => new Pilgrim([
-                'departure_id' => $request->integer('departure_id') ?: null,
+                'departure_id' => $departureId,
                 'room_type' => 'quad',
             ]),
-            'departures' => Departure::query()->orderBy('program_name')->get(['id', 'program_name', 'program_kind', 'departure_date']),
+            'departures' => $departures = Departure::query()
+                ->orderBy('program_kind')
+                ->orderBy('program_name')
+                ->get(['id', 'program_name', 'program_kind', 'departure_date', 'hotel_makkah', 'hotel_madinah', 'hotel_transit', 'hotel_maktab']),
         ]);
     }
 
     public function store(Request $request)
     {
-        $pilgrim = Pilgrim::query()->create($this->validated($request));
+        $data = $this->validated($request);
+        $pilgrim = Pilgrim::query()->create($data);
+        $this->syncDepartureHotels($request, Departure::query()->findOrFail($data['departure_id']));
 
         return redirect()
             ->route('admin.operations.pilgrims.show', $pilgrim)
@@ -94,15 +114,22 @@ class PilgrimController extends Controller
 
         return view('admin.operations.pilgrims.show', [
             'pilgrim' => $pilgrim,
-            'departures' => Departure::query()->orderBy('program_name')->get(['id', 'program_name', 'program_kind']),
+            'departures' => Departure::query()->orderBy('program_kind')->orderBy('program_name')->get(['id', 'program_name', 'program_kind', 'departure_date', 'hotel_transit', 'hotel_maktab']),
         ]);
     }
 
     public function edit(Pilgrim $pilgrim)
     {
+        $pilgrim->load('departure');
+
+        $departures = Departure::query()
+            ->orderBy('program_kind')
+            ->orderBy('program_name')
+            ->get(['id', 'program_name', 'program_kind', 'departure_date', 'hotel_makkah', 'hotel_madinah', 'hotel_transit', 'hotel_maktab']);
+
         return view('admin.operations.pilgrims.form', [
             'pilgrim' => $pilgrim,
-            'departures' => Departure::query()->orderBy('program_name')->get(['id', 'program_name', 'program_kind', 'departure_date']),
+            'departures' => $departures,
         ]);
     }
 
@@ -120,6 +147,7 @@ class PilgrimController extends Controller
         }
 
         $pilgrim->update($data);
+        $this->syncDepartureHotels($request, Departure::query()->findOrFail($data['departure_id']));
 
         return redirect()
             ->route('admin.operations.pilgrims.show', $pilgrim)
@@ -148,20 +176,34 @@ class PilgrimController extends Controller
     private function validated(Request $request, ?Pilgrim $pilgrim = null): array
     {
         $departure = Departure::query()->find($request->integer('departure_id'));
-        $isHaji = $departure?->isHaji() ?? ($pilgrim?->departure?->isHaji() ?? false);
+        $programKind = $departure?->program_kind ?? $pilgrim?->departure?->program_kind;
 
         $rules = [
             'departure_id' => ['required', 'exists:departures,id'],
             'full_name' => ['required', 'string', 'max:180'],
             'phone' => ['nullable', 'string', 'max:32'],
             'gender' => ['nullable', Rule::in(array_keys(Pilgrim::GENDERS))],
-            'room_type' => ['required', Rule::in(array_keys(RoomType::labels()))],
+            'room_type' => ['required', Rule::in(array_keys(RoomType::labelsFor($programKind)))],
             'package_price' => ['nullable', 'integer', 'min:0'],
             'notes' => ['nullable', 'string'],
-            'haji_registration_id' => [$isHaji ? 'nullable' : 'nullable', 'string', 'max:120'],
+            'haji_registration_id' => ['nullable', 'string', 'max:120'],
             'haji_portion_number' => ['nullable', 'string', 'max:120'],
         ];
 
         return $request->validate($rules);
+    }
+
+    private function syncDepartureHotels(Request $request, Departure $departure): void
+    {
+        if (! $departure->isHaji()) {
+            return;
+        }
+
+        $departure->update($request->validate([
+            'hotel_makkah' => ['nullable', 'string', 'max:180'],
+            'hotel_madinah' => ['nullable', 'string', 'max:180'],
+            'hotel_transit' => ['nullable', 'string', 'max:180'],
+            'hotel_maktab' => ['nullable', 'string', 'max:180'],
+        ]));
     }
 }

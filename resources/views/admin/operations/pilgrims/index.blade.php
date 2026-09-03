@@ -2,25 +2,39 @@
 
 @section('title', 'Jamaah')
 @section('content')
+@php
+  $kindFilter = request('kind', '');
+  $filterQuery = request()->except('kind', 'page');
+@endphp
 <div class="page-head">
   <div>
     <h1>Jamaah</h1>
-    <p class="sub">Data jamaah per keberangkatan, tipe kamar, dan status grouping.</p>
+    <p class="sub">Data jamaah per keberangkatan. Umroh dan haji dipisah lewat filter jenis program.</p>
   </div>
   <div class="actions head-actions">
-    <a class="btn" href="{{ route('admin.operations.pilgrims.create', request()->only('departure_id')) }}">@include('admin.partials.icon', ['name' => 'plus']) Tambah jamaah</a>
+    <a class="btn" href="{{ route('admin.operations.pilgrims.create', array_filter(['departure_id' => request('departure_id'), 'kind' => $kindFilter ?: null])) }}">@include('admin.partials.icon', ['name' => 'plus']) Tambah jamaah</a>
   </div>
 </div>
 
 @include('admin.partials.scope-tabs')
 
+<div class="tabs tabs--kind">
+  <a href="{{ route('admin.operations.pilgrims.index', $filterQuery) }}" class="{{ $kindFilter === '' ? 'active' : '' }}">Semua</a>
+  @foreach(\App\Models\Departure::KINDS as $key => $label)
+    <a href="{{ route('admin.operations.pilgrims.index', [...$filterQuery, 'kind' => $key]) }}" class="{{ $kindFilter === $key ? 'active' : '' }}">{{ $label }}</a>
+  @endforeach
+</div>
+
 <form class="filter-bar filter-bar--wide" method="get">
   @if($trashed)<input type="hidden" name="trashed" value="1">@endif
+  @if($kindFilter !== '')<input type="hidden" name="kind" value="{{ $kindFilter }}">@endif
   <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari nama, HP, ID/porsi haji">
   <select name="departure_id">
     <option value="">Semua keberangkatan</option>
     @foreach($departures as $departure)
-      <option value="{{ $departure->id }}" @selected((int) request('departure_id') === $departure->id)>{{ $departure->program_name }}</option>
+      @if($kindFilter === '' || $departure->program_kind === $kindFilter)
+        <option value="{{ $departure->id }}" @selected((int) request('departure_id') === $departure->id)>{{ $departure->program_name }} · {{ $departure->kindLabel() }}</option>
+      @endif
     @endforeach
   </select>
   <select name="room_type">
@@ -45,10 +59,13 @@
 
 <div class="panel">
   <div class="table-wrap">
-    <table class="ops-table pilgrim-table">
+    <table class="ops-table pilgrim-table {{ $kindFilter !== '' ? 'pilgrim-table--kind-filtered' : '' }}">
       <thead>
         <tr>
           <th class="col-name">Nama</th>
+          @if($kindFilter === '')
+            <th class="col-kind">Jenis</th>
+          @endif
           <th class="col-hp">HP</th>
           <th class="col-departure">Keberangkatan</th>
           <th class="col-room">Kamar</th>
@@ -61,6 +78,15 @@
         @forelse($pilgrims as $pilgrim)
           <tr>
             <td class="col-name"><b>{{ $pilgrim->full_name }}</b></td>
+            @if($kindFilter === '')
+              <td class="col-kind">
+                @if($pilgrim->departure)
+                  <span class="badge kind-{{ $pilgrim->departure->program_kind }}">{{ $pilgrim->departure->kindLabel() }}</span>
+                @else
+                  <span class="muted">—</span>
+                @endif
+              </td>
+            @endif
             <td class="col-hp"><span class="cell-mono">{{ $pilgrim->phone ?: '—' }}</span></td>
             <td class="col-departure">
               <span class="cell-truncate" title="{{ $pilgrim->departure?->program_name }}">{{ $pilgrim->departure?->program_name ?: '—' }}</span>
@@ -97,7 +123,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="7" class="empty-cell">Belum ada jamaah.</td></tr>
+          <tr><td colspan="{{ $kindFilter === '' ? 8 : 7 }}" class="empty-cell">Belum ada jamaah.</td></tr>
         @endforelse
       </tbody>
     </table>

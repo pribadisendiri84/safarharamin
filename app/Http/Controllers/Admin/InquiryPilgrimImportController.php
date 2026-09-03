@@ -29,15 +29,19 @@ class InquiryPilgrimImportController extends Controller
 
         $pax = $inquiry->soldPaxCount();
 
-        $data = $request->validate([
+        $validated = $request->validate([
             'departure_id' => ['required', 'exists:departures,id'],
-            'room_type' => ['required', Rule::in(array_keys(RoomType::labels()))],
             'names' => ['required', 'array', 'size:'.$pax],
             'names.*' => ['required', 'string', 'max:180'],
         ]);
 
-        $departure = Departure::query()->findOrFail($data['departure_id']);
-        $pilgrims = $importService->import($inquiry, $departure, $data['room_type'], $data['names']);
+        $departure = Departure::query()->findOrFail($validated['departure_id']);
+
+        $validated = array_merge($validated, $request->validate([
+            'room_type' => ['required', Rule::in(array_keys(RoomType::labelsFor($departure->program_kind)))],
+        ]));
+
+        $pilgrims = $importService->import($inquiry, $departure, $validated['room_type'], $validated['names']);
 
         $message = $pilgrims->count() === 1
             ? '1 jamaah berhasil dipindah dari pengajuan closing.'

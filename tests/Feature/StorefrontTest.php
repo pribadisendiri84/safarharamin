@@ -713,4 +713,39 @@ class StorefrontTest extends TestCase
 
         $this->assertDatabaseHas('testimonials', ['city' => 'Depok', 'is_published' => 0]);
     }
+
+    public function test_haji_package_shows_double_plus_price_and_hotels(): void
+    {
+        $package = Package::query()->create([
+            'title' => 'Haji Plus Contoh',
+            'slug' => 'haji-plus-contoh',
+            'type' => 'haji_plus',
+            'departure_city' => 'jakarta',
+            'duration_days' => 40,
+            'price' => 60000000,
+            'price_quad' => 60000000,
+            'price_triple' => 62000000,
+            'price_double' => 65000000,
+            'price_double_plus' => 68000000,
+            'hotel_makkah' => 'Makkah Clock Tower',
+            'hotel_madinah' => 'Madinah Pullman',
+            'hotel_transit' => 'Transit Jeddah',
+            'hotel_maktab' => 'Maktab Mina 5',
+            'hotel_stars' => 5,
+            'airline' => 'Saudia',
+            'room_type' => 'quad',
+            'seats_total' => 200,
+            'seats_left' => 50,
+            'status' => 'published',
+            'images' => ['/images/placeholder-kaaba.svg'],
+        ]);
+
+        $this->get(route('packages.show', $package))
+            ->assertOk()
+            ->assertSee('Double Plus (2 org/kamar)', false)
+            ->assertSee('Hotel Transit')
+            ->assertSee('Transit Jeddah')
+            ->assertSee('Maktab')
+            ->assertSee('Maktab Mina 5');
+    }
 }

@@ -19,8 +19,9 @@ class RoomGroupingController extends Controller
     public function index(Request $request, Departure $departure)
     {
         $activeTab = $request->string('tab')->toString();
-        if (! in_array($activeTab, ['quad', 'triple', 'double'], true)) {
-            $activeTab = 'quad';
+        $roomTypes = RoomType::labelsFor($departure->program_kind);
+        if (! array_key_exists($activeTab, $roomTypes)) {
+            $activeTab = array_key_first($roomTypes);
         }
 
         $departure->load([
@@ -37,7 +38,7 @@ class RoomGroupingController extends Controller
             'rooms' => $rooms,
             'ungrouped' => $ungrouped,
             'stats' => $departure->stats(),
-            'roomTypes' => RoomType::labels(),
+            'roomTypes' => $roomTypes,
         ]);
     }
 
@@ -51,7 +52,7 @@ class RoomGroupingController extends Controller
     public function storeRoom(Request $request, Departure $departure)
     {
         $data = $request->validate([
-            'room_type' => ['required', Rule::in(array_keys(RoomType::labels()))],
+            'room_type' => ['required', Rule::in(array_keys(RoomType::labelsFor($departure->program_kind)))],
         ]);
 
         $room = $this->grouping->createRoom($departure, RoomType::fromValue($data['room_type']));

@@ -55,6 +55,10 @@
         <li><span>Maskapai</span><b>{{ $package->airline ?: '-' }}</b></li>
         <li><span>Hotel Makkah</span><b>{{ $package->hotel_makkah ?: '-' }}</b></li>
         <li><span>Hotel Madinah</span><b>{{ $package->hotel_madinah ?: '-' }}</b></li>
+        @if($package->isHaji())
+          <li><span>Hotel Transit</span><b>{{ $package->hotel_transit ?: '-' }}</b></li>
+          <li><span>Maktab</span><b>{{ $package->hotel_maktab ?: '-' }}</b></li>
+        @endif
         <li><span>Bintang</span><b>{{ $package->hotel_stars }}★</b></li>
         <li><span>Seat</span><b>{{ $package->seatsLine() }}</b></li>
       </ul>

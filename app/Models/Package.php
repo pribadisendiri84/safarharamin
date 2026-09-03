@@ -23,10 +23,13 @@ use Illuminate\Support\Str;
     'price_quad',
     'price_triple',
     'price_double',
+    'price_double_plus',
     'original_price',
     'price_note',
     'hotel_makkah',
     'hotel_madinah',
+    'hotel_transit',
+    'hotel_maktab',
     'hotel_stars',
     'airline',
     'room_type',
@@ -64,11 +67,16 @@ class Package extends Model
         'double' => 'Double',
     ];
 
+    public const HAJI_ROOM_TYPES = [
+        'double_plus' => 'Double Plus',
+    ];
+
     /** @var array<string, int> */
     public const ROOM_OCCUPANCY = [
         'quad' => 4,
         'triple' => 3,
         'double' => 2,
+        'double_plus' => 2,
     ];
 
     public const STATUSES = [
@@ -94,6 +102,7 @@ class Package extends Model
             'price_quad' => 'integer',
             'price_triple' => 'integer',
             'price_double' => 'integer',
+            'price_double_plus' => 'integer',
             'original_price' => 'integer',
             'departure_date' => 'date',
         ];
@@ -114,7 +123,7 @@ class Package extends Model
     {
         $filled = [];
 
-        foreach (array_keys(self::ROOM_TYPES) as $key) {
+        foreach (array_keys($this->roomTypes()) as $key) {
             $value = $this->getAttribute('price_'.$key);
             if ($value !== null && (int) $value > 0) {
                 $filled[$key] = (int) $value;
@@ -132,12 +141,33 @@ class Package extends Model
 
         $this->price = min($filled);
 
-        foreach (array_keys(self::ROOM_TYPES) as $key) {
+        foreach (array_keys($this->roomTypes()) as $key) {
             if (isset($filled[$key])) {
                 $this->room_type = $key;
                 break;
             }
         }
+    }
+
+    public function isHaji(): bool
+    {
+        return in_array($this->type, self::HAJI_TYPES, true);
+    }
+
+    /** @return array<string, string> */
+    public function roomTypes(): array
+    {
+        if ($this->isHaji()) {
+            return self::ROOM_TYPES + self::HAJI_ROOM_TYPES;
+        }
+
+        return self::ROOM_TYPES;
+    }
+
+    /** @return list<string> */
+    public static function hajiTypeKeys(): array
+    {
+        return self::HAJI_TYPES;
     }
 
     public function inquiries(): HasMany
@@ -302,7 +332,7 @@ class Package extends Model
 
     public function roomTypeLabel(string $key): string
     {
-        $name = self::ROOM_TYPES[$key] ?? $key;
+        $name = $this->roomTypes()[$key] ?? self::ROOM_TYPES[$key] ?? self::HAJI_ROOM_TYPES[$key] ?? $key;
         $pax = self::ROOM_OCCUPANCY[$key] ?? null;
 
         return $pax ? "{$name} ({$pax} org/kamar)" : $name;
@@ -322,7 +352,7 @@ class Package extends Model
     {
         $rows = [];
 
-        foreach (self::ROOM_TYPES as $key => $label) {
+        foreach ($this->roomTypes() as $key => $label) {
             $value = $this->{'price_'.$key};
             if ($value) {
                 $occupancy = self::ROOM_OCCUPANCY[$key] ?? 0;
@@ -347,7 +377,7 @@ class Package extends Model
             return collect($rows)->pluck('label')->implode(' · ');
         }
 
-        return self::ROOM_TYPES[$this->room_type] ?? $this->room_type;
+        return $this->roomTypes()[$this->room_type] ?? self::ROOM_TYPES[$this->room_type] ?? $this->room_type;
     }
 
     public function formattedMoney(int $amount): string

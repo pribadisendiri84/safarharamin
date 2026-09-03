@@ -17,6 +17,7 @@ class OperationsDashboardController extends Controller
             'total_quad' => Pilgrim::query()->where('room_type', 'quad')->count(),
             'total_triple' => Pilgrim::query()->where('room_type', 'triple')->count(),
             'total_double' => Pilgrim::query()->where('room_type', 'double')->count(),
+            'total_double_plus' => Pilgrim::query()->where('room_type', 'double_plus')->count(),
             'total_rooms' => Room::query()->count(),
             'rooms_full' => 0,
             'rooms_incomplete' => 0,

@@ -37,7 +37,7 @@
       <form method="post" action="{{ route('admin.operations.grouping.rooms.store', $departure) }}" class="inline-form">
         @csrf
         <input type="hidden" name="room_type" value="{{ $activeTab }}">
-        <button class="btn gray" type="submit">+ Buat room {{ strtoupper($activeTab) }}</button>
+        <button class="btn gray" type="submit">+ Buat room {{ strtoupper($roomTypes[$activeTab] ?? $activeTab) }}</button>
       </form>
     </div>
 

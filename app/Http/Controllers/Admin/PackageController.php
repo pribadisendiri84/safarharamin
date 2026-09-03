@@ -281,10 +281,13 @@ class PackageController extends Controller
             'price_quad' => ['nullable', 'integer', 'min:1'],
             'price_triple' => ['nullable', 'integer', 'min:1'],
             'price_double' => ['nullable', 'integer', 'min:1'],
+            'price_double_plus' => ['nullable', 'integer', 'min:1'],
             'original_price' => ['nullable', 'integer', 'min:1'],
             'price_note' => ['nullable', 'string', 'max:180'],
             'hotel_makkah' => ['nullable', 'string', 'max:120'],
             'hotel_madinah' => ['nullable', 'string', 'max:120'],
+            'hotel_transit' => ['nullable', 'string', 'max:120'],
+            'hotel_maktab' => ['nullable', 'string', 'max:120'],
             'hotel_stars' => ['required', 'integer', 'min:3', 'max:5'],
             'airline' => ['nullable', 'string', 'max:80'],
             'seats_total' => ['required', 'integer', 'min:1'],
@@ -303,12 +306,18 @@ class PackageController extends Controller
         $data['is_hot'] = $request->boolean('is_hot');
         $data['home_sort'] = $this->resolveHomeSort($data['is_featured'], $existing);
 
+        if (! in_array($data['type'], Package::HAJI_TYPES, true)) {
+            $data['price_double_plus'] = null;
+            $data['hotel_transit'] = null;
+            $data['hotel_maktab'] = null;
+        }
+
         return $data;
     }
 
     private function normalizeRoomPrices(Request $request): void
     {
-        foreach (['price_quad', 'price_triple', 'price_double'] as $field) {
+        foreach (['price_quad', 'price_triple', 'price_double', 'price_double_plus'] as $field) {
             $raw = $request->input($field);
             if ($raw === null || $raw === '') {
                 $request->merge([$field => null]);

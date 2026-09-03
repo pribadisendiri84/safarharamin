@@ -18,6 +18,9 @@
   <div class="stat"><span>Quad</span><b>{{ number_format($stats['total_quad'], 0, ',', '.') }}</b></div>
   <div class="stat"><span>Triple</span><b>{{ number_format($stats['total_triple'], 0, ',', '.') }}</b></div>
   <div class="stat"><span>Double</span><b>{{ number_format($stats['total_double'], 0, ',', '.') }}</b></div>
+  @if($stats['total_double_plus'] > 0)
+    <div class="stat"><span>Double Plus</span><b>{{ number_format($stats['total_double_plus'], 0, ',', '.') }}</b></div>
+  @endif
   <div class="stat"><span>Total room</span><b>{{ number_format($stats['total_rooms'], 0, ',', '.') }}</b></div>
   <div class="stat"><span>Room full</span><b>{{ number_format($stats['rooms_full'], 0, ',', '.') }}</b></div>
   <div class="stat warn-stat"><span>Room belum penuh</span><b>{{ number_format($stats['rooms_incomplete'], 0, ',', '.') }}</b></div>

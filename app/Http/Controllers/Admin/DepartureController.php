@@ -51,8 +51,6 @@ class DepartureController extends Controller
                 'program_name' => $package?->title,
                 'departure_date' => $package?->departure_date,
                 'airline' => $package?->airline,
-                'hotel_makkah' => $package?->hotel_makkah,
-                'hotel_madinah' => $package?->hotel_madinah,
                 'package_id' => $package?->id,
             ]),
             'packages' => Package::query()->orderBy('title')->get(['id', 'title', 'type', 'departure_date']),
@@ -115,6 +113,8 @@ class DepartureController extends Controller
             'flight_number' => ['nullable', 'string', 'max:60'],
             'hotel_makkah' => ['nullable', 'string', 'max:180'],
             'hotel_madinah' => ['nullable', 'string', 'max:180'],
+            'hotel_transit' => ['nullable', 'string', 'max:180'],
+            'hotel_maktab' => ['nullable', 'string', 'max:180'],
             'notes' => ['nullable', 'string'],
         ]);
     }

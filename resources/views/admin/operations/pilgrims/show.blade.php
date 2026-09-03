@@ -32,6 +32,12 @@
       @if($isHaji)
         <div class="ops-spec-row"><dt>ID / catatan haji</dt><dd>{{ $pilgrim->haji_registration_id ?: '—' }}</dd></div>
         <div class="ops-spec-row"><dt>Nomor porsi</dt><dd>{{ $pilgrim->haji_portion_number ?: '—' }}</dd></div>
+        @if($pilgrim->departure)
+          <div class="ops-spec-row"><dt>Hotel Makkah</dt><dd>{{ $pilgrim->departure->hotel_makkah ?: '—' }}</dd></div>
+          <div class="ops-spec-row"><dt>Hotel Madinah</dt><dd>{{ $pilgrim->departure->hotel_madinah ?: '—' }}</dd></div>
+          <div class="ops-spec-row"><dt>Hotel Transit</dt><dd>{{ $pilgrim->departure->hotel_transit ?: '—' }}</dd></div>
+          <div class="ops-spec-row"><dt>Maktab</dt><dd>{{ $pilgrim->departure->hotel_maktab ?: '—' }}</dd></div>
+        @endif
       @endif
       @if($pilgrim->notes)
         <div class="ops-spec-row"><dt>Catatan</dt><dd>{{ $pilgrim->notes }}</dd></div>

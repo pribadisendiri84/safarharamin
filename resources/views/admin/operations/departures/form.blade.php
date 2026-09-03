@@ -2,6 +2,9 @@
 
 @section('title', $departure->exists ? 'Edit keberangkatan' : 'Tambah keberangkatan')
 @section('content')
+@php
+  $isHaji = old('program_kind', $departure->program_kind) === 'haji';
+@endphp
 <div class="page-head">
   <div>
     <h1>{{ $departure->exists ? 'Edit keberangkatan' : 'Tambah keberangkatan' }}</h1>
@@ -26,7 +29,7 @@
 
   <div class="row2">
     <label>Jenis
-      <select name="program_kind" required>
+      <select name="program_kind" id="departure-kind" required>
         @foreach(\App\Models\Departure::KINDS as $key => $label)
           <option value="{{ $key }}" @selected(old('program_kind', $departure->program_kind) === $key)>{{ $label }}</option>
         @endforeach
@@ -40,10 +43,17 @@
     <label>Nomor penerbangan<input name="flight_number" value="{{ old('flight_number', $departure->flight_number) }}"></label>
   </div>
 
-  <div class="row2">
-    <label>Hotel Makkah<input name="hotel_makkah" value="{{ old('hotel_makkah', $departure->hotel_makkah) }}"></label>
-    <label>Hotel Madinah<input name="hotel_madinah" value="{{ old('hotel_madinah', $departure->hotel_madinah) }}"></label>
-  </div>
+  <fieldset class="hotel-fields">
+    <legend id="hotel-fields-legend">{{ $isHaji ? 'Hotel haji' : 'Hotel' }}</legend>
+    <div class="row2">
+      <label>Hotel Makkah<input name="hotel_makkah" value="{{ old('hotel_makkah', $departure->hotel_makkah ?? '') }}"></label>
+      <label>Hotel Madinah<input name="hotel_madinah" value="{{ old('hotel_madinah', $departure->hotel_madinah ?? '') }}"></label>
+    </div>
+    <div class="row2 haji-extra-hotels" @unless($isHaji) hidden @endunless>
+      <label>Hotel Transit<input name="hotel_transit" value="{{ old('hotel_transit', $departure->hotel_transit ?? '') }}"></label>
+      <label>Maktab<input name="hotel_maktab" value="{{ old('hotel_maktab', $departure->hotel_maktab ?? '') }}"></label>
+    </div>
+  </fieldset>
 
   <label>Catatan<textarea name="notes" rows="3">{{ old('notes', $departure->notes) }}</textarea></label>
 
@@ -53,3 +63,23 @@
   </div>
 </form>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+  var kindSelect = document.getElementById('departure-kind');
+  var hajiExtraHotels = document.querySelector('.haji-extra-hotels');
+  var legend = document.getElementById('hotel-fields-legend');
+  if (!kindSelect) return;
+
+  function syncKind() {
+    var isHaji = kindSelect.value === 'haji';
+    if (hajiExtraHotels) hajiExtraHotels.hidden = !isHaji;
+    if (legend) legend.textContent = isHaji ? 'Hotel haji' : 'Hotel';
+  }
+
+  kindSelect.addEventListener('change', syncKind);
+  syncKind();
+})();
+</script>
+@endpush
