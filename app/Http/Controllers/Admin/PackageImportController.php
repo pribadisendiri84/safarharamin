@@ -28,7 +28,7 @@ class PackageImportController extends Controller
         }
 
         return redirect()
-            ->route('admin.packages.index', ['needs_flyer' => 1])
+            ->route('admin.packages.index', ['data_complete' => 0])
             ->with('ok', $message)
             ->with('import_errors', $result['errors']);
     }

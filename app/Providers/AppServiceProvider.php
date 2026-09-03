@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Support\SiteProfile;
+use App\Support\WaMessages;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -25,7 +26,9 @@ class AppServiceProvider extends ServiceProvider
                     request()->attributes->set('site_profile', $site);
                 }
             }
-            $view->with('site', $site)->with('wa', $site->waNumber);
+            $view->with('site', $site)
+                ->with('wa', $site->waNumber)
+                ->with('waFloat', WaMessages::floatButton());
         });
 
         Gate::define('manage-users', fn (User $user) => $user->isSuperadmin());

@@ -86,7 +86,14 @@
               @endif
               @if($inquiry->notes)<small>{{ $inquiry->notes }}</small>@endif
             </td>
-            <td><span class="badge {{ $inquiry->status }}">{{ $inquiry->statusLabel() }}</span></td>
+            <td>
+              <span class="badge {{ $inquiry->status }}">{{ $inquiry->statusLabel() }}</span>
+              @if($inquiry->isSold() && ! $inquiry->pilgrimsImported())
+                <small class="import-hint">Belum dipindah</small>
+              @elseif($inquiry->pilgrimsImported())
+                <small class="import-hint ok">Sudah di Jamaah</small>
+              @endif
+            </td>
             <td>@include('admin.partials.timestamps', ['model' => $inquiry])</td>
             <td>
               @include('admin.partials.row-actions', [

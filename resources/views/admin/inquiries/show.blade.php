@@ -74,7 +74,7 @@
           <input type="number" name="sold_pax" min="1" max="80" value="{{ old('sold_pax', $inquiry->sold_pax ?? $inquiry->pax ?? 1) }}">
         </label>
         <label>Nilai closing (Rp)
-          <input type="number" name="sold_amount" min="0" value="{{ old('sold_amount', $inquiry->sold_amount) }}" placeholder="Kosong = harga paket × jamaah">
+          <input type="text" class="js-rupiah" name="sold_amount" value="{{ old('sold_amount', $inquiry->sold_amount) }}" placeholder="Kosong = harga paket × jamaah">
         </label>
       </div>
       <label>Tanggal closing
@@ -114,4 +114,69 @@
     </ul>
   </section>
 </div>
+
+@if($inquiry->isSold() && ! $inquiry->trashed())
+  <section class="panel import-pilgrim-panel">
+    <div class="panel-head">@include('admin.partials.icon', ['name' => 'users']) Pindah ke Jamaah</div>
+    @if($inquiry->pilgrimsImported())
+      <div class="form-pad">
+        <p class="sub">Pengajuan closing ini sudah dipindah ke modul jamaah ({{ $inquiry->pilgrims->count() }} jamaah).</p>
+        <div class="actions">
+          <a class="btn gray" href="{{ route('admin.operations.pilgrims.index', ['departure_id' => $inquiry->pilgrims->first()?->departure_id]) }}">Lihat jamaah</a>
+          @if($inquiry->pilgrims->first()?->departure)
+            <a class="btn" href="{{ route('admin.operations.grouping.index', $inquiry->pilgrims->first()->departure) }}">Grouping room</a>
+          @endif
+        </div>
+      </div>
+    @elseif($departures->isEmpty())
+      <div class="form-pad">
+        <p class="sub">Belum ada keberangkatan. Buat dulu di menu <a href="{{ route('admin.operations.departures.create') }}">Keberangkatan</a>, lalu kembali ke sini untuk memindahkan jamaah closing.</p>
+      </div>
+    @else
+      <form class="form form-pad import-pilgrim-form" method="post" action="{{ route('admin.inquiries.import-pilgrims', $inquiry) }}">
+        @csrf
+        <p class="sub import-pilgrim-intro">
+          Pindahkan {{ $inquiry->soldPaxCount() }} jamaah closing ke operasi. Harga per jamaah: <b>Rp {{ number_format((int) round((int) $inquiry->sold_amount / max(1, $inquiry->soldPaxCount())), 0, ',', '.') }}</b>.
+          @unless($matchedDepartures)
+            Paket pengajuan belum punya keberangkatan khusus — pilih keberangkatan yang sesuai.
+          @endunless
+        </p>
+        <div class="row2">
+          <label>Keberangkatan
+            <select name="departure_id" required class="js-searchable" data-placeholder="Pilih keberangkatan…">
+              <option value="">Pilih keberangkatan</option>
+              @foreach($departures as $departure)
+                <option value="{{ $departure->id }}" @selected((string) old('departure_id') === (string) $departure->id)>
+                  {{ $departure->program_name }} · {{ $departure->formattedDepartureDate() }}
+                </option>
+              @endforeach
+            </select>
+          </label>
+          <label>Tipe kamar
+            <select name="room_type" required>
+              @foreach(\App\Enums\RoomType::labels() as $key => $label)
+                <option value="{{ $key }}" @selected(old('room_type', 'quad') === $key)>{{ $label }}</option>
+              @endforeach
+            </select>
+          </label>
+        </div>
+        <div class="import-name-list">
+          <span class="import-name-label">Nama jamaah ({{ $inquiry->soldPaxCount() }})</span>
+          @for($i = 0; $i < $inquiry->soldPaxCount(); $i++)
+            <label>Nama jamaah {{ $i + 1 }}
+              <input
+                type="text"
+                name="names[]"
+                value="{{ old('names.'.$i, $i === 0 ? $inquiry->name : '') }}"
+                @required(true)
+                placeholder="{{ $i === 0 ? 'Nama kontak pengajuan' : 'Nama jamaah '.($i + 1) }}"
+              >
+            </label>
+          @endfor
+        </div>
+        <button class="btn" type="submit">Pindah ke Jamaah</button>
+      </form>
+    @endif
+  </section>
+@endif
 @endsection

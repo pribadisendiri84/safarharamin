@@ -68,13 +68,13 @@
     <label>Tanggal berangkat<input type="date" name="departure_date" value="{{ old('departure_date', optional($package->departure_date)->format('Y-m-d')) }}"></label>
   </div>
   <div class="row3">
-    <label>Quad — 4 org/kamar (Rp)<input type="number" name="price_quad" value="{{ old('price_quad', $package->price_quad ?? $package->price) }}" min="1" required></label>
-    <label>Triple — 3 org/kamar (Rp)<input type="number" name="price_triple" value="{{ old('price_triple', $package->price_triple) }}" min="1" required></label>
-    <label>Double — 2 org/kamar (Rp)<input type="number" name="price_double" value="{{ old('price_double', $package->price_double) }}" min="1" required></label>
+    <label>Quad — 4 org/kamar (Rp)<input type="text" class="js-rupiah" name="price_quad" value="{{ old('price_quad', $package->price_quad ?? $package->price) }}" required></label>
+    <label>Triple — 3 org/kamar (Rp)<input type="text" class="js-rupiah" name="price_triple" value="{{ old('price_triple', $package->price_triple) }}" required></label>
+    <label>Double — 2 org/kamar (Rp)<input type="text" class="js-rupiah" name="price_double" value="{{ old('price_double', $package->price_double) }}" required></label>
   </div>
   <p class="sub">Harga per jamaah. Semakin sedikit isi kamar, semakin mahal (Quad termurah).</p>
   <div class="row2">
-    <label>Harga coret<input type="number" name="original_price" value="{{ old('original_price', $package->original_price) }}" min="1"></label>
+    <label>Harga coret<input type="text" class="js-rupiah" name="original_price" value="{{ old('original_price', $package->original_price) }}"></label>
     <label>Catatan harga<input name="price_note" value="{{ old('price_note', $package->price_note) }}" maxlength="180" placeholder="Harga dapat berubah sesuai kebijakan"></label>
   </div>
   <div class="row3">
@@ -95,9 +95,10 @@
   <label>Deskripsi (opsional)<textarea name="description" rows="3">{{ old('description', $package->description) }}</textarea></label>
   <label>Itinerary (opsional)<textarea name="itinerary" rows="4">{{ old('itinerary', $package->itinerary) }}</textarea></label>
   <div class="check-row">
-    <label class="check"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $package->is_featured))> Unggulan</label>
+    <label class="check"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $package->is_featured))> Tampil di beranda</label>
     <label class="check"><input type="checkbox" name="is_hot" value="1" @checked(old('is_hot', $package->is_hot))> Kuota terbatas</label>
   </div>
+  <p class="sub">Centang beranda di daftar paket (maks. {{ \App\Models\Package::homeLimit() }}). Urutan lewat drag-drop.</p>
   <div class="form-actions">
     <button class="btn" type="submit">Simpan</button>
   </div>

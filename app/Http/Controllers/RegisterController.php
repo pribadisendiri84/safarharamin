@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\City;
 use App\Models\Inquiry;
 use App\Models\Package;
-use App\Support\SiteProfile;
+use App\Support\WaMessages;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -37,11 +36,7 @@ class RegisterController extends Controller
             'status' => 'baru',
         ]);
 
-        $package = $inquiry->package;
-        $message = 'Halo '.SiteProfile::current()->name.', saya '.$inquiry->name.' ingin daftar'.
-            ($package ? ' paket '.$package->title : '').
-            ' ('.$inquiry->pax.' jamaah) dari '.City::label($inquiry->city).
-            '. Mohon dihubungi.';
+        $message = WaMessages::register($inquiry, $inquiry->package);
 
         $request->session()->put('wa_text', $message);
 

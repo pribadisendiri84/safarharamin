@@ -107,7 +107,7 @@ class AdminPackageBulkTest extends TestCase
             ->post(route('admin.packages.import.store'), [
                 'csv' => UploadedFile::fake()->createWithContent('import.csv', $csv),
             ])
-            ->assertRedirect(route('admin.packages.index', ['needs_flyer' => 1]))
+            ->assertRedirect(route('admin.packages.index', ['data_complete' => 0]))
             ->assertSessionHas('ok');
 
         $this->assertDatabaseHas('packages', [
@@ -217,14 +217,15 @@ class AdminPackageBulkTest extends TestCase
             ->assertSessionHasErrors('photos');
     }
 
-    public function test_needs_flyer_filter_lists_packages_without_images(): void
+    public function test_data_incomplete_filter_lists_packages_missing_flyer_or_date(): void
     {
         $admin = User::factory()->admin()->create();
         Package::query()->create([
-            'title' => 'Paket Lengkap Flyer',
-            'slug' => 'paket-lengkap-flyer',
+            'title' => 'Paket Data Lengkap',
+            'slug' => 'paket-data-lengkap-filter',
             'type' => 'umroh',
             'departure_city' => 'jakarta',
+            'departure_date' => '2026-10-12',
             'duration_days' => 9,
             'price' => 30000000,
             'price_quad' => 30000000,
@@ -256,9 +257,188 @@ class AdminPackageBulkTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->get(route('admin.packages.index', ['needs_flyer' => 1]))
+            ->get(route('admin.packages.index', ['data_complete' => 0]))
             ->assertOk()
             ->assertSee('Belum Ada Flyer')
-            ->assertDontSee('Paket Lengkap Flyer');
+            ->assertDontSee('Paket Data Lengkap');
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.index', ['data_complete' => 1]))
+            ->assertOk()
+            ->assertSee('Paket Data Lengkap')
+            ->assertDontSee('Belum Ada Flyer');
+    }
+
+    public function test_featured_filter_lists_only_home_packages(): void
+    {
+        $admin = User::factory()->admin()->create();
+        Package::query()->create([
+            'title' => 'Paket Beranda',
+            'slug' => 'paket-beranda',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-10-12',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'hotel_stars' => 4,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'status' => 'published',
+            'is_featured' => true,
+            'home_sort' => 1,
+        ]);
+        Package::query()->create([
+            'title' => 'Paket Non Beranda',
+            'slug' => 'paket-non-beranda',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'hotel_stars' => 4,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'status' => 'published',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.index', ['featured' => 1]))
+            ->assertOk()
+            ->assertSee('Paket Beranda')
+            ->assertDontSee('Paket Non Beranda');
+    }
+
+    public function test_data_complete_filter_lists_packages_with_flyer_and_departure_date(): void
+    {
+        $admin = User::factory()->admin()->create();
+        Package::query()->create([
+            'title' => 'Paket Data Lengkap',
+            'slug' => 'paket-data-lengkap',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-11-01',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'hotel_stars' => 4,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'status' => 'draft',
+        ]);
+        Package::query()->create([
+            'title' => 'Paket Data Belum Lengkap',
+            'slug' => 'paket-data-belum-lengkap',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'hotel_stars' => 4,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => [],
+            'status' => 'draft',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.index', ['data_complete' => 1]))
+            ->assertOk()
+            ->assertSee('Paket Data Lengkap')
+            ->assertDontSee('Paket Data Belum Lengkap');
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.index', ['data_complete' => 0]))
+            ->assertOk()
+            ->assertSee('Paket Data Belum Lengkap')
+            ->assertDontSee('Paket Data Lengkap');
+
+        $this->actingAs($admin)
+            ->get('/admin/packages?data_complete=&featured=&status=')
+            ->assertOk()
+            ->assertSee('Paket Data Lengkap')
+            ->assertSee('Paket Data Belum Lengkap');
+    }
+
+    public function test_admin_can_update_package_status_from_list(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $package = Package::query()->create([
+            'title' => 'Paket Ubah Status',
+            'slug' => 'paket-ubah-status',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-10-12',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'hotel_stars' => 4,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'status' => 'draft',
+        ]);
+
+        $this->actingAs($admin)
+            ->patchJson(route('admin.packages.update-status', $package), ['status' => 'published'])
+            ->assertOk()
+            ->assertJson([
+                'ok' => true,
+                'status' => 'published',
+            ]);
+
+        $this->assertDatabaseHas('packages', [
+            'id' => $package->id,
+            'status' => 'published',
+        ]);
+    }
+
+    public function test_update_status_rejects_publish_without_flyer(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $package = Package::query()->create([
+            'title' => 'Paket Tanpa Flyer',
+            'slug' => 'paket-tanpa-flyer-status',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-10-12',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'hotel_stars' => 4,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => [],
+            'status' => 'draft',
+        ]);
+
+        $this->actingAs($admin)
+            ->patchJson(route('admin.packages.update-status', $package), ['status' => 'published'])
+            ->assertStatus(422)
+            ->assertJson([
+                'ok' => false,
+                'status' => 'draft',
+            ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Admin\Concerns\FiltersTrashed;
 use App\Http\Controllers\Controller;
+use App\Models\Departure;
 use App\Models\Inquiry;
 use App\Models\Package;
 use App\Models\User;
@@ -83,7 +84,14 @@ class InquiryController extends Controller
     {
         $this->authorizeInquiry($inquiry);
 
-        $inquiry->load(['package', 'followUps.author', 'creator', 'pic']);
+        $inquiry->load(['package', 'followUps.author', 'creator', 'pic', 'pilgrims.departure']);
+
+        $departureQuery = Departure::query()->orderBy('departure_date')->orderBy('program_name');
+        if ($inquiry->package_id) {
+            $matchedDepartures = (clone $departureQuery)->where('package_id', $inquiry->package_id)->get(['id', 'program_name', 'departure_date', 'package_id']);
+        } else {
+            $matchedDepartures = collect();
+        }
 
         return view('admin.inquiries.show', [
             'inquiry' => $inquiry,
@@ -91,6 +99,10 @@ class InquiryController extends Controller
             'pics' => request()->user()?->canSeeLeadSources()
                 ? User::query()->orderBy('name')->get(['id', 'name'])
                 : collect(),
+            'departures' => $matchedDepartures->isNotEmpty()
+                ? $matchedDepartures
+                : Departure::query()->orderBy('program_name')->get(['id', 'program_name', 'departure_date', 'package_id']),
+            'matchedDepartures' => $matchedDepartures->isNotEmpty(),
         ]);
     }
 

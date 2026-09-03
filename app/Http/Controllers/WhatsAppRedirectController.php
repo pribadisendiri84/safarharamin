@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\SiteProfile;
+use App\Support\WaMessages;
 use App\Support\VisitorTracker;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class WhatsAppRedirectController extends Controller
 
         $number = preg_replace('/\D+/', '', SiteProfile::current()->waNumber) ?: SiteProfile::DEFAULT_WA;
         $text = match ($from) {
-            'float' => 'Halo '.SiteProfile::current()->name.', saya ingin tanya paket haji/umroh.',
+            'float' => WaMessages::float(),
             'form' => (string) $request->session()->pull('wa_text', ''),
             default => '',
         };

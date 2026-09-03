@@ -11,11 +11,10 @@ class HomeController extends Controller
     public function index()
     {
         $featured = Package::query()
-            ->published()
-            ->orderByDesc('is_hot')
-            ->orderByDesc('is_featured')
-            ->orderBy('price')
-            ->limit(6)
+            ->displayedOnHome()
+            ->orderBy('home_sort')
+            ->orderByDesc('id')
+            ->limit(Package::homeLimit())
             ->get();
 
         $counts = Package::query()
@@ -34,7 +33,7 @@ class HomeController extends Controller
             'umrohCount' => $umrohCount,
             'hajiCount' => $hajiCount,
             'testimonials' => Testimonial::query()->published()->limit(3)->get(),
-            'gallery' => GalleryItem::query()->orderBy('sort_order')->limit(6)->get(),
+            'gallery' => GalleryItem::query()->displayedOnHome()->orderBy('home_sort')->orderByDesc('id')->limit(GalleryItem::homeLimit())->get(),
         ]);
     }
 }

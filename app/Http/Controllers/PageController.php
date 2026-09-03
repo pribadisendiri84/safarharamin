@@ -21,8 +21,15 @@ class PageController extends Controller
 
     public function gallery()
     {
+        $activeCategory = request()->string('kategori')->toString();
+        if (! array_key_exists($activeCategory, GalleryItem::categories())) {
+            $activeCategory = GalleryItem::CATEGORY_UMROH;
+        }
+
         return view('pages.gallery', [
-            'items' => GalleryItem::query()->orderBy('sort_order')->orderByDesc('id')->get(),
+            'grouped' => GalleryItem::groupedForStorefront(),
+            'categories' => GalleryItem::categories(),
+            'activeCategory' => $activeCategory,
         ]);
     }
 

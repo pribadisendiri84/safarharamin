@@ -86,14 +86,12 @@
     <h2>Gallery keberangkatan</h2>
     <a href="{{ route('gallery') }}">Lihat gallery →</a>
   </div>
-  <div class="gallery-home">
+  <div class="gallery-home gallery-zoom-grid">
     @foreach($gallery as $item)
-      <figure>
-        <img src="{{ $item->image }}" alt="{{ $item->title }}" loading="lazy">
-        <figcaption>{{ $item->title }}</figcaption>
-      </figure>
+      @include('partials.gallery-item', ['item' => $item])
     @endforeach
   </div>
+  @include('partials.gallery-lightbox')
 </section>
 @endif
 

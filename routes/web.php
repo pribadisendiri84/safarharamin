@@ -6,8 +6,15 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\HistoryController;
 use App\Http\Controllers\Admin\InquiryController;
+use App\Http\Controllers\Admin\InquiryPilgrimImportController;
 use App\Http\Controllers\Admin\PackageController as AdminPackageController;
 use App\Http\Controllers\Admin\PackageImportController;
+use App\Http\Controllers\Admin\DepartureController;
+use App\Http\Controllers\Admin\DepartureRecapController;
+use App\Http\Controllers\Admin\OperationsDashboardController;
+use App\Http\Controllers\Admin\PilgrimController;
+use App\Http\Controllers\Admin\PilgrimTransactionController;
+use App\Http\Controllers\Admin\RoomGroupingController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\TrafficController;
@@ -47,7 +54,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::resource('packages', AdminPackageController::class)->except(['show']);
             Route::get('packages/{package}/duplicate', [AdminPackageController::class, 'duplicate'])->name('packages.duplicate');
             Route::post('packages/{package}/restore', [AdminPackageController::class, 'restore'])->withTrashed()->name('packages.restore');
+            Route::patch('packages/{package}/featured', [AdminPackageController::class, 'toggleFeatured'])->name('packages.toggle-featured');
+            Route::patch('packages/{package}/status', [AdminPackageController::class, 'updateStatus'])->name('packages.update-status');
+            Route::post('packages/reorder-home', [AdminPackageController::class, 'reorderHome'])->name('packages.reorder-home');
             Route::resource('gallery', GalleryController::class)->except(['show']);
+            Route::patch('gallery/{gallery}/home', [GalleryController::class, 'toggleHome'])->name('gallery.toggle-home');
+            Route::post('gallery/reorder', [GalleryController::class, 'reorder'])->name('gallery.reorder');
             Route::post('gallery/{gallery}/restore', [GalleryController::class, 'restore'])->withTrashed()->name('gallery.restore');
             Route::resource('testimonials', TestimonialController::class)->except(['show']);
             Route::post('testimonials/{testimonial}/restore', [TestimonialController::class, 'restore'])->withTrashed()->name('testimonials.restore');
@@ -68,6 +80,31 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('inquiries/{inquiry}/notes', [InquiryController::class, 'storeNote'])->name('inquiries.notes.store');
         Route::delete('inquiries/{inquiry}', [InquiryController::class, 'destroy'])->name('inquiries.destroy');
         Route::post('inquiries/{inquiry}/restore', [InquiryController::class, 'restore'])->withTrashed()->name('inquiries.restore');
+        Route::post('inquiries/{inquiry}/import-jamaah', [InquiryPilgrimImportController::class, 'store'])->name('inquiries.import-pilgrims');
+
+        Route::prefix('operasi')->name('operations.')->group(function () {
+            Route::get('/', OperationsDashboardController::class)->name('dashboard');
+            Route::resource('keberangkatan', DepartureController::class)
+                ->parameters(['keberangkatan' => 'departure'])
+                ->names('departures')
+                ->except(['show']);
+            Route::post('keberangkatan/{departure}/restore', [DepartureController::class, 'restore'])->name('departures.restore');
+            Route::resource('jamaah', PilgrimController::class)
+                ->parameters(['jamaah' => 'pilgrim'])
+                ->names('pilgrims');
+            Route::post('jamaah/{pilgrim}/restore', [PilgrimController::class, 'restore'])->name('pilgrims.restore');
+            Route::post('jamaah/{pilgrim}/transaksi', [PilgrimTransactionController::class, 'store'])->name('pilgrims.transactions.store');
+            Route::get('jamaah/{pilgrim}/transaksi/{transaction}/invoice', [PilgrimTransactionController::class, 'showInvoice'])->name('pilgrims.transactions.invoice.show');
+            Route::delete('jamaah/{pilgrim}/transaksi/{transaction}', [PilgrimTransactionController::class, 'destroy'])->name('pilgrims.transactions.destroy');
+            Route::get('keberangkatan/{departure}/grouping', [RoomGroupingController::class, 'index'])->name('grouping.index');
+            Route::post('keberangkatan/{departure}/grouping/auto', [RoomGroupingController::class, 'autoGroup'])->name('grouping.auto');
+            Route::post('keberangkatan/{departure}/grouping/rooms', [RoomGroupingController::class, 'storeRoom'])->name('grouping.rooms.store');
+            Route::delete('keberangkatan/{departure}/grouping/rooms/{room}', [RoomGroupingController::class, 'destroyRoom'])->name('grouping.rooms.destroy');
+            Route::post('keberangkatan/{departure}/grouping/assign', [RoomGroupingController::class, 'assign'])->name('grouping.assign');
+            Route::post('keberangkatan/{departure}/grouping/move', [RoomGroupingController::class, 'move'])->name('grouping.move');
+            Route::post('keberangkatan/{departure}/grouping/remove', [RoomGroupingController::class, 'remove'])->name('grouping.remove');
+            Route::get('keberangkatan/{departure}/rekap', [DepartureRecapController::class, 'show'])->name('recap.show');
+        });
 
         Route::middleware('can:manage-users')->group(function () {
             Route::get('riwayat', [HistoryController::class, 'index'])->name('history.index');

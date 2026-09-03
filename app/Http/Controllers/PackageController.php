@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Inquiry;
 use App\Models\Package;
+use App\Support\WaMessages;
 use Illuminate\Http\Request;
 
 class PackageController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Package::query()->published();
+        $query = Package::query()->visibleOnCatalog();
         $type = $request->string('tipe')->toString();
         $group = $request->string('kelompok')->toString();
 
@@ -78,7 +79,7 @@ class PackageController extends Controller
 
     public function show(Package $package)
     {
-        abort_unless($package->status === 'published', 404);
+        abort_unless($package->isVisibleOnCatalog(), 404);
 
         $related = Package::query()
             ->published()
@@ -114,13 +115,10 @@ class PackageController extends Controller
             'status' => 'baru',
         ]);
 
-        $message = $package->whatsappMessage()."\n\nNama: {$data['name']}\nWA: {$data['phone']}";
+        $message = WaMessages::packageInquiry($package, $data['name'], $data['phone']);
 
         $request->session()->put('wa_text', $message);
 
-        return redirect()
-            ->route('packages.show', $package)
-            ->with('ok', 'Permintaan tercatat. Lanjut WhatsApp untuk cek seat.')
-            ->with('wa_url', route('go.whatsapp', ['from' => 'form']));
+        return redirect()->route('go.whatsapp', ['from' => 'form']);
     }
 }

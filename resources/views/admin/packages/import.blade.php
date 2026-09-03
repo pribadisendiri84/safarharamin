@@ -5,7 +5,7 @@
 <div class="page-head">
   <div>
     <h1>Import paket CSV</h1>
-    <p class="sub">Semua field diisi lewat CSV. Flyer di-upload manual setelah import (filter Perlu flyer).</p>
+    <p class="sub">Semua field diisi lewat CSV. Flyer di-upload manual setelah import (filter <strong>Belum lengkap</strong>).</p>
   </div>
   <div class="actions head-actions">
     <a class="btn gray" href="{{ route('admin.packages.import.template') }}">@include('admin.partials.icon', ['name' => 'upload']) Unduh contoh CSV</a>

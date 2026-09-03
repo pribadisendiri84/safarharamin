@@ -45,6 +45,20 @@ HTTPS: `git clone https://github.com/pribadisendiri84/safarharamin.git`
 | `/testimoni` | Testimoni jamaah |
 | `/kalkulator-cicilan` | Simulasi setoran |
 | `/admin` | Kelola paket, galeri, testimoni, pengajuan, nomor WA |
+| `/admin/operasi` | Dashboard operasi jamaah (grouping, pembukuan DP/pelunasan) |
+
+### Admin — Operasi Jamaah
+
+Modul internal untuk agen perjalanan:
+
+- **Keberangkatan** — program umroh/haji per tanggal berangkat
+- **Jamaah** — data jamaah, status grouping & pembayaran (lunas / cicilan % / belum bayar)
+- **Grouping room** — assign jamaah ke room quad/triple/double, auto-group
+- **Rekap** — ringkasan room per keberangkatan + status bayar per jamaah
+- **Pembukuan** — catat DP, pelunasan, porsi (haji), penyesuaian
+- **Import dari pengajuan** — pengajuan status Closing bisa dipindah ke jamaah (pilih keberangkatan + nama jamaah)
+
+Menu sidebar: Operasi jamaah → Keberangkatan / Jamaah.
 
 ## Deploy ke Sumopod (VPS)
 

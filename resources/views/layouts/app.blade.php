@@ -63,7 +63,10 @@
   <div class="wrap copy">© {{ date('Y') }} {{ $site->name }}</div>
 </footer>
 
-<a class="wa-float" href="{{ route('go.whatsapp', ['from' => 'float']) }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i>Tanya via WhatsApp</a>
+@if($waFloat['enabled'])
+<a class="wa-float" href="{{ route('go.whatsapp', ['from' => 'float']) }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i>{{ $waFloat['label'] }}</a>
+@endif
 @include('admin.partials.searchable-select-script')
+@stack('scripts')
 </body>
 </html>

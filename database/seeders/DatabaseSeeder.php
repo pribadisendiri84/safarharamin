@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CitySeeder::class,
             CatalogSeeder::class,
+            OperationsSeeder::class,
         ]);
     }
 }

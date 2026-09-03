@@ -26,12 +26,19 @@
           ['route' => 'admin.gallery.*', 'href' => route('admin.gallery.index'), 'label' => 'Galeri', 'icon' => 'image', 'ability' => 'manage-catalog'],
           ['route' => 'admin.testimonials.*', 'href' => route('admin.testimonials.index'), 'label' => 'Testimoni', 'icon' => 'quote', 'ability' => 'manage-catalog'],
           ['route' => 'admin.inquiries.*', 'href' => route('admin.inquiries.index'), 'label' => 'Pengajuan', 'icon' => 'inbox'],
+          ['route' => 'admin.operations.*', 'href' => route('admin.operations.dashboard'), 'label' => 'Operasi jamaah', 'icon' => 'users'],
+          ['route' => 'admin.operations.departures.*', 'href' => route('admin.operations.departures.index'), 'label' => 'Keberangkatan', 'icon' => 'calendar', 'match' => ['admin.operations.departures.*', 'admin.operations.grouping.*', 'admin.operations.recap.*']],
+          ['route' => 'admin.operations.pilgrims.*', 'href' => route('admin.operations.pilgrims.index'), 'label' => 'Jamaah', 'icon' => 'box'],
           ['route' => 'admin.settings.*', 'href' => route('admin.settings.edit'), 'label' => 'Pengaturan', 'icon' => 'gear', 'ability' => 'manage-catalog'],
         ];
       @endphp
       @foreach($menu as $item)
         @if(empty($item['ability']) || auth()->user()->can($item['ability']))
-        <a href="{{ $item['href'] }}" class="{{ request()->routeIs($item['route']) ? 'active' : '' }}">
+        @php
+          $activeRoutes = $item['match'] ?? [$item['route']];
+          $isActive = collect($activeRoutes)->contains(fn ($pattern) => request()->routeIs($pattern));
+        @endphp
+        <a href="{{ $item['href'] }}" class="{{ $isActive ? 'active' : '' }}">
           @include('admin.partials.icon', ['name' => $item['icon']])
           {{ $item['label'] }}
         </a>
@@ -76,6 +83,7 @@
     </div>
     <main class="wrap">
       @if(session('ok'))<div class="alert ok">{{ session('ok') }}</div>@endif
+      @if(session('err'))<div class="alert err">{{ session('err') }}</div>@endif
       @if($errors->any())<div class="alert err">{{ $errors->first() }}</div>@endif
       @yield('content')
     </main>
@@ -92,6 +100,7 @@ function toggleSidebar(force) {
 </script>
 @include('admin.partials.searchable-select-script')
 @include('admin.partials.password-toggle-script')
+@include('admin.partials.rupiah-input-script')
 @stack('scripts')
 </body>
 </html>

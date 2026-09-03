@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\RecordsActivity;
-use App\Support\SiteProfile;
+use App\Support\WaMessages;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'sold_pax',
     'sold_amount',
     'closed_at',
+    'pilgrims_imported_at',
     'seats_applied',
 ])]
 class Inquiry extends Model
@@ -78,6 +79,7 @@ class Inquiry extends Model
             'sold_pax' => 'integer',
             'sold_amount' => 'integer',
             'closed_at' => 'datetime',
+            'pilgrims_imported_at' => 'datetime',
             'seats_applied' => 'boolean',
         ];
     }
@@ -117,6 +119,16 @@ class Inquiry extends Model
     public function followUps(): HasMany
     {
         return $this->hasMany(InquiryFollowUp::class)->latest();
+    }
+
+    public function pilgrims(): HasMany
+    {
+        return $this->hasMany(Pilgrim::class);
+    }
+
+    public function pilgrimsImported(): bool
+    {
+        return $this->pilgrims_imported_at !== null;
     }
 
     public function kindLabel(): string
@@ -166,7 +178,7 @@ class Inquiry extends Model
             $digits = '62'.substr($digits, 1);
         }
 
-        $message = 'Halo '.$this->name.', saya dari '.SiteProfile::current()->name.' terkait pengajuan paket Anda.';
+        $message = WaMessages::inquiryReply($this);
 
         return 'https://wa.me/'.$digits.'?text='.rawurlencode($message);
     }
@@ -187,7 +199,7 @@ class Inquiry extends Model
             }
             $package->refresh();
             if ($package->seats_left <= 0 && $package->status === 'published') {
-                $package->update(['status' => 'full']);
+                $package->update(['status' => 'fullbook']);
             }
             $this->forceFill(['seats_applied' => true])->saveQuietly();
         }

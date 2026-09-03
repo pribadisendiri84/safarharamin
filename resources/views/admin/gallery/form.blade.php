@@ -19,11 +19,26 @@
   <label>Judul
     <input name="title" value="{{ old('title', $item->title) }}" required>
   </label>
+  <label>Kategori
+    <select name="category" required>
+      @foreach(\App\Models\GalleryItem::categories() as $key => $label)
+        <option value="{{ $key }}" @selected(old('category', $item->category ?: 'umroh') === $key)>{{ $label }}</option>
+      @endforeach
+    </select>
+  </label>
+  <label>Grup (mis. Manasik, Bandara, Madinah)
+    <input name="group_name" value="{{ old('group_name', $item->group_name) }}" placeholder="Opsional — foto dengan grup sama dikelompokkan">
+  </label>
   <label>Keterangan
     <input name="caption" value="{{ old('caption', $item->caption) }}">
   </label>
-  <label>Urutan (angka kecil tampil lebih dulu)
+  <label>Urutan halaman galeri
     <input type="number" name="sort_order" value="{{ old('sort_order', $item->sort_order ?? 0) }}" min="0">
+  </label>
+  <p class="sub">Bisa juga diatur dengan drag-drop di daftar galeri admin.</p>
+  <label class="check">
+    <input type="checkbox" name="show_on_home" value="1" @checked(old('show_on_home', $item->show_on_home))>
+    Tampilkan di beranda (urutan drag-drop di daftar galeri)
   </label>
   @if($item->image)
     <p class="sub">Foto sekarang:</p>
@@ -37,6 +52,8 @@
   <label>Atau URL foto
     <input name="image_url" value="{{ old('image_url', str_starts_with((string) $item->image, 'http') ? $item->image : '') }}" placeholder="https://…">
   </label>
-  <button class="btn" type="submit">Simpan</button>
+  <div class="form-actions">
+    <button class="btn" type="submit">Simpan</button>
+  </div>
 </form>
 @endsection

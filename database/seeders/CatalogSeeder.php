@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\GalleryItem;
 use App\Models\Package;
 use App\Models\Testimonial;
+use App\Support\HomeDisplay;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -50,9 +51,16 @@ class CatalogSeeder extends Seeder
             ['Umroh Hemat Yogyakarta', 'umroh', 'yogyakarta', '2026-12-14', 9, 28900000, 31000000, 'Winner Inn Ajyad', 'ODST', 3, 'Lion Air', 'quad', 40, 25, true, false],
         ];
 
+        $featuredSlot = 0;
+
         foreach ($rows as $i => $row) {
             [$title, $type, $city, $date, $days, $price, $original, $makkah, $madinah, $stars, $airline, $room, $total, $left, $featured, $hot] = $row;
             $rooms = $this->roomPrices($price);
+            $homeSort = null;
+            if ($featured) {
+                $featuredSlot++;
+                $homeSort = $featuredSlot <= HomeDisplay::packageLimit() ? $featuredSlot : 0;
+            }
 
             Package::query()->updateOrCreate(
                 ['slug' => Str::slug($title)],
@@ -81,6 +89,7 @@ class CatalogSeeder extends Seeder
                     'itinerary' => "Hari 1: Berkumpul embarkasi & terbang ke Jeddah/Madinah.\nHari 2-3: Ibadah di Madinah.\nHari 4: Menuju Makkah, umroh.\nHari 5-7: Ibadah di Masjidil Haram.\nHari terakhir: Kepulangan sesuai jadwal maskapai.",
                     'images' => [$photos[$i % count($photos)]],
                     'is_featured' => $featured,
+                    'home_sort' => $homeSort,
                     'is_hot' => $hot,
                     'status' => 'published',
                 ]
@@ -107,12 +116,15 @@ class CatalogSeeder extends Seeder
         }
 
         $gallery = [
-            ['Manasik Jakarta', $photos[0], 'Persiapan sebelum berangkat'],
-            ['Keberangkatan Soekarno-Hatta', $photos[3], 'Rombongan embarkasi Jakarta'],
-            ['Masjid Nabawi', $photos[1], 'Jamaah di Madinah'],
-            ['Masjidil Haram', $photos[0], 'Thawaf bersama muthawwif'],
-            ['Rombongan Madinah', $photos[2], 'Hotel dekat Gate 328'],
-            ['Kepulangan jamaah', $photos[3], 'Tiba kembali di tanah air'],
+            ['Manasik Jakarta', $photos[0], 'Persiapan sebelum berangkat', 'umroh', 'Manasik'],
+            ['Keberangkatan Soekarno-Hatta', $photos[3], 'Rombongan embarkasi Jakarta', 'umroh', 'Bandara'],
+            ['Masjid Nabawi', $photos[1], 'Jamaah di Madinah', 'umroh', 'Madinah'],
+            ['Masjidil Haram', $photos[0], 'Thawaf bersama muthawwif', 'umroh', 'Makkah'],
+            ['Rombongan Madinah', $photos[2], 'Hotel dekat Gate 328', 'umroh', 'Madinah'],
+            ['Kepulangan jamaah', $photos[3], 'Tiba kembali di tanah air', 'umroh', 'Bandara'],
+            ['Manasik haji', $photos[0], 'Briefing jamaah haji', 'haji', 'Manasik'],
+            ['Keberangkatan haji', $photos[3], 'Embarkasi rombongan haji', 'haji', 'Bandara'],
+            ['Ibadah di Mina', $photos[1], 'Dokumentasi haji plus', 'haji', 'Ibadah'],
         ];
 
         foreach ($gallery as $i => $row) {
@@ -121,7 +133,11 @@ class CatalogSeeder extends Seeder
                 [
                     'image' => $row[1],
                     'caption' => $row[2],
+                    'category' => $row[3],
+                    'group_name' => $row[4],
                     'sort_order' => $i,
+                    'show_on_home' => $i < 9,
+                    'home_sort' => $i < 9 ? $i + 1 : null,
                 ]
             );
         }

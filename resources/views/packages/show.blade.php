@@ -21,6 +21,7 @@
   <div class="detail-grid">
     <div>
       <div class="badges">
+        @if($package->isFullbook())<span class="badge fullbook">Fullbook</span>@endif
         @if($package->is_hot)<span class="badge hot">Kuota terbatas</span>@endif
         <span class="badge gold">{{ $package->hotel_stars }}★</span>
         <span class="badge">{{ $package->typeLabel() }}</span>
@@ -87,24 +88,23 @@
     </div>
 
     <aside class="ask">
-      <h3>Tanya / amankan seat</h3>
-      <p>Data masuk ke admin. Balasan via WhatsApp.</p>
-      @if(session('ok'))
-        <div class="alert ok">{{ session('ok') }}</div>
-        @if(session('wa_url'))
-          <a class="btn full" href="{{ session('wa_url') }}" target="_blank" rel="noopener">Lanjut ke WhatsApp</a>
-        @endif
+      @if($package->isFullbook())
+        <h3>Paket fullbook</h3>
+        <div class="alert err">Kuota paket ini sudah penuh. Hubungi kami untuk info jadwal berikutnya atau paket serupa.</div>
+        <a class="btn light full" href="{{ route('packages.index', ['tipe' => $package->type]) }}">Lihat paket lain</a>
+      @else
+        <h3>Tanya / amankan seat</h3>
+        @if($errors->any())<div class="alert err">{{ $errors->first() }}</div>@endif
+        <form method="post" action="{{ route('packages.inquire', $package) }}" class="ask-form">
+          @csrf
+          <label>Nama<input name="name" value="{{ old('name') }}" required></label>
+          <label>WhatsApp<input name="phone" value="{{ old('phone') }}" required></label>
+          <label>Jumlah jamaah<input type="number" name="pax" value="{{ old('pax', 1) }}" min="1" max="20"></label>
+          <label>Catatan<textarea name="notes" rows="2">{{ old('notes') }}</textarea></label>
+          <button class="btn full" type="submit">Tanya via WhatsApp</button>
+        </form>
+        <a class="btn light full" href="{{ route('register', ['package_id' => $package->id]) }}">Daftar paket ini</a>
       @endif
-      @if($errors->any())<div class="alert err">{{ $errors->first() }}</div>@endif
-      <form method="post" action="{{ route('packages.inquire', $package) }}" class="ask-form">
-        @csrf
-        <label>Nama<input name="name" value="{{ old('name') }}" required></label>
-        <label>WhatsApp<input name="phone" value="{{ old('phone') }}" required></label>
-        <label>Jumlah jamaah<input type="number" name="pax" value="{{ old('pax', 1) }}" min="1" max="20"></label>
-        <label>Catatan<textarea name="notes" rows="2">{{ old('notes') }}</textarea></label>
-        <button class="btn full" type="submit">Kirim &amp; buka WhatsApp</button>
-      </form>
-      <a class="btn light full" href="{{ route('register', ['package_id' => $package->id]) }}">Daftar paket ini</a>
     </aside>
   </div>
 </section>

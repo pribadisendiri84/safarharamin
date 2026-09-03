@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use App\Concerns\RecordsActivity;
-use App\Support\SiteProfile;
+use App\Support\HomeDisplay;
+use App\Support\WaMessages;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -37,6 +38,7 @@ use Illuminate\Support\Str;
     'description',
     'images',
     'is_featured',
+    'home_sort',
     'is_hot',
     'status',
 ])]
@@ -71,9 +73,13 @@ class Package extends Model
 
     public const STATUSES = [
         'published' => 'Tayang',
+        'fullbook' => 'Fullbook',
         'draft' => 'Draft',
-        'full' => 'Penuh',
+        'hide' => 'Sembunyi',
     ];
+
+    /** @var list<string> */
+    public const CATALOG_STATUSES = ['published', 'fullbook'];
 
     protected function casts(): array
     {
@@ -82,6 +88,7 @@ class Package extends Model
             'facilities' => 'array',
             'exclusions' => 'array',
             'is_featured' => 'boolean',
+            'home_sort' => 'integer',
             'is_hot' => 'boolean',
             'price' => 'integer',
             'price_quad' => 'integer',
@@ -115,6 +122,93 @@ class Package extends Model
         return $query->where('status', 'published');
     }
 
+    public function scopeVisibleOnCatalog(Builder $query): Builder
+    {
+        return $query->whereIn('status', self::CATALOG_STATUSES);
+    }
+
+    public function scopeFeatured(Builder $query): Builder
+    {
+        return $query->where('is_featured', true);
+    }
+
+    public function scopeDisplayedOnHome(Builder $query): Builder
+    {
+        $limit = HomeDisplay::packageLimit();
+
+        return $query->visibleOnCatalog()->featured()->whereBetween('home_sort', [1, $limit]);
+    }
+
+    public static function homeLimit(): int
+    {
+        return HomeDisplay::packageLimit();
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, self>
+     */
+    public static function homeItemsForAdmin(): \Illuminate\Support\Collection
+    {
+        return static::query()
+            ->displayedOnHome()
+            ->orderBy('home_sort')
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    public static function displayedHomeCount(?int $exceptId = null): int
+    {
+        return static::query()
+            ->displayedOnHome()
+            ->when($exceptId, fn (Builder $q) => $q->whereKeyNot($exceptId))
+            ->count();
+    }
+
+    public static function canAddToHome(?int $exceptId = null): bool
+    {
+        return static::displayedHomeCount($exceptId) < self::homeLimit();
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public static function applyHomeOrder(array $ids): void
+    {
+        $limit = self::homeLimit();
+        $activeIds = array_slice(array_map('intval', $ids), 0, $limit);
+
+        foreach ($activeIds as $index => $id) {
+            static::query()->whereKey($id)->update([
+                'is_featured' => true,
+                'home_sort' => $index + 1,
+            ]);
+        }
+
+        static::query()
+            ->featured()
+            ->when($activeIds !== [], fn (Builder $q) => $q->whereNotIn('id', $activeIds))
+            ->update(['is_featured' => false, 'home_sort' => null]);
+    }
+
+    public static function nextAvailableHomeSlot(?int $exceptId = null): ?int
+    {
+        $limit = self::homeLimit();
+        $used = static::query()
+            ->displayedOnHome()
+            ->when($exceptId, fn (Builder $q) => $q->whereKeyNot($exceptId))
+            ->pluck('home_sort')
+            ->map(fn ($value) => (int) $value)
+            ->all();
+
+        for ($slot = 1; $slot <= $limit; $slot++) {
+            if (! in_array($slot, $used, true)) {
+                return $slot;
+            }
+        }
+
+        return null;
+    }
+
     public function scopeNeedsFlyer(Builder $query): Builder
     {
         return $query->where(function (Builder $builder) {
@@ -124,9 +218,43 @@ class Package extends Model
         });
     }
 
+    public function scopeDataComplete(Builder $query): Builder
+    {
+        return $query->whereNotNull('departure_date')->where(function (Builder $builder) {
+            $builder->whereNotNull('images')
+                ->where('images', '!=', '[]')
+                ->where('images', '!=', 'null');
+        });
+    }
+
+    public function scopeDataIncomplete(Builder $query): Builder
+    {
+        return $query->where(function (Builder $builder) {
+            $builder->whereNull('departure_date')
+                ->orWhereNull('images')
+                ->orWhere('images', '[]')
+                ->orWhere('images', 'null');
+        });
+    }
+
     public function needsFlyer(): bool
     {
         return ($this->images ?? []) === [];
+    }
+
+    public function isDataComplete(): bool
+    {
+        return $this->departure_date !== null && ! $this->needsFlyer();
+    }
+
+    public function isFullbook(): bool
+    {
+        return $this->status === 'fullbook';
+    }
+
+    public function isVisibleOnCatalog(): bool
+    {
+        return in_array($this->status, self::CATALOG_STATUSES, true);
     }
 
     public function typeLabel(): string
@@ -255,12 +383,7 @@ class Package extends Model
 
     public function whatsappMessage(): string
     {
-        $rooms = collect($this->roomPriceList())
-            ->map(fn (array $row) => $row['full_label'].' '.$this->formattedMoney($row['price']).'/jamaah')
-            ->implode(', ');
-        $pricePart = $rooms !== '' ? $rooms : $this->formattedStartingPrice();
-
-        return 'Halo '.SiteProfile::current()->name.", saya tertarik paket {$this->title} ({$pricePart}, {$this->duration_days} hari, berangkat {$this->departureLine()}). Mohon info seat & cara daftar.";
+        return WaMessages::packageInquiry($this);
     }
 
     public static function uniqueSlug(string $title, ?int $ignoreId = null): string
