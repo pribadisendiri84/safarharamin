@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'Kota embarkasi')
+@section('title', 'Kota Embarkasi')
 @section('content')
 <div class="page-head">
   <div>
-    <h1>Kota embarkasi</h1>
+    <h1>Kota Embarkasi</h1>
     <p class="sub">{{ $cities->count() }} kota di master. Dipakai di paket, filter website, dan form daftar.</p>
   </div>
 </div>

@@ -45,9 +45,9 @@ HTTPS: `git clone https://github.com/pribadisendiri84/safarharamin.git`
 | `/testimoni` | Testimoni jamaah |
 | `/kalkulator-cicilan` | Simulasi setoran |
 | `/admin` | Kelola paket, galeri, testimoni, pengajuan, nomor WA |
-| `/admin/operasi` | Dashboard operasi jamaah (grouping, pembukuan DP/pelunasan) |
+| `/admin/operasi` | Ringkasan keberangkatan (grouping, pembukuan DP/pelunasan) |
 
-### Admin — Operasi Jamaah
+### Admin — Operasional
 
 Modul internal untuk agen perjalanan:
 
@@ -55,10 +55,20 @@ Modul internal untuk agen perjalanan:
 - **Jamaah** — data jamaah, status grouping & pembayaran (lunas / cicilan % / belum bayar)
 - **Grouping room** — assign jamaah ke room quad/triple/double, auto-group
 - **Rekap** — ringkasan room per keberangkatan + status bayar per jamaah
-- **Pembukuan** — catat DP, pelunasan, porsi (haji), penyesuaian
+- **Pembukuan** — catat DP, pelunasan, porsi (haji), penyesuaian, lain-lain
+- **Bukti bayar & kwitansi** — upload bukti (foto/PDF), nomor invoice otomatis per transaksi
 - **Import dari pengajuan** — pengajuan status Closing bisa dipindah ke jamaah (pilih keberangkatan + nama jamaah)
 
-Menu sidebar: Operasi jamaah → Keberangkatan / Jamaah.
+Menu sidebar admin (bergrup):
+
+| Grup | Menu |
+|------|------|
+| *(standalone)* | Dashboard |
+| Website | Paket · Galeri · Testimoni |
+| Pendaftaran | Pengajuan |
+| Operasional | Ringkasan · Keberangkatan · Jamaah |
+| Master Data | Kota Embarkasi |
+| Sistem | Pengaturan · Log Aktivitas · Trafik Website · Pengguna |
 
 ## Deploy ke Sumopod (VPS)
 
@@ -73,6 +83,32 @@ Alzena dan SafarHaramin **satu VPS**. Yang dipakai bersama: Nginx, PHP-FPM, MySQ
 Repo: `git@github.com:pribadisendiri84/safarharamin.git` (GitHub, bukan GitLab).
 
 Sementara **tanpa domain**. SSL/Certbot ditunda sampai ada domain.
+
+### Cepat — sudah `git pull`?
+
+Jalankan di VPS (folder `/var/www/safarharamin`):
+
+```bash
+cd /var/www/safarharamin
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan optimize:clear
+php artisan optimize
+chown -R www-data:www-data storage bootstrap/cache
+chmod -R ug+rwx storage bootstrap/cache
+systemctl reload php8.4-fpm
+```
+
+**Jangan** jalankan `db:seed` lagi kalau sudah ada data produksi.
+
+Cek singkat:
+
+```bash
+php artisan migrate:status   # semua migration harus Ran
+ls -la public/storage        # symlink ke storage/app/public
+```
+
+Upload foto paket, galeri, dan bukti pembayaran jamaah disimpan di `storage/app/public/` — symlink `public/storage` **wajib** ada (lihat setup pertama).
 
 ### 1. Stack (hanya jika VPS masih kosong)
 
@@ -151,7 +187,10 @@ Ganti `IP_VPS` dengan IP publik Sumopod (contoh `103.x.x.x`):
 | `DB_CONNECTION` | `mysql` |
 | `DB_HOST` | `127.0.0.1` |
 | `DB_DATABASE` / `DB_USERNAME` / `DB_PASSWORD` | `arminareka` / `arminareka` / password langkah 1b |
+| `SESSION_DRIVER` | `database` (butuh tabel sessions dari migration) |
 | `SESSION_DOMAIN` | `null` |
+
+Setup pertama (sekali saja):
 
 ```bash
 composer install --no-dev --optimize-autoloader
@@ -168,6 +207,8 @@ chmod -R ug+rwx storage bootstrap/cache
 
 Admin: `http://IP_VPS/admin/login` — `admin@safarharamin.id` / `admin123`. Ganti password setelah login.
 
+Verifikasi upload: buat/edit paket dengan foto, atau catat transaksi jamaah dengan bukti bayar — file harus bisa dibuka dari admin.
+
 ### 4. Nginx (document root = `public/`)
 
 `/etc/nginx/sites-available/safarharamin`:
@@ -178,6 +219,7 @@ server {
     listen [::]:80 default_server;
     server_name IP_VPS _;
     root /var/www/safarharamin/public;
+    client_max_body_size 12M;
 
     add_header X-Frame-Options "SAMEORIGIN";
     index index.php;
@@ -211,7 +253,23 @@ nginx -t && systemctl reload nginx
 
 Cek sock PHP: `ls /run/php/php*-fpm.sock` — samakan dengan `fastcgi_pass`. CLI `php -v` harus versi yang sama dengan FPM.
 
-### 5. Update setelah `git pull`
+**Upload foto (galeri, paket, bukti bayar):** batas default Nginx sering 1 MB → error **413 Request Entity Too Large**. Pastikan:
+
+1. Nginx: `client_max_body_size 12M;` di dalam block `server { … }` (sudah ada di contoh di atas), lalu `nginx -t && systemctl reload nginx`
+2. PHP-FPM — edit `/etc/php/8.4/fpm/php.ini` (atau `php -i | grep php.ini`):
+
+```ini
+upload_max_filesize = 12M
+post_max_size = 12M
+```
+
+Lalu `systemctl reload php8.4-fpm`.
+
+Aplikasi juga mengompres foto di browser sebelum unggah; tetap naikkan limit server untuk jaga-jaga.
+
+### 5. Update rutin setelah `git pull`
+
+Sama dengan [Cepat — sudah git pull?](#cepat--sudah-git-pull) di atas, plus pull dulu:
 
 ```bash
 cd /var/www/safarharamin
@@ -222,10 +280,37 @@ php artisan migrate --force
 php artisan optimize:clear
 php artisan optimize
 chown -R www-data:www-data storage bootstrap/cache
+chmod -R ug+rwx storage bootstrap/cache
 systemctl reload php8.4-fpm
 ```
 
+| Perintah | Kapan |
+|----------|-------|
+| `migrate --force` | **Selalu** — schema berubah tiap fitur baru (operasi jamaah, bukti bayar, invoice, dll.) |
+| `composer install` | **Selalu** — kalau `composer.lock` berubah |
+| `storage:link` | Hanya jika `public/storage` belum ada / error 404 upload |
+| `db:seed` | **Jangan** di produksi yang sudah berisi data |
+| `optimize:clear` + `optimize` | **Selalu** — refresh config/route/view cache |
+
 Tidak perlu reload Nginx kecuali config Nginx berubah.
+
+**Migration penting (operasi jamaah):** kalau modul operasi error kolom tidak ada, pastikan migration ini sudah `Ran`:
+
+- `create_operations_tables`
+- `add_inquiry_pilgrim_import`
+- `add_proof_and_invoice_to_pilgrim_transactions`
+
+### 5b. Troubleshooting deploy
+
+| Gejala | Solusi |
+|--------|--------|
+| 500 setelah pull | `tail -50 storage/logs/laravel.log` |
+| `no such column` / SQL error | `php artisan migrate --force` lalu cek `migrate:status` |
+| Foto/bukti bayar 404 | `php artisan storage:link` + `chown -R www-data:www-data storage` |
+| **413 Request Entity Too Large** (upload galeri/paket) | Tambah `client_max_body_size 12M;` di Nginx + `upload_max_filesize` / `post_max_size` di PHP-FPM, reload keduanya |
+| Upload gagal / permission denied | `chmod -R ug+rwx storage bootstrap/cache` |
+| Perubahan `.env` tidak kebaca | `php artisan optimize:clear` lalu `php artisan config:cache` |
+| Halaman admin CSS lama | Hard refresh browser (Ctrl+F5) — asset CSS di `public/css/` |
 
 ### 6. Nanti kalau sudah ada domain
 

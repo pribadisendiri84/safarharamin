@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Trafik')
+@section('title', 'Trafik Website')
 @section('content')
 <div class="page-head">
   <div>

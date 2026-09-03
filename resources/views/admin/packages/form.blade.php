@@ -17,7 +17,7 @@
   <label>Unggah flyer
     <input type="file" id="flyer-upload" name="photos[]" accept="image/*" multiple data-upload-preview="flyer-upload">
   </label>
-  <p class="sub">Foto otomatis dikecilkan saat disimpan (maks. 1200×1700 px).</p>
+  <p class="sub">Foto otomatis dikecilkan di browser sebelum unggah, lalu dioptimalkan lagi di server (maks. 1200×1700 px).</p>
   <div class="flyer-strip">
     @if(($package->images ?? []) !== [])
       <div class="flyer-block">

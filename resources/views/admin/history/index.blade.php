@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'Riwayat')
+@section('title', 'Log Aktivitas')
 @section('content')
 <div class="page-head">
   <div>
-    <h1>Riwayat data</h1>
+    <h1>Log Aktivitas</h1>
     <p class="sub">Catatan dibuat, diubah, dihapus, dan dipulihkan. Hapus memakai soft delete — data masih bisa dikembalikan.</p>
   </div>
 </div>

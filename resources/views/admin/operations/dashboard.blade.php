@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'Operasi Jamaah')
+@section('title', 'Ringkasan Keberangkatan')
 @section('content')
 <div class="page-head">
   <div>
-    <h1>Operasi Jamaah</h1>
+    <h1>Ringkasan Keberangkatan</h1>
     <p class="sub">Pencatatan jamaah, grouping kamar, dan pembukuan DP/pelunasan.</p>
   </div>
   <div class="actions head-actions">

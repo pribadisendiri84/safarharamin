@@ -26,7 +26,7 @@ class OperationsTest extends TestCase
         $this->actingAs($this->admin())
             ->get(route('admin.operations.dashboard'))
             ->assertOk()
-            ->assertSee('Operasi Jamaah')
+            ->assertSee('Ringkasan Keberangkatan')
             ->assertSee('Lunas')
             ->assertSee('Cicilan')
             ->assertSee('Belum bayar');

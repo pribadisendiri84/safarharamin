@@ -47,7 +47,7 @@
   <label>Unggah foto
     <input type="file" id="gallery-upload" name="photo" accept="image/*" data-upload-preview="gallery-upload">
   </label>
-  <p class="sub">Foto otomatis dikecilkan saat disimpan. Pratinjau muncul setelah memilih file.</p>
+  <p class="sub">Foto otomatis dikecilkan di browser sebelum unggah, lalu dioptimalkan lagi di server (maks. 1200×1700 px).</p>
   @include('admin.partials.image-upload-preview', ['inputId' => 'gallery-upload', 'hint' => 'Pratinjau foto baru'])
   <label>Atau URL foto
     <input name="image_url" value="{{ old('image_url', str_starts_with((string) $item->image, 'http') ? $item->image : '') }}" placeholder="https://…">
