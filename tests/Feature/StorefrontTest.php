@@ -75,6 +75,46 @@ class StorefrontTest extends TestCase
             ->assertDontSee('Umroh Hemat Contoh');
     }
 
+    public function test_catalog_filters_by_airline(): void
+    {
+        Package::query()->where('slug', 'umroh-hemat-contoh')->update(['airline' => 'Garuda Indonesia']);
+
+        Package::query()->create([
+            'title' => 'Umroh Saudia Contoh',
+            'slug' => 'umroh-saudia-contoh',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-11-11',
+            'duration_days' => 9,
+            'price' => 42100000,
+            'price_quad' => 42100000,
+            'airline' => 'Saudia',
+            'hotel_stars' => 5,
+            'room_type' => 'quad',
+            'seats_total' => 45,
+            'seats_left' => 20,
+            'status' => 'published',
+            'images' => ['/images/placeholder-kaaba.svg'],
+        ]);
+
+        $this->get('/paket')
+            ->assertOk()
+            ->assertSee('Maskapai')
+            ->assertSee('Semua maskapai')
+            ->assertSee('Umroh Hemat Contoh')
+            ->assertSee('Umroh Saudia Contoh');
+
+        $this->get('/paket?maskapai=Saudia')
+            ->assertOk()
+            ->assertSee('Umroh Saudia Contoh')
+            ->assertDontSee('Umroh Hemat Contoh');
+
+        $this->get('/paket?maskapai=Garuda Indonesia')
+            ->assertOk()
+            ->assertSee('Umroh Hemat Contoh')
+            ->assertDontSee('Umroh Saudia Contoh');
+    }
+
     public function test_fullbook_packages_appear_on_catalog_with_badge(): void
     {
         Package::query()->where('slug', 'umroh-hemat-contoh')->update(['status' => 'fullbook']);
@@ -840,8 +880,13 @@ class StorefrontTest extends TestCase
         $this->get('/paket?jenis=arafah')
             ->assertOk()
             ->assertSee('Umroh Plus Arafah Hilton')
-            ->assertSee('Umroh Plus · Arafah')
+            ->assertDontSee('Umroh Plus · Arafah')
             ->assertDontSee('Umroh Mina Saja');
+
+        $this->get('/paket?jenis=mina')
+            ->assertOk()
+            ->assertSee('Umroh Mina Saja')
+            ->assertDontSee('Umroh Plus Arafah Hilton');
 
         $this->get('/paket/umroh-plus-arafah-hilton')
             ->assertOk()

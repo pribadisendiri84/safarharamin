@@ -49,6 +49,14 @@
         'placeholder' => 'Cari kota…',
       ])
     </label>
+    <label>Maskapai
+      @include('partials.airline-select', [
+        'name' => 'maskapai',
+        'selected' => $filters['maskapai'] ?? '',
+        'empty' => 'Semua maskapai',
+        'placeholder' => 'Cari maskapai…',
+      ])
+    </label>
     <label>Harga max
       <input type="number" name="harga_max" value="{{ $filters['harga_max'] ?? '' }}" min="0" step="1000000">
     </label>

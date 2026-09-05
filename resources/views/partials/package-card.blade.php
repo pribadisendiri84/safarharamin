@@ -48,7 +48,6 @@
       @endif
     </div>
     <h3>{{ $package->title }}</h3>
-    <small>{{ $package->catalogTypeLine() }}</small>
     <ul class="card-details">
       <li>
         <span class="meta-ico tone-blue"><i class="bi bi-calendar3"></i></span>

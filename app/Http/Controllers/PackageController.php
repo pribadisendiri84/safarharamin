@@ -32,6 +32,10 @@ class PackageController extends Controller
             $query->where('departure_city', $city);
         }
 
+        if ($airline = $request->string('maskapai')->toString()) {
+            $query->where('airline', $airline);
+        }
+
         if ($q = trim((string) $request->input('q'))) {
             $query->where(function ($builder) use ($q) {
                 $builder->where('title', 'like', '%'.$q.'%')
@@ -79,7 +83,7 @@ class PackageController extends Controller
             'typeLabel' => $typeLabel,
             'chipCities' => $chipCities,
             'packageKinds' => PackageKind::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['slug', 'name']),
-            'filters' => $request->only(['q', 'tipe', 'kelompok', 'jenis', 'kota', 'harga_max', 'hari', 'urut']),
+            'filters' => $request->only(['q', 'tipe', 'kelompok', 'jenis', 'kota', 'maskapai', 'harga_max', 'hari', 'urut']),
         ]);
     }
 
