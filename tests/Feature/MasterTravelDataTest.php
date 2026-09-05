@@ -20,6 +20,7 @@ class MasterTravelDataTest extends TestCase
             ->post(route('admin.hotels.store'), [
                 'name' => 'Hotel Baru Makkah',
                 'location' => Hotel::LOCATION_MAKKAH,
+                'stars' => 4,
                 'sort_order' => 5,
                 'is_active' => '1',
             ])
@@ -42,7 +43,7 @@ class MasterTravelDataTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.packages.create'))
             ->assertOk()
-            ->assertSee('Hotel Baru Makkah', false)
+            ->assertSee('Hotel Baru Makkah (4★)', false)
             ->assertSee('Citilink', false);
     }
 

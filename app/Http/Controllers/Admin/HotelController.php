@@ -70,7 +70,7 @@ class HotelController extends Controller
     }
 
     /**
-     * @return array{name: string, location: string, sort_order: int, is_active: bool}
+     * @return array{name: string, location: string, stars: int, sort_order: int, is_active: bool}
      */
     private function validated(Request $request, ?Hotel $hotel = null): array
     {
@@ -85,6 +85,7 @@ class HotelController extends Controller
                     ->whereNull('deleted_at'),
             ],
             'location' => ['required', Rule::in(array_keys(Hotel::LOCATIONS))],
+            'stars' => ['required', 'integer', 'min:1', 'max:5'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active' => ['nullable', 'boolean'],
         ]);
@@ -92,6 +93,7 @@ class HotelController extends Controller
         return [
             'name' => $data['name'],
             'location' => $data['location'],
+            'stars' => (int) $data['stars'],
             'sort_order' => (int) ($data['sort_order'] ?? 0),
             'is_active' => $request->boolean('is_active'),
         ];

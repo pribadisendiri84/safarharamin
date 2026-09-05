@@ -12,7 +12,8 @@ class PageController extends Controller
     {
         $samples = Package::query()
             ->published()
-            ->whereIn('type', ['haji_plus', 'haji_furoda'])
+            ->whereIn('type', Package::HAJI_TYPES)
+            ->with('packageKind')
             ->orderBy('price')
             ->get();
 

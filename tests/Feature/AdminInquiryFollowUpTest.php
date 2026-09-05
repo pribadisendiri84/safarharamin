@@ -162,6 +162,7 @@ class AdminInquiryFollowUpTest extends TestCase
             'departure_city' => 'jakarta',
             'duration_days' => 9,
             'price' => 29500000,
+            'price_quad' => 29500000,
             'hotel_stars' => 4,
             'room_type' => 'quad',
             'seats_total' => 20,

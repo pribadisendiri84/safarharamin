@@ -43,13 +43,11 @@
       <img class="brand-logo" src="{{ $site->logoUrl }}" alt="{{ $site->name }}">
     </div>
     <main class="wrap">
-      @if(session('ok'))<div class="alert ok">{{ session('ok') }}</div>@endif
-      @if(session('err'))<div class="alert err">{{ session('err') }}</div>@endif
-      @if($errors->any())<div class="alert err">{{ $errors->first() }}</div>@endif
       @yield('content')
     </main>
   </div>
 </div>
+@include('partials.feedback-modal')
 <script>
 function toggleSidebar(force) {
   var side = document.getElementById('sidebar');

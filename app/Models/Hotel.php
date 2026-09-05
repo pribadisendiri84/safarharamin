@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Schema;
 
-#[Fillable(['name', 'location', 'sort_order', 'is_active'])]
+#[Fillable(['name', 'location', 'stars', 'sort_order', 'is_active'])]
 class Hotel extends Model
 {
     use RecordsActivity, SoftDeletes;
@@ -33,12 +33,34 @@ class Hotel extends Model
         return [
             'is_active' => 'boolean',
             'sort_order' => 'integer',
+            'stars' => 'integer',
         ];
     }
 
     public function locationLabel(): string
     {
         return self::LOCATIONS[$this->location] ?? $this->location;
+    }
+
+    public function optionLabel(): string
+    {
+        $stars = (int) ($this->stars ?: 0);
+
+        return $stars > 0 ? $this->name.' ('.$stars.'★)' : $this->name;
+    }
+
+    public static function starsFor(string $location, string $name): ?int
+    {
+        if (! Schema::hasTable('hotels') || ! Schema::hasColumn('hotels', 'stars')) {
+            return null;
+        }
+
+        $stars = static::query()
+            ->where('location', $location)
+            ->where('name', $name)
+            ->value('stars');
+
+        return $stars !== null ? (int) $stars : null;
     }
 
     /**
@@ -50,7 +72,7 @@ class Hotel extends Model
             return self::legacyOption($keep);
         }
 
-        $options = static::query()
+        $rows = static::query()
             ->where('location', $location)
             ->when(
                 $keep,
@@ -59,8 +81,9 @@ class Hotel extends Model
             )
             ->orderBy('sort_order')
             ->orderBy('name')
-            ->pluck('name', 'name')
-            ->all();
+            ->get(['name', 'stars']);
+
+        $options = $rows->mapWithKeys(fn (self $hotel) => [$hotel->name => $hotel->optionLabel()])->all();
 
         return self::mergeLegacyOption($options, $keep);
     }

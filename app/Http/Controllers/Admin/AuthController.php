@@ -4,10 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AdminCaptcha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -21,35 +20,51 @@ class AuthController extends Controller
         return view('admin.login');
     }
 
-    public function login(Request $request)
+    public function login(Request $request, AdminCaptcha $captcha)
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
+            'captcha' => ['required', 'string', 'size:6'],
         ]);
 
-        $this->ensureIsNotRateLimited($request);
+        if (! $captcha->verify($request, $credentials['captcha'])) {
+            throw ValidationException::withMessages([
+                'captcha' => 'Kode keamanan salah atau sudah kedaluwarsa. Muat ulang gambar lalu coba lagi.',
+            ]);
+        }
 
-        $deleted = User::onlyTrashed()->where('email', $credentials['email'])->exists();
-        if ($deleted) {
-            RateLimiter::hit($this->throttleKey($request), 60);
+        unset($credentials['captcha']);
 
+        $user = User::withTrashed()->where('email', $credentials['email'])->first();
+
+        if ($user?->trashed()) {
             return back()->withErrors([
                 'email' => 'Akun ini sudah dihapus. Minta superadmin memulihkan akses.',
             ])->onlyInput('email');
         }
 
+        if ($user?->isLoginLocked()) {
+            return back()->withErrors([
+                'email' => 'Akun terkunci setelah tiga kali login gagal. Hubungi superadmin untuk membuka akses.',
+            ])->onlyInput('email');
+        }
+
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            RateLimiter::clear($this->throttleKey($request));
+            /** @var User $authenticated */
+            $authenticated = Auth::user();
+            $authenticated->unlockLogin();
             $request->session()->regenerate();
 
             return redirect()->intended(route('admin.dashboard'));
         }
 
-        RateLimiter::hit($this->throttleKey($request), 60);
+        $locked = $user?->registerFailedLogin() ?? false;
 
         return back()->withErrors([
-            'email' => 'Email atau password salah.',
+            'email' => $locked
+                ? 'Akun terkunci setelah tiga kali login gagal. Hubungi superadmin untuk membuka akses.'
+                : 'Email atau password salah.',
         ])->onlyInput('email');
     }
 
@@ -60,23 +75,5 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('admin.login');
-    }
-
-    private function ensureIsNotRateLimited(Request $request): void
-    {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey($request), 5)) {
-            return;
-        }
-
-        $seconds = RateLimiter::availableIn($this->throttleKey($request));
-
-        throw ValidationException::withMessages([
-            'email' => 'Terlalu banyak percobaan login. Coba lagi dalam '.$seconds.' detik.',
-        ]);
-    }
-
-    private function throttleKey(Request $request): string
-    {
-        return Str::transliterate(Str::lower((string) $request->input('email')).'|'.$request->ip());
     }
 }

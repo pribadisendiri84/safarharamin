@@ -28,7 +28,35 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'login_failed_attempts' => 'integer',
+            'login_locked_at' => 'datetime',
         ];
+    }
+
+    public function isLoginLocked(): bool
+    {
+        return $this->login_locked_at !== null;
+    }
+
+    public function registerFailedLogin(): bool
+    {
+        $attempts = min(255, ((int) $this->login_failed_attempts) + 1);
+        $locked = $attempts >= (int) config('admin-auth.max_attempts', 3);
+
+        $this->forceFill([
+            'login_failed_attempts' => $attempts,
+            'login_locked_at' => $locked ? now() : null,
+        ])->saveQuietly();
+
+        return $locked;
+    }
+
+    public function unlockLogin(): void
+    {
+        $this->forceFill([
+            'login_failed_attempts' => 0,
+            'login_locked_at' => null,
+        ])->saveQuietly();
     }
 
     public function resolvedRole(): UserRole

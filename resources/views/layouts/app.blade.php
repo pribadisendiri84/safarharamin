@@ -38,6 +38,8 @@
   @yield('content')
 </main>
 
+@include('partials.feedback-modal')
+
 <footer class="foot">
   <div class="wrap foot-grid">
     <div>
@@ -51,11 +53,10 @@
       <a href="{{ route('packages.index', ['kelompok' => 'umroh']) }}">Semua umroh</a>
       <a href="{{ route('packages.index', ['tipe' => 'umroh']) }}">Reguler</a>
       <a href="{{ route('packages.index', ['tipe' => 'umroh_plus']) }}">Plus</a>
-      <a href="{{ route('packages.index', ['tipe' => 'umroh_ramadhan']) }}">Ramadhan</a>
     </div>
     <div>
       <b>Haji &amp; layanan</b>
-      <a href="{{ route('haji') }}">Haji plus &amp; furoda</a>
+      <a href="{{ route('haji') }}">Haji plus</a>
       <a href="{{ route('testimonials') }}">Testimoni</a>
       <a href="{{ route('register') }}">Daftar sekarang</a>
     </div>

@@ -5,7 +5,7 @@
 <div class="page-head">
   <div>
     <h1>Master Hotel</h1>
-    <p class="sub">Daftar hotel untuk dropdown di paket katalog dan keberangkatan.</p>
+    <p class="sub">Nama hotel boleh sama di Makkah dan Madinah. Bintang diisi di sini, bukan di form paket.</p>
   </div>
 </div>
 
@@ -25,7 +25,7 @@
     @csrf
     @if($location)<input type="hidden" name="location" value="{{ $location }}">@endif
     <div class="row3">
-      <label>Nama hotel<input name="name" value="{{ old('name') }}" required placeholder="Contoh: Swissotel Makkah"></label>
+      <label>Nama hotel<input name="name" value="{{ old('name') }}" required placeholder="Contoh: Hilton"></label>
       <label>Lokasi
         <select name="location" @if($location) disabled @endif required>
           @foreach(\App\Models\Hotel::LOCATIONS as $key => $label)
@@ -33,8 +33,11 @@
           @endforeach
         </select>
       </label>
-      <label>Urutan<input type="number" name="sort_order" value="{{ old('sort_order', 0) }}" min="0"></label>
+      <label>Bintang
+        <input type="number" name="stars" value="{{ old('stars', 4) }}" min="1" max="5" required>
+      </label>
     </div>
+    <label>Urutan<input type="number" name="sort_order" value="{{ old('sort_order', 0) }}" min="0"></label>
     <label class="check"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', true))> Tampil di pilihan</label>
     <button class="btn" type="submit">Tambah hotel</button>
   </form>
@@ -48,6 +51,7 @@
         <tr>
           <th>Hotel</th>
           <th>Lokasi</th>
+          <th>Bintang</th>
           <th>Urutan</th>
           <th>Status</th>
           <th>Waktu</th>
@@ -66,6 +70,7 @@
                   @method('PUT')
                   <input type="hidden" name="location" value="{{ $hotel->location }}">
                   <input name="name" value="{{ old('name', $hotel->name) }}" required>
+                  <input type="number" name="stars" value="{{ old('stars', $hotel->stars ?? 4) }}" min="1" max="5" required>
                   <input type="number" name="sort_order" value="{{ old('sort_order', $hotel->sort_order) }}" min="0">
                   <label class="check"><input type="checkbox" name="is_active" value="1" @checked($hotel->is_active)> Aktif</label>
                   <button class="btn gray compact" type="submit">Update</button>
@@ -73,6 +78,7 @@
               @endif
             </td>
             <td>{{ $hotel->locationLabel() }}</td>
+            <td>{{ $hotel->stars }}★</td>
             <td>{{ $hotel->sort_order }}</td>
             <td><span class="badge {{ $hotel->is_active && ! $hotel->trashed() ? 'published' : 'draft' }}">{{ $hotel->trashed() ? 'Terhapus' : ($hotel->is_active ? 'Aktif' : 'Nonaktif') }}</span></td>
             <td>@include('admin.partials.timestamps', ['model' => $hotel])</td>
@@ -86,7 +92,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="6" class="empty-state">{{ $trashed ? 'Tidak ada hotel terhapus.' : 'Belum ada hotel.' }}</td></tr>
+          <tr><td colspan="7" class="empty-state">{{ $trashed ? 'Tidak ada hotel terhapus.' : 'Belum ada hotel.' }}</td></tr>
         @endforelse
       </tbody>
     </table>

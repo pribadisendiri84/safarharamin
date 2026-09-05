@@ -30,12 +30,12 @@
   <div class="split-pick">
     <a href="{{ route('packages.index', ['kelompok' => 'umroh']) }}">
       <span class="eyebrow"><i class="bi bi-moon-stars"></i> Umroh</span>
-      <b>Reguler, plus, ramadhan</b>
+      <b>Reguler dan plus</b>
       <p>{{ number_format($umrohCount, 0, ',', '.') }} paket · filter embarkasi dan harga</p>
     </a>
     <a href="{{ route('haji') }}">
       <span class="eyebrow"><i class="bi bi-building"></i> Haji</span>
-      <b>Plus dan furoda</b>
+      <b>Haji plus</b>
       <p>{{ number_format($hajiCount, 0, ',', '.') }} paket · hotel, manasik, kuota musim ini</p>
     </a>
   </div>

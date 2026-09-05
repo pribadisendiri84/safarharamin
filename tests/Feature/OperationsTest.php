@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Departure;
 use App\Models\Package;
+use App\Models\Pic;
 use App\Models\Pilgrim;
 use App\Models\Room;
 use App\Models\User;
@@ -18,6 +19,11 @@ class OperationsTest extends TestCase
     private function admin(): User
     {
         return User::factory()->admin()->create();
+    }
+
+    private function pic(): Pic
+    {
+        return Pic::query()->orderBy('sort_order')->firstOrFail();
     }
 
     public function test_operations_dashboard_is_accessible(): void
@@ -66,6 +72,7 @@ class OperationsTest extends TestCase
         $this->actingAs($admin)
             ->post(route('admin.operations.pilgrims.store'), [
                 'departure_id' => $departure->id,
+                'pic_id' => $this->pic()->id,
                 'full_name' => 'Abdul Hadi',
                 'phone' => '081234567890',
                 'gender' => 'male',
@@ -78,6 +85,7 @@ class OperationsTest extends TestCase
             'full_name' => 'Abdul Hadi',
             'departure_id' => $departure->id,
             'room_type' => 'quad',
+            'pic_id' => $this->pic()->id,
         ]);
     }
 
@@ -383,6 +391,63 @@ class OperationsTest extends TestCase
             ->assertSee('Vaksin meningitis');
     }
 
+    public function test_payment_is_refunded_with_a_new_transaction_instead_of_deleted(): void
+    {
+        $admin = $this->admin();
+        $departure = Departure::query()->create([
+            'program_name' => 'Umroh Refund Test',
+            'program_kind' => 'umroh',
+        ]);
+        $pilgrim = Pilgrim::query()->create([
+            'departure_id' => $departure->id,
+            'full_name' => 'Jamaah Refund',
+            'room_type' => 'quad',
+            'package_price' => 30000000,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.operations.pilgrims.transactions.store', $pilgrim), [
+                'type' => 'dp',
+                'amount' => 5000000,
+                'paid_at' => '2026-02-01',
+            ])
+            ->assertRedirect();
+
+        $payment = $pilgrim->transactions()->where('type', 'dp')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->post(route('admin.operations.pilgrims.transactions.refund', [$pilgrim, $payment]))
+            ->assertRedirect()
+            ->assertSessionHas('ok');
+
+        $pilgrim->refresh();
+        $this->assertSame(0, (int) $pilgrim->paid_amount);
+        $this->assertDatabaseHas('pilgrim_transactions', [
+            'id' => $payment->id,
+            'type' => 'dp',
+            'amount' => 5000000,
+        ]);
+        $this->assertDatabaseHas('pilgrim_transactions', [
+            'pilgrim_id' => $pilgrim->id,
+            'refunded_transaction_id' => $payment->id,
+            'type' => 'refund',
+            'amount' => 5000000,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.operations.pilgrims.show', $pilgrim))
+            ->assertOk()
+            ->assertSee('Refund')
+            ->assertSee('Sudah refund')
+            ->assertDontSee('>Hapus<', false);
+
+        $this->actingAs($admin)
+            ->post(route('admin.operations.pilgrims.transactions.refund', [$pilgrim, $payment]))
+            ->assertSessionHasErrors('refund');
+
+        $this->assertSame(2, $pilgrim->transactions()->count());
+    }
+
     public function test_transaction_can_upload_proof_and_auto_invoice(): void
     {
         Storage::fake('public');
@@ -548,6 +613,7 @@ class OperationsTest extends TestCase
         $this->actingAs($admin)
             ->post(route('admin.operations.pilgrims.store'), [
                 'departure_id' => $departure->id,
+                'pic_id' => $this->pic()->id,
                 'full_name' => 'Jamaah Double Plus',
                 'room_type' => 'double_plus',
                 'package_price' => 55000000,
@@ -572,6 +638,7 @@ class OperationsTest extends TestCase
         $this->actingAs($admin)
             ->post(route('admin.operations.pilgrims.store'), [
                 'departure_id' => $departure->id,
+                'pic_id' => $this->pic()->id,
                 'full_name' => 'Jamaah Umroh',
                 'room_type' => 'double_plus',
             ])
@@ -590,6 +657,7 @@ class OperationsTest extends TestCase
         $this->actingAs($admin)
             ->post(route('admin.operations.pilgrims.store'), [
                 'departure_id' => $departure->id,
+                'pic_id' => $this->pic()->id,
                 'full_name' => 'Jamaah Hotel Readonly',
                 'room_type' => 'double_plus',
                 'hotel_makkah' => 'Makkah Tower',
@@ -622,6 +690,8 @@ class OperationsTest extends TestCase
             ->get(route('admin.operations.pilgrims.create', ['kind' => 'haji']))
             ->assertOk()
             ->assertSee('Double Plus', false)
+            ->assertSee('Cari PIC', false)
+            ->assertSee('Yanti', false)
             ->assertSee('Program keberangkatan', false)
             ->assertSee('Ubah di Keberangkatan', false)
             ->assertSee('Data khusus haji', false)
@@ -654,5 +724,41 @@ class OperationsTest extends TestCase
             ->assertSee('Swissotel', false)
             ->assertSee('Anwar Al Madinah', false)
             ->assertSee('Edit keberangkatan', false);
+    }
+
+    public function test_pilgrim_pic_can_be_changed(): void
+    {
+        $admin = $this->admin();
+        $first = $this->pic();
+        $second = Pic::query()->where('id', '!=', $first->id)->orderBy('sort_order')->firstOrFail();
+        $departure = Departure::query()->create([
+            'program_name' => 'Umroh PIC',
+            'program_kind' => 'umroh',
+        ]);
+        $pilgrim = Pilgrim::query()->create([
+            'departure_id' => $departure->id,
+            'pic_id' => $first->id,
+            'full_name' => 'Jamaah Ganti PIC',
+            'room_type' => 'quad',
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('admin.operations.pilgrims.update', $pilgrim), [
+                'departure_id' => $departure->id,
+                'pic_id' => $second->id,
+                'full_name' => 'Jamaah Ganti PIC',
+                'room_type' => 'quad',
+            ])
+            ->assertRedirect(route('admin.operations.pilgrims.show', $pilgrim));
+
+        $this->assertDatabaseHas('pilgrims', [
+            'id' => $pilgrim->id,
+            'pic_id' => $second->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.operations.pilgrims.show', $pilgrim))
+            ->assertOk()
+            ->assertSee($second->name, false);
     }
 }

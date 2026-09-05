@@ -47,6 +47,13 @@
 
   <label>Nama lengkap<input name="full_name" value="{{ old('full_name', $pilgrim->full_name) }}" required></label>
 
+  <label>PIC
+    @include('partials.pic-select', [
+      'selected' => old('pic_id', $pilgrim->pic_id),
+      'pics' => $pics,
+    ])
+  </label>
+
   <div class="row2">
     <label>Nomor HP<input name="phone" value="{{ old('phone', $pilgrim->phone) }}"></label>
     <label>Jenis kelamin

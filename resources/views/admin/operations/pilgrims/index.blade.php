@@ -9,7 +9,7 @@
 <div class="page-head">
   <div>
     <h1>Jamaah</h1>
-    <p class="sub">Data jamaah per keberangkatan. Umroh dan haji dipisah lewat filter jenis program.</p>
+    <p class="sub">Data jamaah per keberangkatan. Umroh dan haji dipisah lewat filter jenis program. PIC bisa diubah di form jamaah.</p>
   </div>
   <div class="actions head-actions">
     <a class="btn" href="{{ route('admin.operations.pilgrims.create', array_filter(['departure_id' => request('departure_id'), 'kind' => $kindFilter ?: null])) }}">@include('admin.partials.icon', ['name' => 'plus']) Tambah jamaah</a>
@@ -35,6 +35,12 @@
       @if($kindFilter === '' || $departure->program_kind === $kindFilter)
         <option value="{{ $departure->id }}" @selected((int) request('departure_id') === $departure->id)>{{ $departure->program_name }} · {{ $departure->kindLabel() }}</option>
       @endif
+    @endforeach
+  </select>
+  <select name="pic_id" class="js-searchable" data-placeholder="Semua PIC">
+    <option value="">Semua PIC</option>
+    @foreach($pics as $id => $label)
+      <option value="{{ $id }}" @selected((string) request('pic_id') === (string) $id)>{{ $label }}</option>
     @endforeach
   </select>
   <select name="room_type">
@@ -63,6 +69,7 @@
       <thead>
         <tr>
           <th class="col-name">Nama</th>
+          <th class="col-pic">PIC</th>
           @if($kindFilter === '')
             <th class="col-kind">Jenis</th>
           @endif
@@ -78,6 +85,7 @@
         @forelse($pilgrims as $pilgrim)
           <tr>
             <td class="col-name"><b>{{ $pilgrim->full_name }}</b></td>
+            <td class="col-pic"><span class="cell-truncate" title="{{ $pilgrim->picName() }}">{{ $pilgrim->picName() }}</span></td>
             @if($kindFilter === '')
               <td class="col-kind">
                 @if($pilgrim->departure)
@@ -123,7 +131,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="{{ $kindFilter === '' ? 8 : 7 }}" class="empty-cell">Belum ada jamaah.</td></tr>
+          <tr><td colspan="{{ $kindFilter === '' ? 9 : 8 }}" class="empty-cell">Belum ada jamaah.</td></tr>
         @endforelse
       </tbody>
     </table>

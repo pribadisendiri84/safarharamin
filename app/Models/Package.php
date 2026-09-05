@@ -8,6 +8,7 @@ use App\Support\WaMessages;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
@@ -16,6 +17,7 @@ use Illuminate\Support\Str;
     'title',
     'slug',
     'type',
+    'package_kind_id',
     'departure_city',
     'departure_date',
     'duration_days',
@@ -27,7 +29,9 @@ use Illuminate\Support\Str;
     'original_price',
     'price_note',
     'hotel_makkah',
+    'hotel_makkah_setaraf',
     'hotel_madinah',
+    'hotel_madinah_setaraf',
     'hotel_transit',
     'hotel_maktab',
     'hotel_stars',
@@ -52,14 +56,12 @@ class Package extends Model
     public const TYPES = [
         'umroh' => 'Umroh Reguler',
         'umroh_plus' => 'Umroh Plus',
-        'umroh_ramadhan' => 'Umroh Ramadhan',
         'haji_plus' => 'Haji Plus',
-        'haji_furoda' => 'Haji Furoda',
     ];
 
-    public const UMROH_TYPES = ['umroh', 'umroh_plus', 'umroh_ramadhan'];
+    public const UMROH_TYPES = ['umroh', 'umroh_plus'];
 
-    public const HAJI_TYPES = ['haji_plus', 'haji_furoda'];
+    public const HAJI_TYPES = ['haji_plus'];
 
     public const ROOM_TYPES = [
         'quad' => 'Quad',
@@ -98,6 +100,8 @@ class Package extends Model
             'is_featured' => 'boolean',
             'home_sort' => 'integer',
             'is_hot' => 'boolean',
+            'hotel_makkah_setaraf' => 'boolean',
+            'hotel_madinah_setaraf' => 'boolean',
             'price' => 'integer',
             'price_quad' => 'integer',
             'price_triple' => 'integer',
@@ -116,7 +120,80 @@ class Package extends Model
             }
 
             $package->syncPrimaryPrice();
+            $package->syncHotelStarsFromMaster();
         });
+    }
+
+    public function packageKind(): BelongsTo
+    {
+        return $this->belongsTo(PackageKind::class);
+    }
+
+    public function packageKindLabel(): string
+    {
+        return $this->packageKind?->name ?? '';
+    }
+
+    public function catalogTypeLine(): string
+    {
+        $kind = $this->packageKindLabel();
+
+        return $kind !== '' ? $this->typeLabel().' · '.$kind : $this->typeLabel();
+    }
+
+    public function hotelStarsFor(?string $location, ?string $name): ?int
+    {
+        if (! $location || ! filled($name)) {
+            return null;
+        }
+
+        $stars = Hotel::starsFor($location, $name);
+
+        return $stars !== null ? (int) $stars : null;
+    }
+
+    public function displayHotelStars(): int
+    {
+        $stars = array_filter([
+            $this->hotelStarsFor(Hotel::LOCATION_MAKKAH, $this->hotel_makkah),
+            $this->hotelStarsFor(Hotel::LOCATION_MADINAH, $this->hotel_madinah),
+        ], fn ($value) => $value !== null);
+
+        if ($stars !== []) {
+            return (int) max($stars);
+        }
+
+        return (int) ($this->hotel_stars ?? 0);
+    }
+
+    public function hotelLine(?string $name, bool $setaraf, ?string $location = null): string
+    {
+        if (! filled($name)) {
+            return '-';
+        }
+
+        $stars = $location ? $this->hotelStarsFor($location, $name) : null;
+        $starPart = $stars ? ' ('.$stars.'★)' : '';
+
+        return $setaraf ? $name.' atau setaraf'.$starPart : $name.$starPart;
+    }
+
+    public function hotelMakkahLine(): string
+    {
+        return $this->hotelLine($this->hotel_makkah, (bool) $this->hotel_makkah_setaraf, Hotel::LOCATION_MAKKAH);
+    }
+
+    public function hotelMadinahLine(): string
+    {
+        return $this->hotelLine($this->hotel_madinah, (bool) $this->hotel_madinah_setaraf, Hotel::LOCATION_MADINAH);
+    }
+
+    public function syncHotelStarsFromMaster(): void
+    {
+        $stars = $this->displayHotelStars();
+        if ($stars > 0) {
+            $this->hotel_stars = $stars;
+        }
     }
 
     public function syncPrimaryPrice(): void

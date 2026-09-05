@@ -12,6 +12,7 @@ class HomeController extends Controller
     {
         $featured = Package::query()
             ->displayedOnHome()
+            ->with('packageKind')
             ->orderBy('home_sort')
             ->orderByDesc('id')
             ->limit(Package::homeLimit())

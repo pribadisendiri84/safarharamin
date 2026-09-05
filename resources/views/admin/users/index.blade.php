@@ -43,6 +43,7 @@
       <thead>
         <tr>
           <th>Pengguna</th>
+          <th>Keamanan login</th>
           <th>Waktu</th>
           <th></th>
         </tr>
@@ -70,6 +71,16 @@
                 </form>
               @endif
             </td>
+            <td>
+              @if($user->isLoginLocked())
+                <span class="badge fullbook">Terkunci</span>
+                <small>Sejak {{ $user->login_locked_at?->format('d M Y H:i') }}</small>
+              @elseif($user->login_failed_attempts > 0)
+                <span class="badge draft">{{ $user->login_failed_attempts }} percobaan gagal</span>
+              @else
+                <span class="badge published">Aman</span>
+              @endif
+            </td>
             <td>@include('admin.partials.timestamps', ['model' => $user])</td>
             <td>
               @if($user->trashed())
@@ -78,6 +89,12 @@
                   <button class="btn gray compact" type="submit">Pulihkan</button>
                 </form>
               @elseif(! $user->is(auth()->user()))
+                @if($user->isLoginLocked())
+                  <form method="post" action="{{ route('admin.users.unlock', $user) }}">
+                    @csrf
+                    <button class="btn gray compact" type="submit">Buka kunci</button>
+                  </form>
+                @endif
                 <form method="post" action="{{ route('admin.users.destroy', $user) }}" onsubmit="return confirm('Hapus pengguna ini? Akun masih bisa dipulihkan.')">
                   @csrf
                   @method('DELETE')
@@ -87,7 +104,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="3" class="empty-state">{{ $trashed ? 'Tidak ada pengguna terhapus.' : 'Belum ada pengguna.' }}</td></tr>
+          <tr><td colspan="4" class="empty-state">{{ $trashed ? 'Tidak ada pengguna terhapus.' : 'Belum ada pengguna.' }}</td></tr>
         @endforelse
       </tbody>
     </table>

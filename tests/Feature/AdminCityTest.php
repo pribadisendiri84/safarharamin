@@ -58,7 +58,7 @@ class AdminCityTest extends TestCase
                 'price_quad' => 30000000,
                 'price_triple' => 31100000,
                 'price_double' => 33400000,
-                'hotel_stars' => 4,
+                'package_kind_id' => $this->packageKindId(),
                 'seats_total' => 20,
                 'seats_left' => 20,
                 'status' => 'published',

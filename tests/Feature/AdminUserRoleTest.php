@@ -97,6 +97,7 @@ class AdminUserRoleTest extends TestCase
         $this->actingAs($staff)->get('/admin/inquiries/create')->assertOk();
         $this->actingAs($staff)->get('/admin/packages')->assertRedirect(route('admin.dashboard'));
         $this->actingAs($staff)->get('/admin/cities')->assertRedirect(route('admin.dashboard'));
+        $this->actingAs($staff)->get('/admin/pics')->assertRedirect(route('admin.dashboard'));
         $this->actingAs($staff)->get('/admin/users')->assertRedirect(route('admin.dashboard'));
         $this->actingAs($staff)->get('/admin/trafik')->assertRedirect(route('admin.dashboard'));
         $this->actingAs($staff)->get('/admin/riwayat')->assertRedirect(route('admin.dashboard'));

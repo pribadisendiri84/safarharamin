@@ -103,7 +103,7 @@
               @if($package->needsFlyer())
                 <span class="badge draft">Perlu flyer</span>
               @endif
-              <small>{{ $package->typeLabel() }} · {{ $package->duration_days }} hari</small>
+              <small>{{ $package->catalogTypeLine() }} · {{ $package->duration_days }} hari</small>
             </td>
             <td>{{ $package->departureLine() }}</td>
             <td>{{ $package->formattedStartingPrice() }}<small>{{ $package->seatsLine() }}</small></td>

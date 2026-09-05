@@ -29,7 +29,9 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             CitySeeder::class,
+            PackageKindSeeder::class,
             CatalogSeeder::class,
+            PicSeeder::class,
             OperationsSeeder::class,
         ]);
     }

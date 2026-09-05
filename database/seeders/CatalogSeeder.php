@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\GalleryItem;
 use App\Models\Package;
+use App\Models\PackageKind;
 use App\Models\Testimonial;
 use App\Support\HomeDisplay;
 use Illuminate\Database\Seeder;
@@ -42,15 +43,16 @@ class CatalogSeeder extends Seeder
             ['Umroh Bintang 5 Ring 1', 'umroh', 'jakarta', '2026-12-08', 9, 45500000, 49900000, 5, 'Saudia', 'triple', 30, 6, true, true],
             ['Umroh Plus Turki 16 Hari', 'umroh_plus', 'jakarta', '2026-10-28', 16, 42900000, null, 4, 'Turkish Airlines', 'quad', 36, 9, true, true],
             ['Umroh Plus Dubai 14 Hari', 'umroh_plus', 'surabaya', '2026-11-18', 14, 39900000, 43500000, 4, 'Emirates', 'quad', 32, 14, true, false],
-            ['Umroh Ramadhan 12 Hari', 'umroh_ramadhan', 'jakarta', '2027-03-02', 12, 48900000, null, 5, 'Saudia', 'triple', 28, 4, true, true],
-            ['Umroh Lailatul Qadar', 'umroh_ramadhan', 'medan', '2027-03-20', 10, 52500000, null, 5, 'Saudia', 'double', 20, 3, true, true],
+            ['Umroh 12 Hari Jakarta', 'umroh', 'jakarta', '2027-03-02', 12, 48900000, null, 5, 'Saudia', 'triple', 28, 4, true, true],
+            ['Umroh Lailatul Qadar', 'umroh', 'medan', '2027-03-20', 10, 52500000, null, 5, 'Saudia', 'double', 20, 3, true, true],
             ['Haji Plus 27 Hari', 'haji_plus', 'jakarta', '2027-05-20', 27, 275000000, null, 5, 'Garuda Indonesia', 'double', 20, 8, true, true],
-            ['Haji Furoda 26 Hari', 'haji_furoda', 'jakarta', '2027-05-18', 26, 320000000, null, 5, 'Saudia', 'double', 12, 5, true, false],
+            ['Haji Plus 26 Hari', 'haji_plus', 'jakarta', '2027-05-18', 26, 320000000, null, 5, 'Saudia', 'double', 12, 5, true, false],
             ['Umroh 9 Hari Surabaya', 'umroh', 'surabaya', '2026-10-20', 9, 31200000, null, 4, 'Garuda Indonesia', 'quad', 40, 22, false, false],
             ['Umroh 9 Hari Medan', 'umroh', 'medan', '2026-11-09', 9, 32800000, 35000000, 4, 'Saudia', 'quad', 36, 16, false, false],
             ['Umroh Hemat Yogyakarta', 'umroh', 'yogyakarta', '2026-12-14', 9, 28900000, 31000000, 3, 'Lion Air', 'quad', 40, 25, true, false],
         ];
 
+        $kindIds = PackageKind::query()->orderBy('sort_order')->pluck('id')->all();
         $featuredSlot = 0;
 
         foreach ($rows as $i => $row) {
@@ -62,11 +64,16 @@ class CatalogSeeder extends Seeder
                 $homeSort = $featuredSlot <= HomeDisplay::packageLimit() ? $featuredSlot : 0;
             }
 
+            $setaraf = $i % 3 === 0;
+            $makkahHotel = $stars >= 5 ? 'Hilton' : 'Anjum Hotel Makkah';
+            $madinahHotel = $stars >= 5 ? 'Hilton' : 'Frontel Al Harithia';
+
             Package::query()->updateOrCreate(
                 ['slug' => Str::slug($title)],
                 [
                     'title' => $title,
                     'type' => $type,
+                    'package_kind_id' => $kindIds[$i % max(count($kindIds), 1)] ?? null,
                     'departure_city' => $city,
                     'departure_date' => $date,
                     'duration_days' => $days,
@@ -76,8 +83,10 @@ class CatalogSeeder extends Seeder
                     'price_double' => $rooms['double'],
                     'original_price' => $original,
                     'price_note' => 'Harga dapat berubah sesuai kebijakan perusahaan.',
-                    'hotel_makkah' => null,
-                    'hotel_madinah' => null,
+                    'hotel_makkah' => $makkahHotel,
+                    'hotel_makkah_setaraf' => $setaraf,
+                    'hotel_madinah' => $madinahHotel,
+                    'hotel_madinah_setaraf' => $setaraf,
                     'hotel_transit' => null,
                     'hotel_maktab' => null,
                     'hotel_stars' => $stars,
@@ -101,7 +110,7 @@ class CatalogSeeder extends Seeder
         $quotes = [
             ['Ibu Aisyah', 'Jakarta', 'Umroh Hemat 9 Hari Jakarta', 'Hotel dekat, pembimbing sabar, anak-anak tidak ketinggalan rombongan.'],
             ['Pak Hasan', 'Surabaya', 'Umroh Plus Turki 16 Hari', 'Umroh khusyuk, city tour Istanbul rapi. Seat sesuai yang dijanjikan.'],
-            ['Ny. Fatimah', 'Medan', 'Umroh Ramadhan 12 Hari', 'Tarawih di Haram tidak terlupakan. Tim selalu siap membantu lansia.'],
+            ['Ny. Fatimah', 'Medan', 'Umroh 12 Hari Jakarta', 'Hotel dekat Haram. Tim selalu siap membantu lansia.'],
             ['H. Rahman', 'Jakarta', 'Haji Plus 27 Hari', 'Arafah dan Mina tertata. Kami tidak bingung mencari tenda.'],
         ];
 

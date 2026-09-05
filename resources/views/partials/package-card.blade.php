@@ -48,6 +48,7 @@
       @endif
     </div>
     <h3>{{ $package->title }}</h3>
+    <small>{{ $package->catalogTypeLine() }}</small>
     <ul class="card-details">
       <li>
         <span class="meta-ico tone-blue"><i class="bi bi-calendar3"></i></span>
@@ -59,9 +60,9 @@
       </li>
       <li>
         <span class="meta-ico tone-gold"><i class="bi bi-buildings"></i></span>
-        <span class="hotel-stars-rating" aria-label="{{ $package->hotel_stars }} dari 5 bintang">
+        <span class="hotel-stars-rating" aria-label="{{ $package->displayHotelStars() }} dari 5 bintang">
           @for($i = 1; $i <= 5; $i++)
-            <i class="bi {{ $i <= (int) $package->hotel_stars ? 'bi-star-fill is-filled' : 'bi-star' }}"></i>
+            <i class="bi {{ $i <= $package->displayHotelStars() ? 'bi-star-fill is-filled' : 'bi-star' }}"></i>
           @endfor
         </span>
       </li>

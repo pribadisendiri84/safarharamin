@@ -5,7 +5,7 @@
 <section class="page-head">
   <div class="wrap">
     <p class="eyebrow">Haji</p>
-    <h1>Haji plus &amp; furoda</h1>
+    <h1>Haji plus</h1>
     <p>Hotel dekat masjid, pendampingan manasik, dan kepastian jadwal. Kuota terbatas setiap musim.</p>
   </div>
 </section>

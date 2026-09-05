@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'pilgrim_id',
+    'refunded_transaction_id',
     'type',
     'amount',
     'paid_at',
@@ -19,6 +20,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class PilgrimTransaction extends Model
 {
+    public const TYPE_REFUND = 'refund';
+
     public const TYPE_DP = 'dp';
 
     public const TYPE_SETTLEMENT = 'pelunasan';
@@ -64,6 +67,7 @@ class PilgrimTransaction extends Model
         self::TYPE_SETTLEMENT => 'Pelunasan',
         self::TYPE_ADJUSTMENT => 'Penyesuaian',
         self::TYPE_OTHER => 'Lain-lain',
+        self::TYPE_REFUND => 'Refund',
     ];
 
     protected function casts(): array
@@ -110,6 +114,31 @@ class PilgrimTransaction extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function refundedTransaction(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'refunded_transaction_id');
+    }
+
+    public function refundTransaction(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(self::class, 'refunded_transaction_id');
+    }
+
+    public function isRefund(): bool
+    {
+        return $this->type === self::TYPE_REFUND;
+    }
+
+    public function isRefunded(): bool
+    {
+        return $this->refundTransaction !== null;
+    }
+
+    public function signedAmount(): int
+    {
+        return $this->isRefund() ? -((int) $this->amount) : (int) $this->amount;
+    }
+
     public function typeLabel(): string
     {
         return self::TYPES[$this->type] ?? $this->type;
@@ -117,7 +146,9 @@ class PilgrimTransaction extends Model
 
     public function formattedAmount(): string
     {
-        return 'Rp '.number_format((int) $this->amount, 0, ',', '.');
+        $prefix = $this->isRefund() ? '-Rp ' : 'Rp ';
+
+        return $prefix.number_format((int) $this->amount, 0, ',', '.');
     }
 
     public function hasProof(): bool

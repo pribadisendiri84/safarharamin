@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Departure;
 use App\Models\Inquiry;
+use App\Models\Pic;
 use App\Models\Pilgrim;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -35,15 +36,18 @@ class InquiryPilgrimImportService
             throw new InvalidArgumentException('Jumlah nama jamaah harus sama dengan jamaah closing.');
         }
 
+        $inquiry->loadMissing('pic');
         $unitPrice = (int) round((int) $inquiry->sold_amount / max(1, $pax));
         $note = $this->buildNotes($inquiry);
+        $picId = Pic::firstOrCreateFromName($inquiry->pic?->name)?->id;
 
-        return DB::transaction(function () use ($inquiry, $departure, $roomType, $names, $unitPrice, $note) {
+        return DB::transaction(function () use ($inquiry, $departure, $roomType, $names, $unitPrice, $note, $picId) {
             $pilgrims = collect();
 
             foreach ($names as $index => $name) {
                 $pilgrims->push(Pilgrim::query()->create([
                     'inquiry_id' => $inquiry->id,
+                    'pic_id' => $picId,
                     'departure_id' => $departure->id,
                     'full_name' => $name,
                     'phone' => $index === 0 ? $inquiry->phone : null,

@@ -260,7 +260,7 @@
           </div>
         </div>
         <div class="invoice-title">
-          <span class="label">Kwitansi Pembayaran</span>
+            <span class="label">{{ $transaction->isRefund() ? 'Bukti Refund' : 'Kwitansi Pembayaran' }}</span>
           <h2>{{ $transaction->invoice_number }}</h2>
         </div>
       </header>
@@ -275,7 +275,7 @@
           <b>{{ $transaction->invoice_created_at?->translatedFormat('d M Y') }}</b>
         </div>
         <div class="meta-item">
-          <span>Tanggal Bayar</span>
+          <span>{{ $transaction->isRefund() ? 'Tanggal Refund' : 'Tanggal Bayar' }}</span>
           <b>{{ $transaction->paid_at->translatedFormat('d M Y') }}</b>
         </div>
       </div>
@@ -327,7 +327,7 @@
         </table>
         <div class="summary">
           <div class="summary-box">
-            <span>Total Dibayar</span>
+            <span>{{ $transaction->isRefund() ? 'Total Refund' : 'Total Dibayar' }}</span>
             <b>{{ $transaction->formattedAmount() }}</b>
           </div>
         </div>

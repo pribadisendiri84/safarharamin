@@ -5,6 +5,7 @@ use App\Support\VisitorTracker;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\PostTooLargeException;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
@@ -33,6 +34,12 @@ return Application::configure(basePath: dirname(__DIR__))
                 return redirect()
                     ->route('admin.dashboard')
                     ->withErrors(['Kamu tidak punya akses ke halaman atau aksi ini.']);
+            }
+        });
+
+        $exceptions->renderable(function (PostTooLargeException $e, Request $request) {
+            if (! $request->expectsJson()) {
+                return response()->view('errors.413', [], 413);
             }
         });
     })->create();

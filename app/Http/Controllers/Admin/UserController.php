@@ -80,6 +80,15 @@ class UserController extends Controller
         return redirect()->route('admin.users.index', ['trashed' => 1])->with('ok', 'Pengguna dipulihkan.');
     }
 
+    public function unlock(User $user)
+    {
+        $this->authorize('manage-users');
+
+        $user->unlockLogin();
+
+        return redirect()->route('admin.users.index')->with('ok', 'Kunci login '.$user->name.' berhasil dibuka.');
+    }
+
     /**
      * @return array<string, mixed>
      */

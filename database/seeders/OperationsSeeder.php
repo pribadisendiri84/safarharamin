@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Departure;
 use App\Models\Package;
+use App\Models\Pic;
 use App\Models\Pilgrim;
 use App\Models\PilgrimTransaction;
 use App\Models\Room;
@@ -19,6 +20,8 @@ class OperationsSeeder extends Seeder
         }
 
         $adminId = User::query()->value('id');
+        $picId = Pic::query()->orderBy('sort_order')->value('id')
+            ?? Pic::firstOrCreateFromName('Yanti')?->id;
 
         $umrohPackage = Package::query()->where('title', 'Umroh Reguler 12 Hari Jakarta')->first();
         $hajiPackage = Package::query()->where('title', 'Haji Plus 27 Hari')->first();
@@ -47,11 +50,11 @@ class OperationsSeeder extends Seeder
             'updated_by' => $adminId,
         ]);
 
-        $this->seedUmrohGrouping($umroh, $adminId);
-        $this->seedHajiSample($haji, $adminId);
+        $this->seedUmrohGrouping($umroh, $adminId, $picId);
+        $this->seedHajiSample($haji, $adminId, $picId);
     }
 
-    private function seedUmrohGrouping(Departure $departure, ?int $adminId): void
+    private function seedUmrohGrouping(Departure $departure, ?int $adminId, ?int $picId): void
     {
         $q01 = Room::query()->create([
             'departure_id' => $departure->id,
@@ -63,6 +66,7 @@ class OperationsSeeder extends Seeder
         foreach (['Abdul Hadi', 'Nurhayati', 'Ferio', 'Salsabila'] as $name) {
             Pilgrim::query()->create([
                 'departure_id' => $departure->id,
+                'pic_id' => $picId,
                 'room_id' => $q01->id,
                 'full_name' => $name,
                 'phone' => '0812'.random_int(10000000, 99999999),
@@ -86,6 +90,7 @@ class OperationsSeeder extends Seeder
         foreach (['Tita', 'Syahrial', 'Sarah'] as $name) {
             Pilgrim::query()->create([
                 'departure_id' => $departure->id,
+                'pic_id' => $picId,
                 'room_id' => $t01->id,
                 'full_name' => $name,
                 'phone' => '0813'.random_int(10000000, 99999999),
@@ -109,6 +114,7 @@ class OperationsSeeder extends Seeder
         foreach (['Imam', 'Bimo'] as $name) {
             Pilgrim::query()->create([
                 'departure_id' => $departure->id,
+                'pic_id' => $picId,
                 'room_id' => $d01->id,
                 'full_name' => $name,
                 'phone' => '0817'.random_int(10000000, 99999999),
@@ -133,6 +139,7 @@ class OperationsSeeder extends Seeder
 
         Pilgrim::query()->create([
             'departure_id' => $departure->id,
+            'pic_id' => $picId,
             'room_id' => $q02->id,
             'full_name' => 'Rina Wulandari',
             'phone' => '081234567801',
@@ -157,6 +164,7 @@ class OperationsSeeder extends Seeder
         foreach ($ungrouped as [$name, $roomType, $gender, $price]) {
             Pilgrim::query()->create([
                 'departure_id' => $departure->id,
+                'pic_id' => $picId,
                 'room_id' => null,
                 'full_name' => $name,
                 'phone' => '0812'.random_int(10000000, 99999999),
@@ -171,7 +179,7 @@ class OperationsSeeder extends Seeder
         }
     }
 
-    private function seedHajiSample(Departure $departure, ?int $adminId): void
+    private function seedHajiSample(Departure $departure, ?int $adminId, ?int $picId): void
     {
         $room = Room::query()->create([
             'departure_id' => $departure->id,
@@ -182,6 +190,7 @@ class OperationsSeeder extends Seeder
 
         $paidPilgrim = Pilgrim::query()->create([
             'departure_id' => $departure->id,
+            'pic_id' => $picId,
             'room_id' => $room->id,
             'full_name' => 'Haji Abdullah Rahman',
             'phone' => '081298765432',
@@ -227,6 +236,7 @@ class OperationsSeeder extends Seeder
 
         Pilgrim::query()->create([
             'departure_id' => $departure->id,
+            'pic_id' => $picId,
             'room_id' => $room->id,
             'full_name' => 'Haji Siti Aminah',
             'phone' => '081376543210',
@@ -244,6 +254,7 @@ class OperationsSeeder extends Seeder
 
         Pilgrim::query()->create([
             'departure_id' => $departure->id,
+            'pic_id' => $picId,
             'room_id' => null,
             'full_name' => 'Haji Muhammad Ridwan',
             'phone' => '081112223344',

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\City;
 use App\Models\Package;
+use App\Models\PackageKind;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
@@ -14,13 +15,13 @@ class PackageCsvImporter
     public const REQUIRED_COLUMNS = [
         'judul',
         'jenis',
+        'tipe_paket',
         'embarkasi',
         'tanggal',
         'durasi',
         'harga_quad',
         'harga_triple',
         'harga_double',
-        'bintang_hotel',
         'seat_total',
         'seat_sisa',
     ];
@@ -106,7 +107,8 @@ class PackageCsvImporter
                 'quad' => 'harga_quad',
                 'triple' => 'harga_triple',
                 'double' => 'harga_double',
-                'hotel_stars' => 'bintang_hotel',
+                'package_kind' => 'tipe_paket',
+                'kind' => 'tipe_paket',
                 'seats_total' => 'seat_total',
                 'seats_left' => 'seat_sisa',
                 'original_price' => 'harga_coret',
@@ -168,7 +170,12 @@ class PackageCsvImporter
 
         $type = trim($data['jenis'] ?? '');
         if ($type === '' || ! array_key_exists($type, Package::TYPES)) {
-            return 'Jenis tidak valid (umroh, umroh_plus, umroh_ramadhan, haji_plus, haji_furoda).';
+            return 'Jenis tidak valid (umroh, umroh_plus, haji_plus).';
+        }
+
+        $kind = PackageKind::findActiveByLabel($data['tipe_paket'] ?? '');
+        if ($kind === null) {
+            return 'Tipe paket tidak valid (Arafah, Mina, Muzdalifah).';
         }
 
         $city = trim($data['embarkasi'] ?? '');
@@ -195,11 +202,6 @@ class PackageCsvImporter
         $priceQuad = $this->parseMoney($data['harga_quad'] ?? '');
         $priceTriple = $this->parseMoney($data['harga_triple'] ?? '');
         $priceDouble = $this->parseMoney($data['harga_double'] ?? '');
-
-        $hotelStars = $this->parseRequiredInt($data['bintang_hotel'] ?? '', 3, 5);
-        if ($hotelStars === null) {
-            return 'Bintang hotel harus 3–5.';
-        }
 
         $seatsTotal = $this->parseRequiredInt($data['seat_total'] ?? '', 1, 999);
         $seatsLeft = $this->parseRequiredInt($data['seat_sisa'] ?? '', 0, 999);
@@ -230,6 +232,7 @@ class PackageCsvImporter
             'title' => $title,
             'slug' => $slug,
             'type' => $type,
+            'package_kind_id' => $kind->id,
             'departure_city' => $city,
             'departure_date' => $departureDate,
             'duration_days' => $duration,
@@ -240,8 +243,9 @@ class PackageCsvImporter
             'original_price' => $originalPrice,
             'price_note' => $this->optionalString($data['catatan_harga'] ?? '', 180),
             'hotel_makkah' => $this->optionalString($data['hotel_makkah'] ?? '', 120),
+            'hotel_makkah_setaraf' => $this->parseBool($data['hotel_makkah_setaraf'] ?? ''),
             'hotel_madinah' => $this->optionalString($data['hotel_madinah'] ?? '', 120),
-            'hotel_stars' => $hotelStars,
+            'hotel_madinah_setaraf' => $this->parseBool($data['hotel_madinah_setaraf'] ?? ''),
             'airline' => $this->optionalString($data['maskapai'] ?? '', 80),
             'room_type' => $priceQuad !== null ? 'quad' : ($priceTriple !== null ? 'triple' : ($priceDouble !== null ? 'double' : 'quad')),
             'seats_total' => $seatsTotal,
@@ -333,16 +337,18 @@ class PackageCsvImporter
         $header = implode(',', [
             'judul',
             'jenis',
+            'tipe_paket',
             'embarkasi',
             'tanggal',
             'durasi',
             'harga_quad',
             'harga_triple',
             'harga_double',
-            'bintang_hotel',
             'maskapai',
             'hotel_makkah',
             'hotel_madinah',
+            'hotel_makkah_setaraf',
+            'hotel_madinah_setaraf',
             'seat_total',
             'seat_sisa',
             'catatan_harga',
@@ -357,16 +363,18 @@ class PackageCsvImporter
         $sample = implode(',', [
             'Paket Muzdalifah 9D - 30 Jan 2025',
             'umroh',
+            'Muzdalifah',
             'jakarta',
             '2025-01-30',
             '9',
             '35100000',
             '36200000',
             '38500000',
-            '4',
             'Garuda Indonesia',
-            'Ajyad Makarem / Assyuhada / setaraf',
-            'Front Taibah / Raudhoh Royal Inn / setaraf',
+            'Hilton',
+            'Hilton',
+            '1',
+            '1',
             '40',
             '40',
             'Harga dapat berubah sesuai kebijakan',

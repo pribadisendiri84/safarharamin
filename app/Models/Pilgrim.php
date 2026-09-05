@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable([
     'departure_id',
     'inquiry_id',
+    'pic_id',
     'room_id',
     'full_name',
     'phone',
@@ -55,6 +56,11 @@ class Pilgrim extends Model
         return $this->belongsTo(Inquiry::class);
     }
 
+    public function pic(): BelongsTo
+    {
+        return $this->belongsTo(Pic::class)->withTrashed();
+    }
+
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
@@ -63,6 +69,11 @@ class Pilgrim extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(PilgrimTransaction::class)->latest('paid_at');
+    }
+
+    public function picName(): string
+    {
+        return $this->pic?->name ?? 'Belum ada PIC';
     }
 
     public function roomTypeEnum(): RoomType
@@ -203,7 +214,9 @@ class Pilgrim extends Model
     public function refreshPaymentSummary(): void
     {
         $transactions = $this->transactions()->orderBy('paid_at')->get();
-        $paid = (int) $transactions->sum('amount');
+        $paid = max(0, (int) $transactions->sum(
+            fn (PilgrimTransaction $transaction) => $transaction->signedAmount()
+        ));
         $dpDate = $transactions->firstWhere('type', PilgrimTransaction::TYPE_DP)?->paid_at;
         $settlementDate = $transactions->firstWhere('type', PilgrimTransaction::TYPE_SETTLEMENT)?->paid_at;
 

@@ -43,6 +43,11 @@ class RegisterController extends Controller
         return redirect()
             ->route('register')
             ->with('ok', 'Pendaftaran tercatat. Tim kami akan menghubungi Anda.')
-            ->with('wa_url', route('go.whatsapp', ['from' => 'form']));
+            ->with('registration_success', true)
+            ->with('wa_url', route('go.whatsapp', ['from' => 'form']))
+            ->with('feedback_title', 'Pendaftaran berhasil')
+            ->with('feedback_action_url', route('go.whatsapp', ['from' => 'form']))
+            ->with('feedback_action_label', 'Lanjut ke WhatsApp')
+            ->with('feedback_action_target', '_blank');
     }
 }

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Departure;
 use App\Models\Inquiry;
 use App\Models\Package;
+use App\Models\Pic;
 use App\Models\Pilgrim;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -77,6 +78,10 @@ class InquiryPilgrimImportTest extends TestCase
         $this->assertSame(29_500_000, (int) $pilgrims[0]->package_price);
         $this->assertSame('Nurhayati', $pilgrims[1]->full_name);
         $this->assertNull($pilgrims[1]->phone);
+        $pic = Pic::query()->whereRaw('lower(name) = ?', [mb_strtolower($admin->name)])->first();
+        $this->assertNotNull($pic);
+        $this->assertSame($pic->id, $pilgrims[0]->pic_id);
+        $this->assertSame($pic->id, $pilgrims[1]->pic_id);
     }
 
     public function test_cannot_import_inquiry_twice(): void

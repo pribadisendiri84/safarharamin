@@ -2,18 +2,21 @@
 
 use App\Http\Controllers\Admin\AirlineController;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\CaptchaController;
 use App\Http\Controllers\Admin\CityController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DepartureController;
+use App\Http\Controllers\Admin\DepartureRecapController;
 use App\Http\Controllers\Admin\GalleryController;
 use App\Http\Controllers\Admin\HistoryController;
 use App\Http\Controllers\Admin\HotelController;
 use App\Http\Controllers\Admin\InquiryController;
 use App\Http\Controllers\Admin\InquiryPilgrimImportController;
+use App\Http\Controllers\Admin\OperationsDashboardController;
 use App\Http\Controllers\Admin\PackageController as AdminPackageController;
 use App\Http\Controllers\Admin\PackageImportController;
-use App\Http\Controllers\Admin\DepartureController;
-use App\Http\Controllers\Admin\DepartureRecapController;
-use App\Http\Controllers\Admin\OperationsDashboardController;
+use App\Http\Controllers\Admin\PackageKindController;
+use App\Http\Controllers\Admin\PicController;
 use App\Http\Controllers\Admin\PilgrimController;
 use App\Http\Controllers\Admin\PilgrimTransactionController;
 use App\Http\Controllers\Admin\RoomGroupingController;
@@ -44,6 +47,7 @@ Route::get('/testimoni', [PageController::class, 'testimonials'])->name('testimo
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->name('login.store');
+    Route::get('captcha', CaptchaController::class)->name('captcha');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::middleware(AdminAuthenticate::class)->group(function () {
@@ -80,6 +84,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('airlines/{airline}', [AirlineController::class, 'update'])->name('airlines.update');
             Route::delete('airlines/{airline}', [AirlineController::class, 'destroy'])->name('airlines.destroy');
             Route::post('airlines/{airline}/restore', [AirlineController::class, 'restore'])->withTrashed()->name('airlines.restore');
+            Route::get('pics', [PicController::class, 'index'])->name('pics.index');
+            Route::post('pics', [PicController::class, 'store'])->name('pics.store');
+            Route::put('pics/{pic}', [PicController::class, 'update'])->name('pics.update');
+            Route::delete('pics/{pic}', [PicController::class, 'destroy'])->name('pics.destroy');
+            Route::post('pics/{pic}/restore', [PicController::class, 'restore'])->withTrashed()->name('pics.restore');
+            Route::get('package-kinds', [PackageKindController::class, 'index'])->name('package-kinds.index');
+            Route::post('package-kinds', [PackageKindController::class, 'store'])->name('package-kinds.store');
+            Route::put('package-kinds/{package_kind}', [PackageKindController::class, 'update'])->name('package-kinds.update');
+            Route::delete('package-kinds/{package_kind}', [PackageKindController::class, 'destroy'])->name('package-kinds.destroy');
+            Route::post('package-kinds/{package_kind}/restore', [PackageKindController::class, 'restore'])->withTrashed()->name('package-kinds.restore');
             Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
             Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
         });
@@ -109,7 +123,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('jamaah/{pilgrim}/restore', [PilgrimController::class, 'restore'])->name('pilgrims.restore');
             Route::post('jamaah/{pilgrim}/transaksi', [PilgrimTransactionController::class, 'store'])->name('pilgrims.transactions.store');
             Route::get('jamaah/{pilgrim}/transaksi/{transaction}/invoice', [PilgrimTransactionController::class, 'showInvoice'])->name('pilgrims.transactions.invoice.show');
-            Route::delete('jamaah/{pilgrim}/transaksi/{transaction}', [PilgrimTransactionController::class, 'destroy'])->name('pilgrims.transactions.destroy');
+            Route::post('jamaah/{pilgrim}/transaksi/{transaction}/refund', [PilgrimTransactionController::class, 'refund'])->name('pilgrims.transactions.refund');
             Route::get('keberangkatan/{departure}/grouping', [RoomGroupingController::class, 'index'])->name('grouping.index');
             Route::post('keberangkatan/{departure}/grouping/auto', [RoomGroupingController::class, 'autoGroup'])->name('grouping.auto');
             Route::post('keberangkatan/{departure}/grouping/rooms', [RoomGroupingController::class, 'storeRoom'])->name('grouping.rooms.store');
@@ -125,6 +139,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('trafik', [TrafficController::class, 'index'])->name('traffic.index');
             Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
             Route::post('users/{user}/restore', [UserController::class, 'restore'])->withTrashed()->name('users.restore');
+            Route::post('users/{user}/unlock', [UserController::class, 'unlock'])->name('users.unlock');
         });
     });
 });

@@ -39,7 +39,7 @@ HTTPS: `git clone https://github.com/pribadisendiri84/safarharamin.git`
 | `/paket` | Katalog + filter tipe/kota/harga |
 | `/paket/{slug}` | Detail, fasilitas, form tanya |
 | `/daftar` | Pendaftaran jamaah |
-| `/haji-plus` | Landing haji plus & furoda |
+| `/haji-plus` | Landing haji plus |
 | `/tabungan` | Tabungan umroh |
 | `/galeri` | Gallery keberangkatan |
 | `/testimoni` | Testimoni jamaah |
@@ -220,6 +220,8 @@ server {
     server_name IP_VPS _;
     root /var/www/safarharamin/public;
     client_max_body_size 12M;
+    error_page 413 /errors/413.html;
+    error_page 500 502 503 504 /errors/50x.html;
 
     add_header X-Frame-Options "SAMEORIGIN";
     index index.php;
@@ -228,6 +230,9 @@ server {
     location / {
         try_files $uri $uri/ /index.php?$query_string;
     }
+
+    location = /errors/413.html { internal; }
+    location = /errors/50x.html { internal; }
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
@@ -265,7 +270,13 @@ post_max_size = 12M
 
 Lalu `systemctl reload php8.4-fpm`.
 
-Aplikasi juga mengompres foto di browser sebelum unggah; tetap naikkan limit server untuk jaga-jaga.
+Aplikasi membatasi foto/bukti unggah maksimal 5 MB per file dan mengompres foto di browser. Limit Nginx/PHP dibuat 12 MB agar request multipart masih dapat masuk ke Laravel dan menghasilkan pesan validasi yang profesional. `error_page` di atas memakai halaman statis branded untuk kegagalan yang terjadi sebelum Laravel/PHP berjalan.
+
+Jika akun admin terkunci setelah tiga password salah, superadmin lain dapat membuka dari menu **Pengguna**. Untuk akun superadmin terakhir, gunakan:
+
+```bash
+php artisan admin:unlock admin@safarharamin.id
+```
 
 ### 5. Update rutin setelah `git pull`
 
@@ -318,3 +329,8 @@ Tidak perlu reload Nginx kecuali config Nginx berubah.
 2. Ganti `server_name` di Nginx, boleh lepas `default_server`.
 3. `certbot --nginx -d domain.id`
 4. `APP_URL=https://domain.id` lalu `php artisan config:cache`.
+
+
+contoh db:seed tertentu
+php artisan db:seed --class=HotelSeeder
+php artisan db:seed --class=AirlineSeeder

@@ -33,6 +33,14 @@
         @endforeach
       </select>
     </label>
+    <label>Tipe paket
+      <select name="jenis">
+        <option value="">Semua</option>
+        @foreach($packageKinds as $kind)
+          <option value="{{ $kind->slug }}" @selected(($filters['jenis'] ?? '') === $kind->slug)>{{ $kind->name }}</option>
+        @endforeach
+      </select>
+    </label>
     <label>Berangkat dari
       @include('partials.city-select', [
         'name' => 'kota',

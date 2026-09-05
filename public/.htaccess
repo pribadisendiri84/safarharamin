@@ -23,3 +23,9 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+ErrorDocument 413 /errors/413.html
+ErrorDocument 500 /errors/50x.html
+ErrorDocument 502 /errors/50x.html
+ErrorDocument 503 /errors/50x.html
+ErrorDocument 504 /errors/50x.html

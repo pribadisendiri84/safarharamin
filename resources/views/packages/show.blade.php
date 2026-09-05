@@ -23,8 +23,11 @@
       <div class="badges">
         @if($package->isFullbook())<span class="badge fullbook">Fullbook</span>@endif
         @if($package->is_hot)<span class="badge hot">Kuota terbatas</span>@endif
-        <span class="badge gold">{{ $package->hotel_stars }}★</span>
+        <span class="badge gold">{{ $package->displayHotelStars() }}★</span>
         <span class="badge">{{ $package->typeLabel() }}</span>
+        @if($package->packageKindLabel() !== '')
+          <span class="badge">{{ $package->packageKindLabel() }}</span>
+        @endif
       </div>
       <h1>{{ $package->title }}</h1>
       <p class="loc">{{ $package->departureLine() }} · {{ $package->seatsLine() }}</p>
@@ -53,13 +56,12 @@
       <ul class="spec-grid">
         <li><span>Durasi</span><b>{{ $package->duration_days }} hari</b></li>
         <li><span>Maskapai</span><b>{{ $package->airline ?: '-' }}</b></li>
-        <li><span>Hotel Makkah</span><b>{{ $package->hotel_makkah ?: '-' }}</b></li>
-        <li><span>Hotel Madinah</span><b>{{ $package->hotel_madinah ?: '-' }}</b></li>
+        <li><span>Hotel Makkah</span><b>{{ $package->hotelMakkahLine() }}</b></li>
+        <li><span>Hotel Madinah</span><b>{{ $package->hotelMadinahLine() }}</b></li>
         @if($package->isHaji())
           <li><span>Hotel Transit</span><b>{{ $package->hotel_transit ?: '-' }}</b></li>
           <li><span>Maktab</span><b>{{ $package->hotel_maktab ?: '-' }}</b></li>
         @endif
-        <li><span>Bintang</span><b>{{ $package->hotel_stars }}★</b></li>
         <li><span>Seat</span><b>{{ $package->seatsLine() }}</b></li>
       </ul>
 

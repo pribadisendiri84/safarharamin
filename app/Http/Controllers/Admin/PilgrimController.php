@@ -6,6 +6,7 @@ use App\Enums\RoomType;
 use App\Http\Controllers\Admin\Concerns\FiltersTrashed;
 use App\Http\Controllers\Controller;
 use App\Models\Departure;
+use App\Models\Pic;
 use App\Models\Pilgrim;
 use App\Models\PilgrimTransaction;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class PilgrimController extends Controller
     public function index(Request $request)
     {
         $query = $this->applyTrashFilter(
-            Pilgrim::query()->with(['departure', 'room'])->latest(),
+            Pilgrim::query()->with(['departure', 'room', 'pic'])->latest(),
             $request
         );
 
@@ -67,9 +68,14 @@ class PilgrimController extends Controller
             };
         }
 
+        if ($picId = $request->integer('pic_id')) {
+            $query->where('pic_id', $picId);
+        }
+
         return view('admin.operations.pilgrims.index', [
             'pilgrims' => $query->paginate(30)->withQueryString(),
             'departures' => Departure::query()->orderBy('program_kind')->orderBy('program_name')->get(['id', 'program_name', 'program_kind', 'departure_date']),
+            'pics' => Pic::options(),
             ...$this->trashViewData(Pilgrim::class, $request),
         ]);
     }
@@ -95,6 +101,7 @@ class PilgrimController extends Controller
                 ->orderBy('program_name')
                 ->get(['id', 'program_name', 'program_kind', 'departure_date', 'airline', 'flight_number', 'hotel_makkah', 'hotel_madinah', 'hotel_transit', 'hotel_maktab']),
             'departureInfos' => $this->departureInfos($departures),
+            'pics' => Pic::options(),
         ]);
     }
 
@@ -110,7 +117,7 @@ class PilgrimController extends Controller
 
     public function show(Pilgrim $pilgrim)
     {
-        $pilgrim->load(['departure', 'room', 'transactions.author']);
+        $pilgrim->load(['departure', 'room', 'transactions.author', 'transactions.refundTransaction', 'pic']);
 
         return view('admin.operations.pilgrims.show', [
             'pilgrim' => $pilgrim,
@@ -131,6 +138,7 @@ class PilgrimController extends Controller
             'pilgrim' => $pilgrim,
             'departures' => $departures,
             'departureInfos' => $this->departureInfos($departures),
+            'pics' => Pic::options($pilgrim->pic_id),
         ]);
     }
 
@@ -180,6 +188,18 @@ class PilgrimController extends Controller
 
         $rules = [
             'departure_id' => ['required', 'exists:departures,id'],
+            'pic_id' => [
+                'required',
+                Rule::exists('pics', 'id')->where(function ($query) use ($pilgrim) {
+                    $query->whereNull('deleted_at')
+                        ->where(function ($inner) use ($pilgrim) {
+                            $inner->where('is_active', true);
+                            if ($pilgrim?->pic_id) {
+                                $inner->orWhere('id', $pilgrim->pic_id);
+                            }
+                        });
+                }),
+            ],
             'full_name' => ['required', 'string', 'max:180'],
             'phone' => ['nullable', 'string', 'max:32'],
             'gender' => ['nullable', Rule::in(array_keys(Pilgrim::GENDERS))],

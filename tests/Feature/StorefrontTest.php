@@ -122,12 +122,18 @@ class StorefrontTest extends TestCase
         $this->get('/tabungan')->assertNotFound();
         $this->get('/kalkulator-cicilan')->assertNotFound();
 
-        $this->post('/daftar', [
-            'name' => 'Budi',
-            'phone' => '08123456789',
-            'city' => 'jakarta',
-            'pax' => 2,
-        ])->assertRedirect(route('register'));
+        $this->followingRedirects()
+            ->post('/daftar', [
+                'name' => 'Budi',
+                'phone' => '08123456789',
+                'city' => 'jakarta',
+                'pax' => 2,
+            ])
+            ->assertOk()
+            ->assertSee('Pendaftaran berhasil')
+            ->assertSee('Lanjut ke WhatsApp')
+            ->assertSee('data-feedback-modal', false)
+            ->assertDontSee('Kirim pendaftaran');
 
         $this->assertDatabaseHas('inquiries', ['name' => 'Budi', 'kind' => 'daftar', 'source' => 'website']);
 
@@ -157,7 +163,7 @@ class StorefrontTest extends TestCase
                 'price_quad' => 42000000,
                 'price_triple' => 43100000,
                 'price_double' => 45400000,
-                'hotel_stars' => 4,
+                'package_kind_id' => $this->packageKindId(),
                 'seats_total' => 30,
                 'seats_left' => 30,
                 'status' => 'published',
@@ -190,7 +196,7 @@ class StorefrontTest extends TestCase
                 'departure_city' => 'jakarta',
                 'duration_days' => 9,
                 'price_double' => 38500000,
-                'hotel_stars' => 4,
+                'package_kind_id' => $this->packageKindId(),
                 'seats_total' => 20,
                 'seats_left' => 20,
                 'status' => 'published',
@@ -218,7 +224,7 @@ class StorefrontTest extends TestCase
                 'type' => 'umroh',
                 'departure_city' => 'jakarta',
                 'duration_days' => 9,
-                'hotel_stars' => 4,
+                'package_kind_id' => $this->packageKindId(),
                 'seats_total' => 20,
                 'seats_left' => 20,
                 'status' => 'draft',
@@ -240,7 +246,7 @@ class StorefrontTest extends TestCase
                 'price_quad' => 35100000,
                 'price_triple' => 36200000,
                 'price_double' => 38500000,
-                'hotel_stars' => 4,
+                'package_kind_id' => $this->packageKindId(),
                 'seats_total' => 40,
                 'seats_left' => 40,
                 'status' => 'published',
@@ -257,7 +263,7 @@ class StorefrontTest extends TestCase
                 'price_quad' => 35100000,
                 'price_triple' => 36200000,
                 'price_double' => 38500000,
-                'hotel_stars' => 4,
+                'package_kind_id' => $this->packageKindId(),
                 'seats_total' => 40,
                 'seats_left' => 40,
                 'status' => 'draft',
@@ -747,5 +753,105 @@ class StorefrontTest extends TestCase
             ->assertSee('Transit Jeddah')
             ->assertSee('Maktab')
             ->assertSee('Maktab Mina 5');
+    }
+
+    public function test_catalog_has_no_ramadhan_or_furoda_types(): void
+    {
+        $this->assertSame(['umroh', 'umroh_plus', 'haji_plus'], array_keys(Package::TYPES));
+
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSee('Ramadhan')
+            ->assertDontSee('furoda', false);
+
+        $this->get('/haji-plus')
+            ->assertOk()
+            ->assertSee('Haji plus')
+            ->assertDontSee('furoda', false);
+    }
+
+    public function test_admin_package_requires_master_kind_and_omits_hotel_stars_field(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get('/admin/packages/create')
+            ->assertOk()
+            ->assertSee('Tipe paket')
+            ->assertDontSee('name="hotel_stars"', false)
+            ->assertSee('Hilton (5★)', false);
+
+        $this->actingAs($user)
+            ->post('/admin/packages', [
+                'title' => 'Tanpa Tipe Master',
+                'type' => 'umroh',
+                'departure_city' => 'jakarta',
+                'duration_days' => 9,
+                'price_quad' => 30000000,
+                'seats_total' => 20,
+                'seats_left' => 20,
+                'status' => 'draft',
+            ])
+            ->assertSessionHasErrors('package_kind_id');
+    }
+
+    public function test_package_kind_filter_and_setaraf_copy_on_storefront(): void
+    {
+        $arafah = $this->packageKindId('arafah');
+        $mina = $this->packageKindId('mina');
+
+        Package::query()->create([
+            'title' => 'Umroh Plus Arafah Hilton',
+            'slug' => 'umroh-plus-arafah-hilton',
+            'type' => 'umroh_plus',
+            'package_kind_id' => $arafah,
+            'departure_city' => 'jakarta',
+            'duration_days' => 12,
+            'price' => 42000000,
+            'price_quad' => 42000000,
+            'hotel_makkah' => 'Hilton',
+            'hotel_makkah_setaraf' => true,
+            'hotel_madinah' => 'Hilton',
+            'hotel_madinah_setaraf' => false,
+            'hotel_stars' => 4,
+            'room_type' => 'quad',
+            'seats_total' => 30,
+            'seats_left' => 10,
+            'status' => 'published',
+            'images' => ['/images/placeholder-kaaba.svg'],
+        ]);
+        Package::query()->create([
+            'title' => 'Umroh Mina Saja',
+            'slug' => 'umroh-mina-saja',
+            'type' => 'umroh',
+            'package_kind_id' => $mina,
+            'departure_city' => 'jakarta',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'status' => 'published',
+            'hotel_stars' => 4,
+            'room_type' => 'quad',
+            'seats_total' => 20,
+            'seats_left' => 10,
+            'images' => ['/images/placeholder-kaaba.svg'],
+        ]);
+
+        $this->get('/paket?jenis=arafah')
+            ->assertOk()
+            ->assertSee('Umroh Plus Arafah Hilton')
+            ->assertSee('Umroh Plus · Arafah')
+            ->assertDontSee('Umroh Mina Saja');
+
+        $this->get('/paket/umroh-plus-arafah-hilton')
+            ->assertOk()
+            ->assertSee('Hilton atau setaraf (5★)')
+            ->assertSee('Hilton (5★)')
+            ->assertSee('Arafah')
+            ->assertSee('Umroh Plus');
+
+        $package = Package::query()->where('slug', 'umroh-plus-arafah-hilton')->first();
+        $this->assertSame(5, $package->displayHotelStars());
+        $this->assertSame(5, $package->hotel_stars);
     }
 }

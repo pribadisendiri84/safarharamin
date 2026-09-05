@@ -39,6 +39,8 @@
         ['route' => 'admin.cities.*', 'href' => route('admin.cities.index'), 'label' => 'Kota Embarkasi', 'icon' => 'pin', 'ability' => 'manage-catalog'],
         ['route' => 'admin.hotels.*', 'href' => route('admin.hotels.index'), 'label' => 'Hotel', 'icon' => 'pin', 'ability' => 'manage-catalog'],
         ['route' => 'admin.airlines.*', 'href' => route('admin.airlines.index'), 'label' => 'Maskapai', 'icon' => 'plane', 'ability' => 'manage-catalog'],
+        ['route' => 'admin.pics.*', 'href' => route('admin.pics.index'), 'label' => 'PIC', 'icon' => 'users', 'ability' => 'manage-catalog'],
+        ['route' => 'admin.package-kinds.*', 'href' => route('admin.package-kinds.index'), 'label' => 'Tipe Paket', 'icon' => 'box', 'ability' => 'manage-catalog'],
       ],
     ],
     [

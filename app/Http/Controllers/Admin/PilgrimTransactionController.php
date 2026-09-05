@@ -8,7 +8,9 @@ use App\Models\PilgrimTransaction;
 use App\Services\PaymentProofStore;
 use App\Support\SiteProfile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PilgrimTransactionController extends Controller
 {
@@ -72,12 +74,40 @@ class PilgrimTransactionController extends Controller
         ]);
     }
 
-    public function destroy(Pilgrim $pilgrim, PilgrimTransaction $transaction)
+    public function refund(Request $request, Pilgrim $pilgrim, PilgrimTransaction $transaction)
     {
         abort_unless($transaction->pilgrim_id === $pilgrim->id, 404);
 
-        $transaction->delete();
+        DB::transaction(function () use ($request, $pilgrim, $transaction): void {
+            $payment = PilgrimTransaction::query()
+                ->whereKey($transaction->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        return back()->with('ok', 'Transaksi dihapus.');
+            if ($payment->isRefund()) {
+                throw ValidationException::withMessages([
+                    'refund' => 'Transaksi refund tidak dapat direfund kembali.',
+                ]);
+            }
+
+            if ($payment->refundTransaction()->exists()) {
+                throw ValidationException::withMessages([
+                    'refund' => 'Transaksi ini sudah direfund.',
+                ]);
+            }
+
+            $pilgrim->transactions()->create([
+                'refunded_transaction_id' => $payment->id,
+                'type' => PilgrimTransaction::TYPE_REFUND,
+                'amount' => $payment->amount,
+                'paid_at' => now()->toDateString(),
+                'notes' => 'Refund transaksi '.$payment->invoiceLabel(),
+                'invoice_number' => PilgrimTransaction::generateInvoiceNumber(),
+                'invoice_created_at' => now(),
+                'created_by' => $request->user()?->id,
+            ]);
+        });
+
+        return back()->with('ok', 'Refund berhasil dicatat sebagai transaksi baru.');
     }
 }

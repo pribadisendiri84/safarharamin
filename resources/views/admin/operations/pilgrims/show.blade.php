@@ -11,7 +11,7 @@
   <div>
     <p class="eyebrow">{{ $pilgrim->departure?->program_name }}</p>
     <h1>{{ $pilgrim->full_name }}</h1>
-    <p class="sub">{{ $pilgrim->roomTypeLabel() }} · {{ $pilgrim->groupingStatusLabel() }}@if($pilgrim->room) · {{ $pilgrim->room->room_number }}@endif</p>
+    <p class="sub">{{ $pilgrim->roomTypeLabel() }} · PIC {{ $pilgrim->picName() }} · {{ $pilgrim->groupingStatusLabel() }}@if($pilgrim->room) · {{ $pilgrim->room->room_number }}@endif</p>
   </div>
   <div class="actions head-actions">
     <a class="btn gray" href="{{ route('admin.operations.pilgrims.edit', $pilgrim) }}">Edit</a>
@@ -26,6 +26,7 @@
   <section class="panel form-pad ops-panel">
     <h2>Profil jamaah</h2>
     <dl class="ops-spec-grid">
+      <div class="ops-spec-row"><dt>PIC</dt><dd>{{ $pilgrim->picName() }}</dd></div>
       <div class="ops-spec-row"><dt>HP</dt><dd>{{ $pilgrim->phone ?: '—' }}</dd></div>
       <div class="ops-spec-row"><dt>Jenis kelamin</dt><dd>{{ $pilgrim->genderLabel() }}</dd></div>
       <div class="ops-spec-row"><dt>Keberangkatan</dt><dd>{{ $pilgrim->departure?->program_name ?: '—' }}</dd></div>
@@ -137,10 +138,10 @@
       </thead>
       <tbody>
         @forelse($pilgrim->transactions as $transaction)
-          <tr>
+          <tr class="{{ $transaction->isRefund() ? 'is-refund' : '' }}">
             <td>{{ $transaction->paid_at->translatedFormat('d M Y') }}</td>
             <td><span class="badge tx-{{ $transaction->type }}">{{ $transaction->typeLabel() }}</span></td>
-            <td><b>{{ $transaction->formattedAmount() }}</b></td>
+            <td><b class="{{ $transaction->isRefund() ? 'refund-amount' : '' }}">{{ $transaction->formattedAmount() }}</b></td>
             <td>
               @if($transaction->notes)
                 {{ $transaction->notes }}
@@ -162,10 +163,14 @@
             <td class="col-tx-actions">
               <div class="tx-row-actions">
                 <a class="btn gray sm" href="{{ route('admin.operations.pilgrims.transactions.invoice.show', [$pilgrim, $transaction]) }}" target="_blank" rel="noopener" title="Cetak invoice">Print</a>
-                <form method="post" action="{{ route('admin.operations.pilgrims.transactions.destroy', [$pilgrim, $transaction]) }}" onsubmit="return confirm('Hapus transaksi ini?')">
-                  @csrf @method('DELETE')
-                  <button class="btn gray sm danger" type="submit">Hapus</button>
-                </form>
+                @if(! $transaction->isRefund() && ! $transaction->isRefunded())
+                  <form method="post" action="{{ route('admin.operations.pilgrims.transactions.refund', [$pilgrim, $transaction]) }}" onsubmit="return confirm('Refund penuh {{ $transaction->formattedAmount() }}? Pembayaran asli tetap tersimpan di riwayat.')">
+                    @csrf
+                    <button class="btn gray sm danger" type="submit">Refund</button>
+                  </form>
+                @elseif($transaction->isRefunded())
+                  <span class="badge draft">Sudah refund</span>
+                @endif
               </div>
             </td>
           </tr>

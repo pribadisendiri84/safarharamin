@@ -19,13 +19,21 @@
       <li>Nama sesuai KTP untuk manifes</li>
     </ul>
   </div>
+  @if(session('registration_success'))
+    <div class="form registration-success">
+      <div class="registration-success__icon" aria-hidden="true">✓</div>
+      <h2>Pendaftaran berhasil</h2>
+      <p>{{ session('ok') }}</p>
+      <p>Silakan lanjutkan ke WhatsApp agar tim kami dapat segera mengonfirmasi data, seat, dan dokumen Anda.</p>
+      @if(session('wa_url'))
+        <a class="btn full" href="{{ session('wa_url') }}" target="_blank" rel="noopener">
+          <i class="bi bi-whatsapp"></i> Lanjut ke WhatsApp
+        </a>
+      @endif
+    </div>
+  @else
   <form class="form" method="post" action="{{ route('register.store') }}">
     @csrf
-    @if(session('ok'))
-      <div class="alert ok">{{ session('ok') }}</div>
-      @if(session('wa_url'))<a class="btn full" href="{{ session('wa_url') }}" target="_blank" rel="noopener">Lanjut ke WhatsApp</a>@endif
-    @endif
-    @if($errors->any())<div class="alert err">{{ $errors->first() }}</div>@endif
     <label>Nama lengkap<input name="name" value="{{ old('name') }}" required></label>
     <label>WhatsApp<input name="phone" value="{{ old('phone') }}" required></label>
     <label>Email<input type="email" name="email" value="{{ old('email') }}"></label>
@@ -49,5 +57,6 @@
     <label>Catatan<textarea name="notes" rows="3">{{ old('notes') }}</textarea></label>
     <button class="btn" type="submit">Kirim pendaftaran</button>
   </form>
+  @endif
 </section>
 @endsection

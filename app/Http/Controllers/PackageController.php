@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Inquiry;
 use App\Models\Package;
+use App\Models\PackageKind;
 use App\Support\WaMessages;
 use Illuminate\Http\Request;
 
@@ -11,7 +12,7 @@ class PackageController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Package::query()->visibleOnCatalog();
+        $query = Package::query()->visibleOnCatalog()->with('packageKind');
         $type = $request->string('tipe')->toString();
         $group = $request->string('kelompok')->toString();
 
@@ -21,6 +22,10 @@ class PackageController extends Controller
             $query->whereIn('type', Package::UMROH_TYPES);
         } elseif ($group === 'haji') {
             $query->whereIn('type', Package::HAJI_TYPES);
+        }
+
+        if ($kind = $request->string('jenis')->toString()) {
+            $query->whereHas('packageKind', fn ($builder) => $builder->where('slug', $kind));
         }
 
         if ($city = $request->string('kota')->toString()) {
@@ -73,7 +78,8 @@ class PackageController extends Controller
             'packages' => $packages,
             'typeLabel' => $typeLabel,
             'chipCities' => $chipCities,
-            'filters' => $request->only(['q', 'tipe', 'kelompok', 'kota', 'harga_max', 'hari', 'urut']),
+            'packageKinds' => PackageKind::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['slug', 'name']),
+            'filters' => $request->only(['q', 'tipe', 'kelompok', 'jenis', 'kota', 'harga_max', 'hari', 'urut']),
         ]);
     }
 
@@ -81,7 +87,10 @@ class PackageController extends Controller
     {
         abort_unless($package->isVisibleOnCatalog(), 404);
 
+        $package->loadMissing('packageKind');
+
         $related = Package::query()
+            ->with('packageKind')
             ->published()
             ->where('id', '!=', $package->id)
             ->where('type', $package->type)

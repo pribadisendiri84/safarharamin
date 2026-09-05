@@ -19,7 +19,7 @@ class PackageController extends Controller
     {
         $query = $this->applyTrashFilter(
             Package::query()
-                ->with('creator')
+                ->with(['creator', 'packageKind'])
                 ->withSum(['inquiries as sold_pax' => fn ($q) => $q->where('status', Inquiry::STATUS_SOLD)], 'sold_pax')
                 ->latest(),
             $request
@@ -275,6 +275,18 @@ class PackageController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
             'type' => ['required', Rule::in(array_keys(Package::TYPES))],
+            'package_kind_id' => [
+                'required',
+                Rule::exists('package_kinds', 'id')->where(function ($query) use ($existing) {
+                    $query->whereNull('deleted_at')
+                        ->where(function ($inner) use ($existing) {
+                            $inner->where('is_active', true);
+                            if ($existing?->package_kind_id) {
+                                $inner->orWhere('id', $existing->package_kind_id);
+                            }
+                        });
+                }),
+            ],
             'departure_city' => ['required', Rule::exists('cities', 'slug')->whereNull('deleted_at')],
             'departure_date' => ['nullable', 'date'],
             'duration_days' => ['required', 'integer', 'min:7', 'max:45'],
@@ -288,7 +300,6 @@ class PackageController extends Controller
             'hotel_madinah' => ['nullable', 'string', 'max:120'],
             'hotel_transit' => ['nullable', 'string', 'max:120'],
             'hotel_maktab' => ['nullable', 'string', 'max:120'],
-            'hotel_stars' => ['required', 'integer', 'min:3', 'max:5'],
             'airline' => ['nullable', 'string', 'max:80'],
             'seats_total' => ['required', 'integer', 'min:1'],
             'seats_left' => ['required', 'integer', 'min:0'],
@@ -304,12 +315,25 @@ class PackageController extends Controller
         unset($data['facilities_text'], $data['exclusions_text'], $data['photos']);
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_hot'] = $request->boolean('is_hot');
+        $data['hotel_makkah_setaraf'] = $request->boolean('hotel_makkah_setaraf');
+        $data['hotel_madinah_setaraf'] = $request->boolean('hotel_madinah_setaraf');
         $data['home_sort'] = $this->resolveHomeSort($data['is_featured'], $existing);
 
         if (! in_array($data['type'], Package::HAJI_TYPES, true)) {
             $data['price_double_plus'] = null;
             $data['hotel_transit'] = null;
             $data['hotel_maktab'] = null;
+        }
+
+        $roomKeys = ['price_quad', 'price_triple', 'price_double'];
+        if (in_array($data['type'], Package::HAJI_TYPES, true)) {
+            $roomKeys[] = 'price_double_plus';
+        }
+        $hasRoomPrice = collect($roomKeys)->contains(fn (string $key) => ($data[$key] ?? null) !== null);
+        if (! $hasRoomPrice) {
+            throw ValidationException::withMessages([
+                'price_quad' => 'Isi minimal satu harga kamar (quad, triple, atau double).',
+            ]);
         }
 
         return $data;

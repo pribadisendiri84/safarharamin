@@ -68,7 +68,7 @@ class AdminHistoryAndSoftDeleteTest extends TestCase
                 'price_quad' => 35000000,
                 'price_triple' => 36100000,
                 'price_double' => 38400000,
-                'hotel_stars' => 4,
+                'package_kind_id' => $this->packageKindId(),
                 'seats_total' => 25,
                 'seats_left' => 25,
                 'status' => 'published',
@@ -97,11 +97,11 @@ class AdminHistoryAndSoftDeleteTest extends TestCase
 
         $this->actingAs($super)
             ->get('/admin')
-            ->assertSee('Riwayat');
+            ->assertSee('Log Aktivitas');
 
         $this->actingAs($admin)
             ->get('/admin')
-            ->assertDontSee('Riwayat');
+            ->assertDontSee('Log Aktivitas');
     }
 
     public function test_deleted_user_cannot_login_until_restored(): void
@@ -120,10 +120,12 @@ class AdminHistoryAndSoftDeleteTest extends TestCase
 
         $this->post('/admin/logout');
 
-        $this->post('/admin/login', [
-            'email' => 'staf@safarharamin.id',
-            'password' => 'password123',
-        ])->assertSessionHasErrors('email');
+        $this->withSession($this->validCaptchaSession())
+            ->post('/admin/login', [
+                'email' => 'staf@safarharamin.id',
+                'password' => 'password123',
+                'captcha' => 'ABC123',
+            ])->assertSessionHasErrors('email');
 
         $this->actingAs($super)
             ->post('/admin/users/'.$admin->id.'/restore')

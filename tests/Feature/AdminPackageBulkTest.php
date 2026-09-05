@@ -44,9 +44,10 @@ class AdminPackageBulkTest extends TestCase
     private function sampleCsvHeader(): string
     {
         return implode(',', [
-            'judul', 'jenis', 'embarkasi', 'tanggal', 'durasi',
-            'harga_quad', 'harga_triple', 'harga_double', 'bintang_hotel',
-            'maskapai', 'hotel_makkah', 'hotel_madinah', 'seat_total', 'seat_sisa',
+            'judul', 'jenis', 'tipe_paket', 'embarkasi', 'tanggal', 'durasi',
+            'harga_quad', 'harga_triple', 'harga_double',
+            'maskapai', 'hotel_makkah', 'hotel_madinah', 'hotel_makkah_setaraf', 'hotel_madinah_setaraf',
+            'seat_total', 'seat_sisa',
             'catatan_harga', 'fasilitas', 'exclude', 'status',
         ]);
     }
@@ -56,16 +57,18 @@ class AdminPackageBulkTest extends TestCase
         return implode(',', [
             $title,
             'umroh',
+            'Arafah',
             'jakarta',
             $date,
             '9',
             '35100000',
             '36200000',
             '38500000',
-            '4',
             'Garuda Indonesia',
-            'Ajyad Makarem',
-            'Front Taibah',
+            'Hilton',
+            'Hilton',
+            '1',
+            '0',
             '40',
             '40',
             'Harga dapat berubah',
@@ -117,6 +120,13 @@ class AdminPackageBulkTest extends TestCase
             'departure_city' => 'jakarta',
             'price_quad' => 35100000,
         ]);
+        $this->assertDatabaseHas('packages', [
+            'title' => 'Muzdalifah 30 Jan',
+            'package_kind_id' => $this->packageKindId('arafah'),
+            'hotel_makkah' => 'Hilton',
+            'hotel_makkah_setaraf' => 1,
+            'hotel_madinah_setaraf' => 0,
+        ]);
         $this->assertDatabaseHas('packages', ['title' => 'Muzdalifah 15 Feb']);
 
         $imported = Package::query()->where('title', 'Muzdalifah 30 Jan')->first();
@@ -131,7 +141,7 @@ class AdminPackageBulkTest extends TestCase
 
         $csv = implode("\n", [
             $this->sampleCsvHeader(),
-            ',umroh,jakarta,2025-01-30,9,35100000,36200000,38500000,4,GA,HM,HM,40,40,,,,draft',
+            ',umroh,Arafah,jakarta,2025-01-30,9,35100000,36200000,38500000,GA,Hilton,Hilton,0,0,40,40,,,,draft',
             $this->sampleCsvRow('Valid Row', '2025-03-01'),
         ]);
 
@@ -155,7 +165,7 @@ class AdminPackageBulkTest extends TestCase
 
         $response->assertOk();
         $response->assertHeader('content-disposition');
-        $this->assertStringContainsString('judul,jenis,embarkasi', $response->streamedContent());
+        $this->assertStringContainsString('judul,jenis,tipe_paket,embarkasi', $response->streamedContent());
     }
 
     public function test_import_page_has_no_source_package_field(): void
@@ -200,7 +210,7 @@ class AdminPackageBulkTest extends TestCase
             'price_quad' => 30000000,
             'price_triple' => 31100000,
             'price_double' => 33400000,
-            'hotel_stars' => 4,
+            'package_kind_id' => $this->packageKindId(),
             'seats_total' => 40,
             'seats_left' => 40,
             'status' => 'draft',

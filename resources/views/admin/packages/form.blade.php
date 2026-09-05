@@ -50,6 +50,11 @@
         @endforeach
       </select>
     </label>
+    <label>Tipe paket
+      @include('partials.package-kind-select', [
+        'selected' => old('package_kind_id', $package->package_kind_id),
+      ])
+    </label>
     <label>Status
       <select name="status" required>
         @foreach(\App\Models\Package::STATUSES as $key => $label)
@@ -81,9 +86,8 @@
     <label>Harga coret<input type="text" class="js-rupiah" name="original_price" value="{{ old('original_price', $package->original_price) }}"></label>
     <label>Catatan harga<input name="price_note" value="{{ old('price_note', $package->price_note) }}" maxlength="180" placeholder="Harga dapat berubah sesuai kebijakan"></label>
   </div>
-  <div class="row3">
+  <div class="row2">
     <label>Durasi (hari)<input type="number" name="duration_days" value="{{ old('duration_days', $package->duration_days ?? 9) }}" min="7" required></label>
-    <label>Bintang hotel<input type="number" name="hotel_stars" value="{{ old('hotel_stars', $package->hotel_stars ?? 4) }}" min="3" max="5" required></label>
     <label>Maskapai
       @include('partials.airline-select', [
         'selected' => old('airline', $package->airline),
@@ -91,21 +95,34 @@
     </label>
   </div>
   <div class="row2">
-    <label>Hotel Makkah
-      @include('partials.hotel-select', [
-        'name' => 'hotel_makkah',
-        'location' => \App\Models\Hotel::LOCATION_MAKKAH,
-        'selected' => old('hotel_makkah', $package->hotel_makkah ?? ''),
-      ])
-    </label>
-    <label>Hotel Madinah
-      @include('partials.hotel-select', [
-        'name' => 'hotel_madinah',
-        'location' => \App\Models\Hotel::LOCATION_MADINAH,
-        'selected' => old('hotel_madinah', $package->hotel_madinah ?? ''),
-      ])
-    </label>
+    <div>
+      <label>Hotel Makkah
+        @include('partials.hotel-select', [
+          'name' => 'hotel_makkah',
+          'location' => \App\Models\Hotel::LOCATION_MAKKAH,
+          'selected' => old('hotel_makkah', $package->hotel_makkah ?? ''),
+        ])
+      </label>
+      <label class="check">
+        <input type="checkbox" name="hotel_makkah_setaraf" value="1" @checked(old('hotel_makkah_setaraf', $package->hotel_makkah_setaraf))>
+        Hotel dapat diganti dengan yang setaraf
+      </label>
+    </div>
+    <div>
+      <label>Hotel Madinah
+        @include('partials.hotel-select', [
+          'name' => 'hotel_madinah',
+          'location' => \App\Models\Hotel::LOCATION_MADINAH,
+          'selected' => old('hotel_madinah', $package->hotel_madinah ?? ''),
+        ])
+      </label>
+      <label class="check">
+        <input type="checkbox" name="hotel_madinah_setaraf" value="1" @checked(old('hotel_madinah_setaraf', $package->hotel_madinah_setaraf))>
+        Hotel dapat diganti dengan yang setaraf
+      </label>
+    </div>
   </div>
+  <p class="sub">Setaraf = hotel pengganti dengan kelas bintang, fasilitas, dan jarak ke masjid yang sebanding jika hotel utama penuh atau tidak tersedia saat konfirmasi. Nama hotel boleh sama di Makkah dan Madinah.</p>
   <div class="row2 haji-extra-hotels" @unless($isHajiPackage) hidden @endunless>
     <label>Hotel Transit
       @include('partials.hotel-select', [
