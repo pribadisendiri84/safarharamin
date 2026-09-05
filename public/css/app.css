@@ -701,10 +701,12 @@ img { max-width: 100%; display: block; }
   .gallery-home.gallery-page { grid-template-columns: 1fr 1fr; }
   .scheme-row { grid-template-columns: 1fr 1fr; }
   .listing-layout, .detail-grid, .split, .cta-box, .foot-grid { grid-template-columns: 1fr; }
+  .listing-layout .grid { grid-template-columns: 1fr 1fr; }
   .filters, .ask { position: static; }
   .gallery img { max-width: 100%; max-height: 520px; }
 }
 @media (max-width: 560px) {
   .grid, .why-grid, .quote-grid, .gallery-home, .gallery-home.gallery-page, .stats-row, .split-pick, .trust-row, .steps, .scheme-flow, .scheme-row, .room-prices { grid-template-columns: 1fr; }
+  .listing-layout .grid { grid-template-columns: 1fr; }
   .bar .btn.ghost { display: none; }
 }
