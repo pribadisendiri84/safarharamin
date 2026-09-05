@@ -8,7 +8,7 @@
 <title>@yield('title', $site->name) — {{ $site->titleSuffix }}</title>
 <link rel="icon" type="image/webp" href="{{ $site->logoUrl }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link rel="stylesheet" href="{{ asset('css/app.css') }}">
+<link rel="stylesheet" href="{{ \App\Support\Asset::url('css/app.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.default.min.css">
 </head>
 <body>

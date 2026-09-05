@@ -7,7 +7,7 @@
 <link rel="icon" type="image/webp" href="{{ $site->logoUrl }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+<link rel="stylesheet" href="{{ \App\Support\Asset::url('css/admin.css') }}">
 </head>
 <body class="login-body">
 <form class="login-card" method="post" action="{{ route('admin.login.store') }}">
