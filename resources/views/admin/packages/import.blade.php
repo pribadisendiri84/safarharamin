@@ -15,8 +15,9 @@
 
 <div class="panel form-pad">
   <p class="sub"><strong>Kolom wajib:</strong> judul, jenis, tipe_paket, embarkasi, tanggal, durasi, harga_quad, harga_triple, harga_double, seat_total, seat_sisa.</p>
-  <p class="sub"><strong>Opsional:</strong> maskapai, hotel_makkah, hotel_madinah, hotel_makkah_setaraf, hotel_madinah_setaraf, catatan_harga, fasilitas, exclude, deskripsi, itinerary, status, unggulan, kuota_terbatas.</p>
+  <p class="sub"><strong>Opsional:</strong> tanggal_selesai, tampilan_tanggal, tampilkan_seat, maskapai, hotel_makkah, hotel_madinah, hotel_makkah_setaraf, hotel_madinah_setaraf, catatan_harga, fasilitas, exclude, deskripsi, itinerary, status, unggulan, kuota_terbatas.</p>
   <p class="sub">Jenis: <code>umroh</code>, <code>umroh_plus</code>, <code>haji_plus</code>. Tipe paket: Arafah, Mina, atau Muzdalifah. Setaraf: <code>1</code>/<code>ya</code> jika hotel boleh diganti yang sekelas. Bintang hotel diambil dari master hotel, bukan dari CSV.</p>
+  <p class="sub">Tampilan tanggal: <code>single</code>, <code>range</code>, atau <code>hidden</code>. Isi <code>tanggal_selesai</code> jika memakai <code>range</code>. <code>tampilkan_seat</code>: <code>1</code>/<code>ya</code> untuk tampil; jika kolom kosong, seat tetap tampil.</p>
   <p class="sub">Fasilitas &amp; exclude: pisah dengan <code>|</code> (pipe). Embarkasi = slug kota, mis. <code>jakarta</code>.</p>
 </div>
 

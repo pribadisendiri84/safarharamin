@@ -75,6 +75,40 @@ class StorefrontTest extends TestCase
             ->assertDontSee('Umroh Hemat Contoh');
     }
 
+    public function test_package_date_range_and_visibility_options_on_storefront(): void
+    {
+        $package = Package::query()->where('slug', 'umroh-hemat-contoh')->firstOrFail();
+        $package->update([
+            'departure_date' => '2026-10-12',
+            'departure_date_end' => '2026-10-18',
+            'departure_date_display' => 'range',
+            'show_seats' => false,
+        ]);
+
+        $this->get('/paket')
+            ->assertOk()
+            ->assertSee('12–18 Okt 2026')
+            ->assertDontSee('12 dari 40 seat');
+
+        $this->get('/paket/umroh-hemat-contoh')
+            ->assertOk()
+            ->assertSee('12–18 Okt 2026 · Jakarta')
+            ->assertDontSee('12 dari 40 seat')
+            ->assertDontSee('<span>Seat</span>', false);
+
+        $package->update(['departure_date_display' => 'hidden']);
+
+        $this->get('/paket')
+            ->assertOk()
+            ->assertDontSee('12–18 Okt 2026')
+            ->assertSee('Jakarta');
+
+        $this->get('/paket/umroh-hemat-contoh')
+            ->assertOk()
+            ->assertSee('<p class="loc">Jakarta</p>', false)
+            ->assertDontSee('12 Okt 2026');
+    }
+
     public function test_catalog_filters_by_airline(): void
     {
         Package::query()->where('slug', 'umroh-hemat-contoh')->update(['airline' => 'Garuda Indonesia']);

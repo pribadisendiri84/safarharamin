@@ -3,6 +3,13 @@
 @section('title', $package->title)
 @section('meta', $package->title.' — '.$package->formattedPrice())
 @section('content')
+@php
+  $catalogMeta = array_values(array_filter([
+      $package->catalogDepartureDateLine(),
+      $package->cityLabel(),
+      $package->showsSeats() ? $package->seatsLine() : null,
+  ]));
+@endphp
 <section class="wrap detail">
   <a class="back" href="{{ route('packages.index', ['tipe' => $package->type]) }}">← Kembali ke {{ $package->typeLabel() }}</a>
 
@@ -30,7 +37,7 @@
         @endif
       </div>
       <h1>{{ $package->title }}</h1>
-      <p class="loc">{{ $package->departureLine() }} · {{ $package->seatsLine() }}</p>
+      <p class="loc">{{ implode(' · ', $catalogMeta) }}</p>
       <div class="price-row">
         <strong>{{ $package->formattedStartingPrice() }}<small class="price-unit">/jamaah</small></strong>
         @if($package->formattedOriginalPrice())
@@ -62,7 +69,9 @@
           <li><span>Hotel Transit</span><b>{{ $package->hotel_transit ?: '-' }}</b></li>
           <li><span>Maktab</span><b>{{ $package->hotel_maktab ?: '-' }}</b></li>
         @endif
-        <li><span>Seat</span><b>{{ $package->seatsLine() }}</b></li>
+        @if($package->showsSeats())
+          <li><span>Seat</span><b>{{ $package->seatsLine() }}</b></li>
+        @endif
       </ul>
 
       <div class="prose">

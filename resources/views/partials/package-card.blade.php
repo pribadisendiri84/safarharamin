@@ -1,6 +1,6 @@
 @php
   /** @var \App\Models\Package $package */
-  $departureDate = $package->departure_date?->translatedFormat('d M Y') ?? 'Jadwal menyusul';
+  $departureDate = $package->catalogDepartureDateLine();
   $startingRoom = $package->startingRoomLabel();
   $roomOptions = $package->roomRangeLabel();
   $priceUnit = '/jamaah';
@@ -49,10 +49,12 @@
     </div>
     <h3>{{ $package->title }}</h3>
     <ul class="card-details">
-      <li>
-        <span class="meta-ico tone-blue"><i class="bi bi-calendar3"></i></span>
-        <span>{{ $departureDate }}</span>
-      </li>
+      @if($departureDate !== null)
+        <li>
+          <span class="meta-ico tone-blue"><i class="bi bi-calendar3"></i></span>
+          <span>{{ $departureDate }}</span>
+        </li>
+      @endif
       <li>
         <span class="meta-ico tone-green"><i class="bi bi-geo-alt"></i></span>
         <span>{{ $package->cityLabel() }}</span>
@@ -73,10 +75,12 @@
         <span class="meta-ico tone-blue"><i class="bi bi-airplane"></i></span>
         <span>{{ $package->airline ?: 'Maskapai berizin' }}</span>
       </li>
-      <li>
-        <span class="meta-ico tone-rose"><i class="bi bi-ticket-perforated"></i></span>
-        <span>{{ $package->seatsLine() }}</span>
-      </li>
+      @if($package->showsSeats())
+        <li>
+          <span class="meta-ico tone-rose"><i class="bi bi-ticket-perforated"></i></span>
+          <span>{{ $package->seatsLine() }}</span>
+        </li>
+      @endif
     </ul>
     @if($roomOptions !== '')
       <p class="card-room-row">

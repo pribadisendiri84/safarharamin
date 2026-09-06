@@ -20,6 +20,8 @@ use Illuminate\Support\Str;
     'package_kind_id',
     'departure_city',
     'departure_date',
+    'departure_date_end',
+    'departure_date_display',
     'duration_days',
     'price',
     'price_quad',
@@ -39,6 +41,7 @@ use Illuminate\Support\Str;
     'room_type',
     'seats_total',
     'seats_left',
+    'show_seats',
     'facilities',
     'exclusions',
     'itinerary',
@@ -91,6 +94,12 @@ class Package extends Model
     /** @var list<string> */
     public const CATALOG_STATUSES = ['published', 'fullbook'];
 
+    public const DEPARTURE_DATE_DISPLAYS = [
+        'single' => 'Tanggal tunggal',
+        'range' => 'Rentang tanggal',
+        'hidden' => 'Jangan tampilkan',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -102,6 +111,7 @@ class Package extends Model
             'is_hot' => 'boolean',
             'hotel_makkah_setaraf' => 'boolean',
             'hotel_madinah_setaraf' => 'boolean',
+            'show_seats' => 'boolean',
             'price' => 'integer',
             'price_quad' => 'integer',
             'price_triple' => 'integer',
@@ -109,6 +119,7 @@ class Package extends Model
             'price_double_plus' => 'integer',
             'original_price' => 'integer',
             'departure_date' => 'date',
+            'departure_date_end' => 'date',
         ];
     }
 
@@ -543,6 +554,48 @@ class Package extends Model
     public function seatsLine(): string
     {
         return $this->seats_left.' dari '.$this->seats_total.' seat';
+    }
+
+    public function showsDepartureDate(): bool
+    {
+        return $this->departure_date_display !== 'hidden';
+    }
+
+    public function showsSeats(): bool
+    {
+        return (bool) $this->show_seats;
+    }
+
+    public function catalogDepartureDateLine(): ?string
+    {
+        if (! $this->showsDepartureDate()) {
+            return null;
+        }
+
+        if (! $this->departure_date) {
+            return 'Jadwal menyusul';
+        }
+
+        if ($this->departure_date_display !== 'range' || ! $this->departure_date_end) {
+            return $this->departure_date->translatedFormat('d M Y');
+        }
+
+        $start = $this->departure_date;
+        $end = $this->departure_date_end;
+
+        if ($start->isSameDay($end)) {
+            return $start->translatedFormat('d M Y');
+        }
+
+        if ($start->year !== $end->year) {
+            return $start->translatedFormat('d M Y').'–'.$end->translatedFormat('d M Y');
+        }
+
+        if ($start->month !== $end->month) {
+            return $start->translatedFormat('d M').'–'.$end->translatedFormat('d M Y');
+        }
+
+        return $start->translatedFormat('d').'–'.$end->translatedFormat('d M Y');
     }
 
     public function departureLine(): string

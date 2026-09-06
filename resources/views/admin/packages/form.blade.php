@@ -63,7 +63,7 @@
       </select>
     </label>
   </div>
-  <div class="row2">
+  <div class="row3">
     <label>Embarkasi
       @include('partials.city-select', [
         'name' => 'departure_city',
@@ -74,7 +74,18 @@
       ])
     </label>
     <label>Tanggal berangkat<input type="date" name="departure_date" value="{{ old('departure_date', optional($package->departure_date)->format('Y-m-d')) }}"></label>
+    <label>Tampilan tanggal di web
+      <select name="departure_date_display" id="departure-date-display">
+        @foreach(\App\Models\Package::DEPARTURE_DATE_DISPLAYS as $key => $label)
+          <option value="{{ $key }}" @selected(old('departure_date_display', $package->departure_date_display ?? 'single') === $key)>{{ $label }}</option>
+        @endforeach
+      </select>
+    </label>
   </div>
+  <label id="departure-date-end-wrap">Tanggal akhir
+    <input type="date" name="departure_date_end" value="{{ old('departure_date_end', optional($package->departure_date_end)->format('Y-m-d')) }}">
+  </label>
+  <p class="sub">Rentang tanggal hanya untuk tampilan paket di web. Tanggal berangkat tetap dipakai sebagai tanggal internal dan operasional.</p>
   <div class="row3">
     <label>Quad — 4 org/kamar (Rp)<input type="text" class="js-rupiah" name="price_quad" value="{{ old('price_quad', $package->price_quad ?? $package->price) }}"></label>
     <label>Triple — 3 org/kamar (Rp)<input type="text" class="js-rupiah" name="price_triple" value="{{ old('price_triple', $package->price_triple) }}"></label>
@@ -143,6 +154,12 @@
     <label>Seat total<input type="number" name="seats_total" value="{{ old('seats_total', $package->seats_total ?? 40) }}" min="1" required></label>
     <label>Seat sisa<input type="number" name="seats_left" value="{{ old('seats_left', $package->seats_left ?? 40) }}" min="0" required></label>
   </div>
+  <input type="hidden" name="show_seats" value="0">
+  <label class="check">
+    <input type="checkbox" name="show_seats" value="1" @checked(old('show_seats', $package->exists ? $package->show_seats : true))>
+    Tampilkan jumlah seat di web
+  </label>
+  <p class="sub">Jika disembunyikan, stok seat tetap dihitung dan status fullbook tetap berjalan.</p>
   <label>Fasilitas / include (opsional, satu baris satu item)<textarea name="facilities_text" rows="4">{{ old('facilities_text', implode("\n", $package->facilities ?? [])) }}</textarea></label>
   <label>Tidak termasuk (satu baris satu item)<textarea name="exclusions_text" rows="4">{{ old('exclusions_text', implode("\n", $package->exclusions ?? [])) }}</textarea></label>
   <label>Deskripsi (opsional)<textarea name="description" rows="3">{{ old('description', $package->description) }}</textarea></label>
@@ -176,6 +193,19 @@
 
   typeSelect.addEventListener('change', syncPackageKind);
   syncPackageKind();
+})();
+
+(function () {
+  var displaySelect = document.getElementById('departure-date-display');
+  var endWrap = document.getElementById('departure-date-end-wrap');
+  if (!displaySelect || !endWrap) return;
+
+  function syncDateDisplay() {
+    endWrap.hidden = displaySelect.value !== 'range';
+  }
+
+  displaySelect.addEventListener('change', syncDateDisplay);
+  syncDateDisplay();
 })();
 </script>
 @endpush

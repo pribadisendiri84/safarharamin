@@ -102,6 +102,10 @@ class PackageCsvImporter
                 'kota' => 'embarkasi',
                 'departure_date' => 'tanggal',
                 'date' => 'tanggal',
+                'departure_date_end' => 'tanggal_selesai',
+                'end_date' => 'tanggal_selesai',
+                'departure_date_display' => 'tampilan_tanggal',
+                'show_seats' => 'tampilkan_seat',
                 'duration_days' => 'durasi',
                 'hari' => 'durasi',
                 'quad' => 'harga_quad',
@@ -194,6 +198,29 @@ class PackageCsvImporter
             return 'Format tanggal tidak valid.';
         }
 
+        $dateDisplay = strtolower(trim($data['tampilan_tanggal'] ?? 'single')) ?: 'single';
+        if (! array_key_exists($dateDisplay, Package::DEPARTURE_DATE_DISPLAYS)) {
+            return 'Tampilan tanggal tidak valid (single, range, hidden).';
+        }
+
+        $departureDateEnd = null;
+        if ($dateDisplay === 'range') {
+            $dateEndRaw = trim($data['tanggal_selesai'] ?? '');
+            if ($dateEndRaw === '') {
+                return 'Tanggal selesai wajib untuk tampilan range.';
+            }
+
+            try {
+                $departureDateEnd = Carbon::parse($dateEndRaw)->toDateString();
+            } catch (\Throwable) {
+                return 'Format tanggal selesai tidak valid.';
+            }
+
+            if ($departureDateEnd < $departureDate) {
+                return 'Tanggal selesai tidak boleh sebelum tanggal berangkat.';
+            }
+        }
+
         $duration = $this->parseRequiredInt($data['durasi'] ?? '', 7, 45);
         if ($duration === null) {
             return 'Durasi harus angka 7–45.';
@@ -235,6 +262,8 @@ class PackageCsvImporter
             'package_kind_id' => $kind->id,
             'departure_city' => $city,
             'departure_date' => $departureDate,
+            'departure_date_end' => $departureDateEnd,
+            'departure_date_display' => $dateDisplay,
             'duration_days' => $duration,
             'price' => $priceQuad ?? $priceTriple ?? $priceDouble ?? 0,
             'price_quad' => $priceQuad,
@@ -250,6 +279,9 @@ class PackageCsvImporter
             'room_type' => $priceQuad !== null ? 'quad' : ($priceTriple !== null ? 'triple' : ($priceDouble !== null ? 'double' : 'quad')),
             'seats_total' => $seatsTotal,
             'seats_left' => $seatsLeft,
+            'show_seats' => trim($data['tampilkan_seat'] ?? '') === ''
+                ? true
+                : $this->parseBool($data['tampilkan_seat']),
             'facilities' => $this->parseList($data['fasilitas'] ?? ''),
             'exclusions' => $this->parseList($data['exclude'] ?? ''),
             'itinerary' => $this->nullableString($data['itinerary'] ?? ''),
@@ -340,6 +372,8 @@ class PackageCsvImporter
             'tipe_paket',
             'embarkasi',
             'tanggal',
+            'tanggal_selesai',
+            'tampilan_tanggal',
             'durasi',
             'harga_quad',
             'harga_triple',
@@ -351,6 +385,7 @@ class PackageCsvImporter
             'hotel_madinah_setaraf',
             'seat_total',
             'seat_sisa',
+            'tampilkan_seat',
             'catatan_harga',
             'fasilitas',
             'exclude',
@@ -366,6 +401,8 @@ class PackageCsvImporter
             'Muzdalifah',
             'jakarta',
             '2025-01-30',
+            '2025-02-05',
+            'range',
             '9',
             '35100000',
             '36200000',
@@ -377,6 +414,7 @@ class PackageCsvImporter
             '1',
             '40',
             '40',
+            '1',
             'Harga dapat berubah sesuai kebijakan',
             'Tiket pesawat PP|Perlengkapan & handling|Hotel + makan 3x|Bus & snack|Zamzam 5L|Kereta cepat MED-MEK',
             'Paspor|Vaksin|Pengeluaran pribadi|Tiket add-on PP',

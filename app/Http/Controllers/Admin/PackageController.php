@@ -108,6 +108,8 @@ class PackageController extends Controller
         $copy = $package->replicate(['slug']);
         $copy->title = $package->title.' (salinan)';
         $copy->departure_date = null;
+        $copy->departure_date_end = null;
+        $copy->departure_date_display = 'single';
         $copy->images = [];
         $copy->status = 'draft';
 
@@ -288,7 +290,9 @@ class PackageController extends Controller
                 }),
             ],
             'departure_city' => ['required', Rule::exists('cities', 'slug')->whereNull('deleted_at')],
-            'departure_date' => ['nullable', 'date'],
+            'departure_date' => ['nullable', 'date', 'required_if:departure_date_display,range'],
+            'departure_date_end' => ['nullable', 'date', 'required_if:departure_date_display,range', 'after_or_equal:departure_date'],
+            'departure_date_display' => ['nullable', Rule::in(array_keys(Package::DEPARTURE_DATE_DISPLAYS))],
             'duration_days' => ['required', 'integer', 'min:7', 'max:45'],
             'price_quad' => ['nullable', 'integer', 'min:1'],
             'price_triple' => ['nullable', 'integer', 'min:1'],
@@ -315,8 +319,17 @@ class PackageController extends Controller
         unset($data['facilities_text'], $data['exclusions_text'], $data['photos']);
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_hot'] = $request->boolean('is_hot');
+        $data['show_seats'] = $request->has('show_seats')
+            ? $request->boolean('show_seats')
+            : ($existing?->show_seats ?? true);
         $data['hotel_makkah_setaraf'] = $request->boolean('hotel_makkah_setaraf');
         $data['hotel_madinah_setaraf'] = $request->boolean('hotel_madinah_setaraf');
+        $data['departure_date_display'] = $data['departure_date_display']
+            ?? $existing?->departure_date_display
+            ?? 'single';
+        if ($data['departure_date_display'] !== 'range') {
+            $data['departure_date_end'] = null;
+        }
         $data['home_sort'] = $this->resolveHomeSort($data['is_featured'], $existing);
 
         if (! in_array($data['type'], Package::HAJI_TYPES, true)) {

@@ -119,6 +119,8 @@ class AdminPackageBulkTest extends TestCase
             'airline' => 'Garuda Indonesia',
             'departure_city' => 'jakarta',
             'price_quad' => 35100000,
+            'departure_date_display' => 'single',
+            'show_seats' => true,
         ]);
         $this->assertDatabaseHas('packages', [
             'title' => 'Muzdalifah 30 Jan',
@@ -133,6 +135,32 @@ class AdminPackageBulkTest extends TestCase
         $this->assertSame([], $imported->images);
         $this->assertSame(['Paspor', 'Vaksin'], $imported->exclusions);
         $this->assertSame(['Tiket PP', 'Hotel'], $imported->facilities);
+    }
+
+    public function test_csv_import_supports_optional_catalog_display_columns(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $header = $this->sampleCsvHeader().',tanggal_selesai,tampilan_tanggal,tampilkan_seat';
+        $csv = implode("\n", [
+            $header,
+            $this->sampleCsvRow('Paket Rentang CSV', '2025-03-01').',2025-03-05,range,0',
+            $this->sampleCsvRow('Paket Rentang Invalid', '2025-03-10').',2025-03-05,range,1',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.packages.import.store'), [
+                'csv' => UploadedFile::fake()->createWithContent('import.csv', $csv),
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('import_errors');
+
+        $this->assertDatabaseHas('packages', [
+            'title' => 'Paket Rentang CSV',
+            'departure_date_end' => '2025-03-05 00:00:00',
+            'departure_date_display' => 'range',
+            'show_seats' => false,
+        ]);
+        $this->assertDatabaseMissing('packages', ['title' => 'Paket Rentang Invalid']);
     }
 
     public function test_csv_import_reports_invalid_rows(): void
@@ -225,6 +253,49 @@ class AdminPackageBulkTest extends TestCase
             ->put(route('admin.packages.update', $package), [...$payload, 'status' => 'published'])
             ->assertRedirect(route('admin.packages.edit', $package))
             ->assertSessionHasErrors('photos');
+    }
+
+    public function test_admin_validates_and_saves_package_catalog_display_options(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $package = $this->sourcePackage();
+        $payload = [
+            'title' => $package->title,
+            'type' => $package->type,
+            'package_kind_id' => $this->packageKindId(),
+            'departure_city' => $package->departure_city,
+            'departure_date' => '2026-10-12',
+            'departure_date_end' => '2026-10-10',
+            'departure_date_display' => 'range',
+            'duration_days' => $package->duration_days,
+            'price_quad' => $package->price_quad,
+            'price_triple' => $package->price_triple,
+            'price_double' => $package->price_double,
+            'seats_total' => $package->seats_total,
+            'seats_left' => $package->seats_left,
+            'show_seats' => '0',
+            'status' => 'draft',
+        ];
+
+        $this->actingAs($admin)
+            ->from(route('admin.packages.edit', $package))
+            ->put(route('admin.packages.update', $package), $payload)
+            ->assertRedirect(route('admin.packages.edit', $package))
+            ->assertSessionHasErrors('departure_date_end');
+
+        $this->actingAs($admin)
+            ->put(route('admin.packages.update', $package), [
+                ...$payload,
+                'departure_date_end' => '2026-10-18',
+            ])
+            ->assertRedirect(route('admin.packages.index'));
+
+        $this->assertDatabaseHas('packages', [
+            'id' => $package->id,
+            'departure_date_end' => '2026-10-18 00:00:00',
+            'departure_date_display' => 'range',
+            'show_seats' => false,
+        ]);
     }
 
     public function test_data_incomplete_filter_lists_packages_missing_flyer_or_date(): void
