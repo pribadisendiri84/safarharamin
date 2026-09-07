@@ -7,6 +7,8 @@
 <meta name="description" content="@yield('meta', $site->tagline)">
 <title>@yield('title', $site->name) — {{ $site->titleSuffix }}</title>
 <link rel="icon" type="image/webp" href="{{ $site->logoUrl }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Scheherazade+New:wght@600;700&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/app.css') }}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.default.min.css">
@@ -27,6 +29,7 @@
       <a href="{{ route('packages.index', ['kelompok' => 'umroh']) }}" class="{{ $navUmroh ? 'on' : '' }}">Umroh</a>
       <a href="{{ route('haji') }}" class="{{ $navHaji ? 'on' : '' }}">Haji</a>
       <a href="{{ route('gallery') }}" class="{{ request()->routeIs('gallery') ? 'on' : '' }}">Gallery</a>
+      <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'on' : '' }}">About</a>
       <a href="{{ route('register') }}" class="{{ request()->routeIs('register') ? 'on' : '' }}">Daftar</a>
     </nav>
     <a class="btn ghost" href="{{ route('go.whatsapp', ['from' => 'header']) }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i>Chat WhatsApp</a>
@@ -55,9 +58,14 @@
       <a href="{{ route('packages.index', ['tipe' => 'umroh_plus']) }}">Plus</a>
     </div>
     <div>
+      <b>Tentang</b>
+      <a href="{{ route('about') }}">About Arminareka</a>
+      <a href="{{ route('gallery') }}">Gallery</a>
+      <a href="{{ route('testimonials') }}">Testimoni</a>
+    </div>
+    <div>
       <b>Haji &amp; layanan</b>
       <a href="{{ route('haji') }}">Haji plus</a>
-      <a href="{{ route('testimonials') }}">Testimoni</a>
       <a href="{{ route('register') }}">Daftar sekarang</a>
     </div>
   </div>

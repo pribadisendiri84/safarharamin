@@ -2,13 +2,18 @@
 
 namespace Tests\Feature;
 
+use App\Models\Airline;
 use App\Models\GalleryItem;
+use App\Models\Hotel;
 use App\Models\Package;
 use App\Models\Setting;
 use App\Models\Testimonial;
 use App\Models\User;
+use App\Support\HajiExchangeRate;
+use App\Support\SiteProfile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -26,6 +31,7 @@ class StorefrontTest extends TestCase
             'title' => 'Umroh Hemat Contoh',
             'slug' => 'umroh-hemat-contoh',
             'type' => 'umroh',
+            'package_kind_id' => $this->packageKindId(),
             'departure_city' => 'jakarta',
             'departure_date' => '2026-10-12',
             'duration_days' => 9,
@@ -41,9 +47,30 @@ class StorefrontTest extends TestCase
             'seats_left' => 12,
             'status' => 'published',
             'images' => ['/images/placeholder-kaaba.svg'],
+            'cover_image' => '/images/catalog-cover-sample.jpg',
             'is_featured' => true,
             'home_sort' => 1,
         ]);
+    }
+
+    public function test_package_detail_shows_flyer_not_catalog_cover(): void
+    {
+        $this->get('/paket/umroh-hemat-contoh')
+            ->assertOk()
+            ->assertDontSee('detail-cover', false)
+            ->assertDontSee('/images/catalog-cover-sample.jpg', false)
+            ->assertSee('Flyer paket')
+            ->assertSee('/images/placeholder-kaaba.svg', false);
+    }
+
+    public function test_classic_card_shows_flyer_not_catalog_cover(): void
+    {
+        Setting::setValue('package_card_style', SiteProfile::CARD_STYLE_CLASSIC);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('/images/placeholder-kaaba.svg', false)
+            ->assertDontSee('/images/catalog-cover-sample.jpg', false);
     }
 
     public function test_home_and_catalog_list_packages(): void
@@ -54,6 +81,7 @@ class StorefrontTest extends TestCase
             ->assertSee('Umroh Hemat Contoh')
             ->assertSee('Quad · Triple · Double')
             ->assertSee('Jakarta')
+            ->assertDontSee('catalog-card', false)
             ->assertDontSee('98%');
 
         $this->get('/paket?tipe=umroh')
@@ -73,6 +101,45 @@ class StorefrontTest extends TestCase
         $this->get('/paket?tipe=haji_plus')
             ->assertOk()
             ->assertDontSee('Umroh Hemat Contoh');
+    }
+
+    public function test_catalog_card_style_uses_master_logos_and_combined_title(): void
+    {
+        Setting::setValue('package_card_style', SiteProfile::CARD_STYLE_CATALOG);
+        Package::query()->where('slug', 'umroh-hemat-contoh')->update([
+            'airline' => 'Garuda Indonesia',
+            'hotel_makkah' => 'Swissotel Makkah',
+            'hotel_makkah_setaraf' => true,
+            'hotel_madinah' => 'Madinah Pullman',
+        ]);
+        Airline::query()->where('name', 'Garuda Indonesia')->update(['logo' => '/storage/airlines/garuda.png']);
+        Hotel::query()->where('location', Hotel::LOCATION_MAKKAH)->where('name', 'Swissotel Makkah')
+            ->update(['logo' => '/storage/hotels/swissotel.png']);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('catalog-card', false)
+            ->assertSee('Umroh Arafah 9 Hari')
+            ->assertSee('Quad')
+            ->assertSee('Triple')
+            ->assertSee('Double')
+            ->assertSee('29,5 Jt.')
+            ->assertSee('30,6 Jt.')
+            ->assertSee('32,9 Jt.')
+            ->assertSee('/storage/airlines/garuda.png', false)
+            ->assertSee('/storage/hotels/swissotel.png', false)
+            ->assertSee('Hotel Makkah')
+            ->assertSee('Hotel Madinah')
+            ->assertDontSee('12 dari 40 seat');
+
+        Package::query()->where('slug', 'umroh-hemat-contoh')->update([
+            'title' => 'Umroh Arafah A GA 9D',
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Umroh Arafah 9 Hari')
+            ->assertDontSee('Umroh Arafah A GA 9D');
     }
 
     public function test_package_date_range_and_visibility_options_on_storefront(): void
@@ -932,5 +999,66 @@ class StorefrontTest extends TestCase
         $package = Package::query()->where('slug', 'umroh-plus-arafah-hilton')->first();
         $this->assertSame(5, $package->displayHotelStars());
         $this->assertSame(5, $package->hotel_stars);
+    }
+
+    public function test_admin_can_add_youtube_video_to_gallery(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/admin/gallery', [
+                'title' => 'Manasik Live',
+                'caption' => 'Rekaman manasik',
+                'category' => 'haji',
+                'group_name' => 'Manasik',
+                'sort_order' => 1,
+                'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            ])
+            ->assertRedirect(route('admin.gallery.index'));
+
+        $item = GalleryItem::query()->where('title', 'Manasik Live')->first();
+        $this->assertNotNull($item);
+        $this->assertTrue($item->isVideo());
+        $this->assertStringContainsString('img.youtube.com/vi/dQw4w9WgXcQ', $item->displayImage());
+
+        $this->get('/galeri?kategori=haji')
+            ->assertOk()
+            ->assertSee('gallery-video-trigger', false)
+            ->assertSee('gallery-inline-video', false)
+            ->assertSee('Manasik Live');
+    }
+
+    public function test_haji_page_shows_manual_exchange_rate(): void
+    {
+        HajiExchangeRate::saveManual(17735, 'SAR', true, HajiExchangeRate::MODE_MANUAL);
+
+        $this->get('/haji-plus')
+            ->assertOk()
+            ->assertSee('Kurs SAR')
+            ->assertSee('Rp 17.735')
+            ->assertSee('Diperbarui');
+    }
+
+    public function test_admin_can_refresh_exchange_rate_automatically(): void
+    {
+        $user = User::factory()->create();
+
+        Http::fake([
+            'open.er-api.com/*' => Http::response([
+                'rates' => ['IDR' => 4234.56],
+            ], 200),
+        ]);
+
+        HajiExchangeRate::saveManual(0, 'SAR', true, HajiExchangeRate::MODE_AUTO);
+
+        $this->actingAs($user)
+            ->post(route('admin.settings.refresh-exchange-rate'))
+            ->assertRedirect(route('admin.settings.edit'));
+
+        $this->assertSame(4235, HajiExchangeRate::storedRate());
+
+        $this->get('/haji-plus')
+            ->assertOk()
+            ->assertSee('Rp 4.235');
     }
 }

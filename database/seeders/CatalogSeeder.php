@@ -99,6 +99,7 @@ class CatalogSeeder extends Seeder
                     'description' => 'Paket '.$title.' dengan hotel bintang '.$stars.', maskapai '.$airline.', dan pendampingan muthawwif berbahasa Indonesia.',
                     'itinerary' => "Hari 1: Berkumpul embarkasi & terbang ke Jeddah/Madinah.\nHari 2-3: Ibadah di Madinah.\nHari 4: Menuju Makkah, umroh.\nHari 5-7: Ibadah di Masjidil Haram.\nHari terakhir: Kepulangan sesuai jadwal maskapai.",
                     'images' => [$photos[$i % count($photos)]],
+                    'cover_image' => '/images/catalog-cover-sample.jpg',
                     'is_featured' => $featured,
                     'home_sort' => $homeSort,
                     'is_hot' => $hot,

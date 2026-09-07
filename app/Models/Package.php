@@ -47,6 +47,7 @@ use Illuminate\Support\Str;
     'itinerary',
     'description',
     'images',
+    'cover_image',
     'is_featured',
     'home_sort',
     'is_hot',
@@ -509,16 +510,55 @@ class Package extends Model
         return 'Rp '.number_format($amount, 0, ',', '.');
     }
 
+    public function formattedMoneyShort(int $amount): string
+    {
+        $whole = intdiv($amount, 1_000_000);
+        $remainder = $amount % 1_000_000;
+
+        if ($remainder === 0) {
+            return number_format($whole, 0, ',', '.').' Jt.';
+        }
+
+        $decimal = intdiv($remainder, 100_000);
+        if ($decimal === 0) {
+            return number_format($whole, 0, ',', '.').' Jt.';
+        }
+
+        return number_format($whole, 0, ',', '.').','.$decimal.' Jt.';
+    }
+
     public function coverImage(): string
     {
+        if (filled($this->cover_image)) {
+            return (string) $this->cover_image;
+        }
+
         return ($this->images ?? [])[0] ?? '/images/placeholder-kaaba.svg';
+    }
+
+    public function hasDedicatedCover(): bool
+    {
+        return filled($this->cover_image);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function flyerImages(): array
+    {
+        return $this->images ?? [];
+    }
+
+    public function flyerImage(): string
+    {
+        return $this->flyerImages()[0] ?? '/images/placeholder-kaaba.svg';
     }
 
     public function gallery(): array
     {
-        $images = $this->images ?? [];
+        $flyers = $this->flyerImages();
 
-        return $images !== [] ? $images : ['/images/placeholder-kaaba.svg'];
+        return $flyers !== [] ? $flyers : [];
     }
 
     public function formattedPrice(): string
@@ -564,6 +604,60 @@ class Package extends Model
     public function showsSeats(): bool
     {
         return (bool) $this->show_seats;
+    }
+
+    public function catalogTypeShortLabel(): string
+    {
+        return match ($this->type) {
+            'umroh' => 'Umroh',
+            'umroh_plus' => 'Umroh Plus',
+            'haji_plus' => 'Haji Plus',
+            default => $this->typeLabel(),
+        };
+    }
+
+    public function catalogTitle(): string
+    {
+        $parts = [$this->catalogTypeShortLabel()];
+
+        $kind = $this->packageKindLabel();
+        if ($kind !== '') {
+            $parts[] = $kind;
+        }
+
+        $days = (int) $this->duration_days;
+        if ($days > 0) {
+            $parts[] = $days.' Hari';
+        }
+
+        return implode(' ', $parts);
+    }
+
+    /**
+     * @return array{type: string, kind: string, duration: string|null}
+     */
+    public function catalogTitleParts(): array
+    {
+        $days = (int) $this->duration_days;
+
+        return [
+            'type' => $this->catalogTypeShortLabel(),
+            'kind' => $this->packageKindLabel(),
+            'duration' => $days > 0 ? $days.' Hari' : null,
+        ];
+    }
+
+    public function titleIncludesDuration(): bool
+    {
+        $days = (int) $this->duration_days;
+        if ($days < 1) {
+            return false;
+        }
+
+        return preg_match(
+            '/\b'.preg_quote((string) $days, '/').'\s*(?:hari|hr|days?|d)\b/iu',
+            (string) $this->title
+        ) === 1;
     }
 
     public function catalogDepartureDateLine(): ?string

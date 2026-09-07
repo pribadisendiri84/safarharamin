@@ -41,6 +41,7 @@ Route::post('/paket/{package:slug}/tanya', [PackageController::class, 'inquire']
 Route::get('/daftar', [RegisterController::class, 'create'])->name('register');
 Route::post('/daftar', [RegisterController::class, 'store'])->name('register.store');
 Route::get('/haji-plus', [PageController::class, 'haji'])->name('haji');
+Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/galeri', [PageController::class, 'gallery'])->name('gallery');
 Route::get('/testimoni', [PageController::class, 'testimonials'])->name('testimonials');
 
@@ -96,6 +97,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('package-kinds/{package_kind}/restore', [PackageKindController::class, 'restore'])->withTrashed()->name('package-kinds.restore');
             Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
             Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+            Route::post('settings/refresh-exchange-rate', [SettingController::class, 'refreshExchangeRate'])->name('settings.refresh-exchange-rate');
         });
 
         Route::get('inquiries', [InquiryController::class, 'index'])->name('inquiries.index');

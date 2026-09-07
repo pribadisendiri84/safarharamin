@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Schema;
 
-#[Fillable(['name', 'location', 'stars', 'sort_order', 'is_active'])]
+#[Fillable(['name', 'logo', 'location', 'stars', 'sort_order', 'is_active'])]
 class Hotel extends Model
 {
     use RecordsActivity, SoftDeletes;
@@ -61,6 +61,18 @@ class Hotel extends Model
             ->value('stars');
 
         return $stars !== null ? (int) $stars : null;
+    }
+
+    public static function logoFor(string $location, ?string $name): ?string
+    {
+        if (! filled($name) || ! Schema::hasTable('hotels') || ! Schema::hasColumn('hotels', 'logo')) {
+            return null;
+        }
+
+        return static::query()
+            ->where('location', $location)
+            ->where('name', $name)
+            ->value('logo');
     }
 
     /**

@@ -2,11 +2,14 @@
 
 @section('title', 'Haji Plus')
 @section('content')
-<section class="page-head">
-  <div class="wrap">
-    <p class="eyebrow">Haji</p>
-    <h1>Haji plus</h1>
-    <p>Hotel dekat masjid, pendampingan manasik, dan kepastian jadwal. Kuota terbatas setiap musim.</p>
+<section class="page-head{{ !empty($hajiExchangeRate) ? ' page-head-with-kurs' : '' }}">
+  <div class="wrap page-head-grid">
+    <div class="page-head-copy">
+      <p class="eyebrow">Haji</p>
+      <h1>Haji plus</h1>
+      <p>Hotel dekat masjid, pendampingan manasik, dan kepastian jadwal. Kuota terbatas setiap musim.</p>
+    </div>
+    @include('partials.haji-exchange-rate', ['hajiExchangeRate' => $hajiExchangeRate ?? null])
   </div>
 </section>
 <section class="wrap why-grid page-benefits">

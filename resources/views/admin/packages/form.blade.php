@@ -8,7 +8,7 @@
 <div class="page-head">
   <div>
     <h1>{{ !empty($isDuplicate) ? 'Duplikat paket' : ($package->exists ? 'Edit paket' : 'Tambah paket') }}</h1>
-    <p class="sub">{{ !empty($isDuplicate) ? 'Data disalin dari paket lain. Ubah lalu Simpan — belum masuk katalog sebelum disimpan.' : 'Unggah flyer dari komputer. Flyer jadi cover di website.' }}</p>
+    <p class="sub">{{ !empty($isDuplicate) ? 'Data disalin dari paket lain. Ubah lalu Simpan — belum masuk katalog sebelum disimpan.' : 'Unggah cover katalog (landscape) dan flyer paket (portrait) secara terpisah.' }}</p>
   </div>
   <div class="actions head-actions">
     <a class="btn ghost" href="{{ route('admin.packages.index') }}">Kembali</a>
@@ -17,10 +17,20 @@
 <form class="form panel form-pad" method="post" enctype="multipart/form-data" action="{{ $package->exists ? route('admin.packages.update', $package) : route('admin.packages.store') }}">
   @csrf
   @if($package->exists) @method('PUT') @endif
-  <label>Unggah flyer
+  <label>Cover katalog
+    <input type="file" id="cover-upload" name="cover_photo" accept="image/*">
+  </label>
+  <p class="sub">Landscape 2:1 — contoh 1200×600 px. Hanya dipakai di kartu katalog.</p>
+  @if(filled($package->cover_image))
+    <div class="cover-preview-block">
+      <p class="flyer-label">Cover sekarang</p>
+      <img class="thumb cover-preview" src="{{ $package->cover_image }}" alt="Cover {{ $package->title }}">
+    </div>
+  @endif
+  <label>Unggah flyer paket
     <input type="file" id="flyer-upload" name="photos[]" accept="image/*" multiple data-upload-preview="flyer-upload">
   </label>
-  <p class="sub">Foto otomatis dikecilkan di browser sebelum unggah, lalu dioptimalkan lagi di server (maks. 1200×1700 px).</p>
+  <p class="sub">Portrait — contoh A4/3:4. Flyer tampil di halaman detail paket (bisa lebih dari satu). Otomatis dikecilkan sebelum unggah (maks. 1200×1700 px).</p>
   <div class="flyer-strip">
     @if(($package->images ?? []) !== [])
       <div class="flyer-block">

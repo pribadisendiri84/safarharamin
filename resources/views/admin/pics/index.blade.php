@@ -30,15 +30,11 @@
 @endunless
 
 <div class="panel">
-  <div class="table-wrap">
-    <table>
+  <div class="table-wrap master-table-wrap">
+    <table class="master-table">
       <thead>
         <tr>
           <th>PIC</th>
-          <th>HP</th>
-          <th>Urutan</th>
-          <th>Status</th>
-          <th>Waktu</th>
           <th></th>
         </tr>
       </thead>
@@ -48,22 +44,20 @@
             <td>
               @if($pic->trashed())
                 <b>{{ $pic->name }}</b>
+                @if($pic->phone)<small>{{ $pic->phone }}</small>@endif
+                <span class="badge draft">Terhapus</span>
               @else
-                <form method="post" action="{{ route('admin.pics.update', $pic) }}" class="form user-edit">
+                <form method="post" action="{{ route('admin.pics.update', $pic) }}" class="form master-row-edit">
                   @csrf
                   @method('PUT')
-                  <input name="name" value="{{ old('name', $pic->name) }}" required>
-                  <input name="phone" value="{{ old('phone', $pic->phone) }}" placeholder="HP">
-                  <input type="number" name="sort_order" value="{{ old('sort_order', $pic->sort_order) }}" min="0">
+                  <input name="name" value="{{ old('name', $pic->name) }}" required placeholder="Nama PIC">
+                  <input name="phone" value="{{ old('phone', $pic->phone) }}" placeholder="Nomor HP">
+                  <input type="number" name="sort_order" value="{{ old('sort_order', $pic->sort_order) }}" min="0" aria-label="Urutan">
                   <label class="check"><input type="checkbox" name="is_active" value="1" @checked($pic->is_active)> Aktif</label>
                   <button class="btn gray compact" type="submit">Update</button>
                 </form>
               @endif
             </td>
-            <td>{{ $pic->phone ?: '—' }}</td>
-            <td>{{ $pic->sort_order }}</td>
-            <td><span class="badge {{ $pic->is_active && ! $pic->trashed() ? 'published' : 'draft' }}">{{ $pic->trashed() ? 'Terhapus' : ($pic->is_active ? 'Aktif' : 'Nonaktif') }}</span></td>
-            <td>@include('admin.partials.timestamps', ['model' => $pic])</td>
             <td>
               @include('admin.partials.row-actions', [
                 'item' => $pic,
@@ -74,7 +68,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="6" class="empty-state">{{ $trashed ? 'Tidak ada PIC terhapus.' : 'Belum ada PIC.' }}</td></tr>
+          <tr><td colspan="2" class="empty-state">{{ $trashed ? 'Tidak ada PIC terhapus.' : 'Belum ada PIC.' }}</td></tr>
         @endforelse
       </tbody>
     </table>

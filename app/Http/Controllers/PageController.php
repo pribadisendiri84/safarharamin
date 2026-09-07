@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\GalleryItem;
 use App\Models\Package;
 use App\Models\Testimonial;
+use App\Support\HajiExchangeRate;
 
 class PageController extends Controller
 {
@@ -17,7 +18,15 @@ class PageController extends Controller
             ->orderBy('price')
             ->get();
 
-        return view('pages.haji', ['samples' => $samples]);
+        return view('pages.haji', [
+            'samples' => $samples,
+            'hajiExchangeRate' => HajiExchangeRate::display(),
+        ]);
+    }
+
+    public function about()
+    {
+        return view('pages.about');
     }
 
     public function gallery()

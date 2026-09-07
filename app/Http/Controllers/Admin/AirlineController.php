@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Airline;
 use App\Models\Departure;
 use App\Models\Package;
+use App\Services\PackageImageStore;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class AirlineController extends Controller
@@ -27,16 +29,34 @@ class AirlineController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, PackageImageStore $images)
     {
-        Airline::query()->create($this->validated($request));
+        $data = $this->validated($request);
+        if ($request->hasFile('logo')) {
+            $data['logo'] = $images->store($request->file('logo'), $data['name'], 'airlines');
+        }
+
+        Airline::query()->create($data);
 
         return redirect()->route('admin.airlines.index')->with('ok', 'Maskapai ditambahkan.');
     }
 
-    public function update(Request $request, Airline $airline)
+    public function update(Request $request, Airline $airline, PackageImageStore $images)
     {
-        $airline->update($this->validated($request, $airline));
+        $data = $this->validated($request, $airline);
+        $previousLogo = $airline->logo;
+
+        if ($request->boolean('remove_logo')) {
+            $data['logo'] = null;
+        }
+        if ($request->hasFile('logo')) {
+            $data['logo'] = $images->store($request->file('logo'), $data['name'], 'airlines');
+        }
+
+        $airline->update($data);
+        if (array_key_exists('logo', $data) && $previousLogo !== $airline->logo) {
+            $this->deleteStoredLogo($previousLogo);
+        }
 
         return redirect()->route('admin.airlines.index')->with('ok', 'Maskapai diperbarui.');
     }
@@ -69,6 +89,8 @@ class AirlineController extends Controller
             'name' => ['required', 'string', 'max:80', Rule::unique('airlines', 'name')->ignore($airline)->whereNull('deleted_at')],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active' => ['nullable', 'boolean'],
+            'logo' => ['nullable', 'image', 'max:2048'],
+            'remove_logo' => ['nullable', 'boolean'],
         ]);
 
         return [
@@ -76,6 +98,15 @@ class AirlineController extends Controller
             'sort_order' => (int) ($data['sort_order'] ?? 0),
             'is_active' => $request->boolean('is_active'),
         ];
+    }
+
+    private function deleteStoredLogo(?string $path): void
+    {
+        if (! $path || ! str_starts_with($path, '/storage/')) {
+            return;
+        }
+
+        Storage::disk('public')->delete(ltrim(substr($path, strlen('/storage/')), '/'));
     }
 
     private function isUsed(Airline $airline): bool

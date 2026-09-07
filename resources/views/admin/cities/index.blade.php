@@ -27,14 +27,11 @@
 @endunless
 
 <div class="panel">
-  <div class="table-wrap">
-    <table>
+  <div class="table-wrap master-table-wrap">
+    <table class="master-table">
       <thead>
         <tr>
           <th>Kota</th>
-          <th>Urutan</th>
-          <th>Status</th>
-          <th>Waktu</th>
           <th></th>
         </tr>
       </thead>
@@ -45,21 +42,19 @@
               @if($city->trashed())
                 <b>{{ $city->name }}</b>
                 <small>{{ $city->slug }}</small>
+                <span class="badge draft">Terhapus</span>
               @else
-                <form method="post" action="{{ route('admin.cities.update', $city) }}" class="form user-edit city-edit">
+                <form method="post" action="{{ route('admin.cities.update', $city) }}" class="form master-row-edit">
                   @csrf
                   @method('PUT')
-                  <input name="name" value="{{ old('name', $city->name) }}" required>
-                  <input type="number" name="sort_order" value="{{ old('sort_order', $city->sort_order) }}" min="0">
+                  <input name="name" value="{{ old('name', $city->name) }}" required placeholder="Nama kota">
+                  <input type="number" name="sort_order" value="{{ old('sort_order', $city->sort_order) }}" min="0" aria-label="Urutan">
+                  <small class="master-row-slug">{{ $city->slug }}</small>
                   <label class="check"><input type="checkbox" name="is_active" value="1" @checked($city->is_active)> Aktif</label>
                   <button class="btn gray compact" type="submit">Update</button>
                 </form>
-                <small>{{ $city->slug }}</small>
               @endif
             </td>
-            <td>{{ $city->sort_order }}</td>
-            <td><span class="badge {{ $city->is_active && ! $city->trashed() ? 'published' : 'draft' }}">{{ $city->trashed() ? 'Terhapus' : ($city->is_active ? 'Aktif' : 'Nonaktif') }}</span></td>
-            <td>@include('admin.partials.timestamps', ['model' => $city])</td>
             <td>
               @include('admin.partials.row-actions', [
                 'item' => $city,
@@ -70,7 +65,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="5" class="empty-state">{{ $trashed ? 'Tidak ada kota terhapus.' : 'Belum ada kota.' }}</td></tr>
+          <tr><td colspan="2" class="empty-state">{{ $trashed ? 'Tidak ada kota terhapus.' : 'Belum ada kota.' }}</td></tr>
         @endforelse
       </tbody>
     </table>

@@ -5,7 +5,7 @@
 <div class="page-head">
   <div>
     <h1>{{ $item->exists ? 'Edit foto' : 'Tambah foto galeri' }}</h1>
-    <p class="sub">Unggah file atau tempel URL. Foto muncul di website setelah disimpan.</p>
+    <p class="sub">Unggah foto, tempel URL gambar, atau link video YouTube. Item muncul di website setelah disimpan.</p>
   </div>
   <div class="actions head-actions">
     <a class="btn ghost" href="{{ route('admin.gallery.index') }}">Kembali</a>
@@ -40,9 +40,13 @@
     <input type="checkbox" name="show_on_home" value="1" @checked(old('show_on_home', $item->show_on_home))>
     Tampilkan di beranda (urutan drag-drop di daftar galeri)
   </label>
-  @if($item->image)
-    <p class="sub">Foto sekarang:</p>
-    <img class="thumb large" src="{{ $item->image }}" alt="{{ $item->title }}">
+  <label>Link video YouTube (opsional)
+    <input name="video_url" value="{{ old('video_url', $item->video_url) }}" placeholder="https://youtube.com/watch?v=…">
+  </label>
+  <p class="sub">Isi link YouTube untuk menampilkan video. Thumbnail YouTube dipakai otomatis jika foto tidak diunggah.</p>
+  @if($item->displayImage())
+    <p class="sub">{{ $item->isVideo() ? 'Pratinjau video:' : 'Foto sekarang:' }}</p>
+    <img class="thumb large" src="{{ $item->displayImage() }}" alt="{{ $item->title }}">
   @endif
   <label>Unggah foto
     <input type="file" id="gallery-upload" name="photo" accept="image/*" data-upload-preview="gallery-upload">

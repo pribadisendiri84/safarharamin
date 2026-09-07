@@ -17,12 +17,22 @@ class SiteProfile
 
     public const DEFAULT_WA = '6281234567890';
 
+    public const CARD_STYLE_CLASSIC = 'classic';
+
+    public const CARD_STYLE_CATALOG = 'catalog';
+
+    public const CARD_STYLES = [
+        self::CARD_STYLE_CLASSIC => 'Klasik',
+        self::CARD_STYLE_CATALOG => 'Katalog',
+    ];
+
     public function __construct(
         public string $name,
         public string $tagline,
         public string $titleSuffix,
         public string $logoUrl,
         public string $waNumber,
+        public string $packageCardStyle,
     ) {}
 
     public static function current(): self
@@ -40,6 +50,7 @@ class SiteProfile
                 Setting::getValue('site_title_suffix', self::DEFAULT_TITLE_SUFFIX) ?: self::DEFAULT_TITLE_SUFFIX,
                 $logo !== '' ? $logo : self::DEFAULT_LOGO,
                 Setting::getValue('wa_number', self::DEFAULT_WA) ?: self::DEFAULT_WA,
+                self::resolveCardStyle(Setting::getValue('package_card_style')),
             );
         } catch (\Throwable) {
             return self::defaults();
@@ -54,7 +65,13 @@ class SiteProfile
             self::DEFAULT_TITLE_SUFFIX,
             self::DEFAULT_LOGO,
             self::DEFAULT_WA,
+            self::CARD_STYLE_CLASSIC,
         );
+    }
+
+    private static function resolveCardStyle(string $style): string
+    {
+        return array_key_exists($style, self::CARD_STYLES) ? $style : self::CARD_STYLE_CLASSIC;
     }
 
     private static function resolveName(string $fromSettings): string

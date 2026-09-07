@@ -21,7 +21,7 @@
 @unless($trashed)
 <div class="panel form-narrow">
   <div class="panel-head">@include('admin.partials.icon', ['name' => 'plus']) Tambah hotel</div>
-  <form class="form form-pad" method="post" action="{{ route('admin.hotels.store') }}">
+  <form class="form form-pad" method="post" enctype="multipart/form-data" action="{{ route('admin.hotels.store') }}">
     @csrf
     @if($location)<input type="hidden" name="location" value="{{ $location }}">@endif
     <div class="row3">
@@ -37,6 +37,10 @@
         <input type="number" name="stars" value="{{ old('stars', 4) }}" min="1" max="5" required>
       </label>
     </div>
+    <label>Logo hotel
+      <input type="file" name="logo" accept="image/png,image/jpeg,image/webp">
+      <span class="sub">Opsional. Logo dipakai di kartu katalog, maksimal 2 MB.</span>
+    </label>
     <label>Urutan<input type="number" name="sort_order" value="{{ old('sort_order', 0) }}" min="0"></label>
     <label class="check"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', true))> Tampil di pilihan</label>
     <button class="btn" type="submit">Tambah hotel</button>
@@ -45,16 +49,11 @@
 @endunless
 
 <div class="panel">
-  <div class="table-wrap">
-    <table>
+  <div class="table-wrap master-table-wrap">
+    <table class="master-table">
       <thead>
         <tr>
           <th>Hotel</th>
-          <th>Lokasi</th>
-          <th>Bintang</th>
-          <th>Urutan</th>
-          <th>Status</th>
-          <th>Waktu</th>
           <th></th>
         </tr>
       </thead>
@@ -64,24 +63,23 @@
             <td>
               @if($hotel->trashed())
                 <b>{{ $hotel->name }}</b>
+                <small>{{ $hotel->locationLabel() }} · {{ $hotel->stars }}★</small>
+                <span class="badge draft">Terhapus</span>
               @else
-                <form method="post" action="{{ route('admin.hotels.update', $hotel) }}" class="form user-edit">
+                <form method="post" enctype="multipart/form-data" action="{{ route('admin.hotels.update', $hotel) }}" class="form master-row-edit">
                   @csrf
                   @method('PUT')
                   <input type="hidden" name="location" value="{{ $hotel->location }}">
-                  <input name="name" value="{{ old('name', $hotel->name) }}" required>
-                  <input type="number" name="stars" value="{{ old('stars', $hotel->stars ?? 4) }}" min="1" max="5" required>
-                  <input type="number" name="sort_order" value="{{ old('sort_order', $hotel->sort_order) }}" min="0">
+                  @include('admin.partials.master-logo-field', ['logo' => $hotel->logo])
+                  <input name="name" value="{{ old('name', $hotel->name) }}" required placeholder="Nama hotel">
+                  <span class="master-row-tag">{{ $hotel->locationLabel() }}</span>
+                  <input type="number" name="stars" value="{{ old('stars', $hotel->stars ?? 4) }}" min="1" max="5" required aria-label="Bintang">
+                  <input type="number" name="sort_order" value="{{ old('sort_order', $hotel->sort_order) }}" min="0" aria-label="Urutan">
                   <label class="check"><input type="checkbox" name="is_active" value="1" @checked($hotel->is_active)> Aktif</label>
                   <button class="btn gray compact" type="submit">Update</button>
                 </form>
               @endif
             </td>
-            <td>{{ $hotel->locationLabel() }}</td>
-            <td>{{ $hotel->stars }}★</td>
-            <td>{{ $hotel->sort_order }}</td>
-            <td><span class="badge {{ $hotel->is_active && ! $hotel->trashed() ? 'published' : 'draft' }}">{{ $hotel->trashed() ? 'Terhapus' : ($hotel->is_active ? 'Aktif' : 'Nonaktif') }}</span></td>
-            <td>@include('admin.partials.timestamps', ['model' => $hotel])</td>
             <td>
               @include('admin.partials.row-actions', [
                 'item' => $hotel,
@@ -92,7 +90,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="7" class="empty-state">{{ $trashed ? 'Tidak ada hotel terhapus.' : 'Belum ada hotel.' }}</td></tr>
+          <tr><td colspan="2" class="empty-state">{{ $trashed ? 'Tidak ada hotel terhapus.' : 'Belum ada hotel.' }}</td></tr>
         @endforelse
       </tbody>
     </table>

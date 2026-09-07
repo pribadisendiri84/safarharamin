@@ -14,13 +14,32 @@ class PackageImageStore
 
     private const MAX_HEIGHT = 1700;
 
+    private const COVER_MAX_WIDTH = 1200;
+
+    private const COVER_MAX_HEIGHT = 600;
+
     private const JPEG_QUALITY = 82;
 
     public function store(UploadedFile $file, string $title, string $folder = 'packages'): string
     {
+        return $this->storeWithLimits($file, $title, $folder, self::MAX_WIDTH, self::MAX_HEIGHT);
+    }
+
+    public function storeCover(UploadedFile $file, string $title): string
+    {
+        return $this->storeWithLimits($file, $title, 'packages/covers', self::COVER_MAX_WIDTH, self::COVER_MAX_HEIGHT);
+    }
+
+    public function storeWithLimits(
+        UploadedFile $file,
+        string $title,
+        string $folder,
+        int $maxWidth,
+        int $maxHeight,
+    ): string {
         Storage::disk('public')->makeDirectory($folder);
 
-        $optimized = $this->optimize($file);
+        $optimized = $this->optimize($file, $maxWidth, $maxHeight);
         $filename = $this->filename($title, $file, $optimized['extension']);
         Storage::disk('public')->put($folder.'/'.$filename, $optimized['contents']);
 
@@ -41,7 +60,7 @@ class PackageImageStore
     /**
      * @return array{contents: string, extension: string}
      */
-    private function optimize(UploadedFile $file): array
+    private function optimize(UploadedFile $file, int $maxWidth = self::MAX_WIDTH, int $maxHeight = self::MAX_HEIGHT): array
     {
         if (! extension_loaded('gd')) {
             return [
@@ -75,7 +94,7 @@ class PackageImageStore
             ];
         }
 
-        [$targetWidth, $targetHeight] = $this->targetDimensions($width, $height);
+        [$targetWidth, $targetHeight] = $this->targetDimensions($width, $height, $maxWidth, $maxHeight);
         $canvas = $this->resizeCanvas($source, $width, $height, $targetWidth, $targetHeight);
         imagedestroy($source);
 
@@ -99,13 +118,13 @@ class PackageImageStore
     /**
      * @return array{0: int, 1: int}
      */
-    private function targetDimensions(int $width, int $height): array
+    private function targetDimensions(int $width, int $height, int $maxWidth, int $maxHeight): array
     {
-        if ($width <= self::MAX_WIDTH && $height <= self::MAX_HEIGHT) {
+        if ($width <= $maxWidth && $height <= $maxHeight) {
             return [$width, $height];
         }
 
-        $ratio = min(self::MAX_WIDTH / $width, self::MAX_HEIGHT / $height);
+        $ratio = min($maxWidth / $width, $maxHeight / $height);
 
         return [
             max(1, (int) round($width * $ratio)),
@@ -126,14 +145,19 @@ class PackageImageStore
 
     private function resizeCanvas(\GdImage $source, int $width, int $height, int $targetWidth, int $targetHeight): \GdImage
     {
+        $canvas = imagecreatetruecolor($targetWidth, $targetHeight);
+        imagealphablending($canvas, false);
+        imagesavealpha($canvas, true);
+        $transparent = imagecolorallocatealpha($canvas, 0, 0, 0, 127);
+        imagefill($canvas, 0, 0, $transparent);
+        imagealphablending($canvas, true);
+
         if ($targetWidth === $width && $targetHeight === $height) {
-            $canvas = imagecreatetruecolor($width, $height);
             imagecopy($canvas, $source, 0, 0, 0, 0, $width, $height);
 
             return $canvas;
         }
 
-        $canvas = imagecreatetruecolor($targetWidth, $targetHeight);
         imagecopyresampled($canvas, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $width, $height);
 
         return $canvas;

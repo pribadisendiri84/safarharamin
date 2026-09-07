@@ -9,21 +9,28 @@
       $package->cityLabel(),
       $package->showsSeats() ? $package->seatsLine() : null,
   ]));
+  $flyers = $package->flyerImages();
 @endphp
 <section class="wrap detail">
   <a class="back" href="{{ route('packages.index', ['tipe' => $package->type]) }}">← Kembali ke {{ $package->typeLabel() }}</a>
 
-  <div class="gallery" id="gallery">
-    @foreach($package->gallery() as $i => $src)
-      <button type="button" class="shot {{ $i === 0 ? 'hero-shot' : '' }}" data-src="{{ $src }}">
-        <img src="{{ $src }}" alt="{{ $package->title }} foto {{ $i + 1 }}">
-      </button>
-    @endforeach
-  </div>
-  <div class="lightbox" id="lightbox" hidden>
-    <button type="button" class="lightbox-close">×</button>
-    <img alt="{{ $package->title }}">
-  </div>
+  @if($flyers !== [])
+    <div class="detail-flyers">
+      <h2 class="detail-flyers-head">Flyer paket</h2>
+      <p class="detail-flyers-note">Klik flyer untuk memperbesar.</p>
+      <div class="gallery detail-flyer-gallery" id="gallery">
+        @foreach($flyers as $i => $src)
+          <button type="button" class="shot {{ $i === 0 ? 'hero-shot' : '' }}" data-src="{{ $src }}">
+            <img src="{{ $src }}" alt="Flyer {{ $package->title }} {{ $i + 1 }}">
+          </button>
+        @endforeach
+      </div>
+    </div>
+    <div class="lightbox" id="lightbox" hidden>
+      <button type="button" class="lightbox-close">×</button>
+      <img alt="{{ $package->title }}">
+    </div>
+  @endif
 
   <div class="detail-grid">
     <div>
@@ -134,6 +141,7 @@
   </div>
 </section>
 @endif
+@if($flyers !== [])
 <script>
 (function () {
   const box = document.getElementById('lightbox');
@@ -147,4 +155,5 @@
   box.addEventListener('click', function () { box.hidden = true; img.src = ''; });
 })();
 </script>
+@endif
 @endsection
