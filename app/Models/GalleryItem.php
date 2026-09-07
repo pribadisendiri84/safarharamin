@@ -4,13 +4,14 @@ namespace App\Models;
 
 use App\Concerns\RecordsActivity;
 use App\Support\HomeDisplay;
+use App\Support\YoutubeUrl;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
-#[Fillable(['title', 'image', 'caption', 'category', 'group_name', 'sort_order', 'show_on_home', 'home_sort'])]
+#[Fillable(['title', 'image', 'video_url', 'caption', 'category', 'group_name', 'sort_order', 'show_on_home', 'home_sort'])]
 class GalleryItem extends Model
 {
     use RecordsActivity, SoftDeletes;
@@ -48,6 +49,25 @@ class GalleryItem extends Model
         return $this->group_name !== null && $this->group_name !== ''
             ? $this->group_name
             : 'Lainnya';
+    }
+
+    public function isVideo(): bool
+    {
+        return filled($this->video_url) && YoutubeUrl::extractId($this->video_url) !== null;
+    }
+
+    public function displayImage(): string
+    {
+        if ($this->isVideo()) {
+            return YoutubeUrl::thumbnailUrl($this->video_url) ?? (string) $this->image;
+        }
+
+        return (string) $this->image;
+    }
+
+    public function embedUrl(): ?string
+    {
+        return $this->isVideo() ? YoutubeUrl::embedUrl($this->video_url) : null;
     }
 
     public function scopeCategory(Builder $query, string $category): Builder

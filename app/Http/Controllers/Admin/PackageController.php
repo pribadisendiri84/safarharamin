@@ -62,6 +62,7 @@ class PackageController extends Controller
         $data = $this->validated($request);
         $data['slug'] = Package::uniqueSlug($data['title']);
         $data['images'] = $this->collectImages($request, $images, $data['title']);
+        $data['cover_image'] = $this->collectCover($request, $images, $data['title']);
         $this->assertFlyerForPublish($data['images'], $data['status']);
         $data['facilities'] = $this->lines($request->input('facilities_text'));
         $data['exclusions'] = $this->lines($request->input('exclusions_text'));
@@ -80,6 +81,7 @@ class PackageController extends Controller
     {
         $data = $this->validated($request, $package);
         $data['images'] = $this->collectImages($request, $images, $data['title'], $package->images ?? []);
+        $data['cover_image'] = $this->collectCover($request, $images, $data['title'], $package->cover_image);
         $this->assertFlyerForPublish($data['images'], $data['status']);
         $data['facilities'] = $this->lines($request->input('facilities_text'));
         $data['exclusions'] = $this->lines($request->input('exclusions_text'));
@@ -111,6 +113,7 @@ class PackageController extends Controller
         $copy->departure_date_end = null;
         $copy->departure_date_display = 'single';
         $copy->images = [];
+        $copy->cover_image = null;
         $copy->status = 'draft';
 
         return view('admin.packages.form', [
@@ -312,11 +315,12 @@ class PackageController extends Controller
             'status' => ['required', Rule::in(array_keys(Package::STATUSES))],
             'photos' => ['nullable', 'array'],
             'photos.*' => ['image', 'max:5120'],
+            'cover_photo' => ['nullable', 'image', 'max:5120'],
             'facilities_text' => ['nullable', 'string'],
             'exclusions_text' => ['nullable', 'string'],
         ]);
 
-        unset($data['facilities_text'], $data['exclusions_text'], $data['photos']);
+        unset($data['facilities_text'], $data['exclusions_text'], $data['photos'], $data['cover_photo']);
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_hot'] = $request->boolean('is_hot');
         $data['show_seats'] = $request->has('show_seats')
@@ -409,6 +413,20 @@ class PackageController extends Controller
         }
 
         return $urls !== [] ? $urls : $existing;
+    }
+
+    private function collectCover(
+        Request $request,
+        PackageImageStore $store,
+        string $title,
+        ?string $existing = null,
+    ): ?string {
+        $file = $request->file('cover_photo');
+        if ($file && $file->isValid()) {
+            return $store->storeCover($file, $title);
+        }
+
+        return $existing;
     }
 
     /**

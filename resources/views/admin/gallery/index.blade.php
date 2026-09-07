@@ -35,7 +35,7 @@
     @forelse($homeItems as $index => $item)
       <li class="home-sort-item" data-id="{{ $item->id }}" data-home-sort="{{ (int) ($item->home_sort ?? 0) }}">
         <span class="drag-handle" title="Drag untuk ubah urutan">⋮⋮</span>
-        <img class="thumb" src="{{ $item->image }}" alt="{{ $item->title }}">
+        <img class="thumb" src="{{ $item->displayImage() }}" alt="{{ $item->title }}">
         <span class="home-sort-meta">
           <b>{{ $item->title }}</b>
           <small>Posisi {{ $item->home_sort }}</small>
@@ -87,9 +87,10 @@
                 </label>
               @endif
             </td>
-            <td><img class="thumb" src="{{ $item->image }}" alt="{{ $item->title }}"></td>
+            <td><img class="thumb" src="{{ $item->displayImage() }}" alt="{{ $item->title }}"></td>
             <td>
               <b>{{ $item->title }}</b>
+              @if($item->isVideo())<small>Video YouTube</small>@endif
               @if($item->caption)<small>{{ $item->caption }}</small>@endif
             </td>
             <td>{{ $item->categoryLabel() }}</td>

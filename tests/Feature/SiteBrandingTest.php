@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\HajiExchangeRate;
+use App\Support\SiteProfile;
 use App\Support\WaMessages;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -68,6 +70,7 @@ class SiteBrandingTest extends TestCase
             'site_name' => 'Arminareka Perdana',
             'site_tagline' => 'Katalog umroh.',
             'site_title_suffix' => 'Travel Haji & Umroh',
+            'package_card_style' => SiteProfile::CARD_STYLE_CLASSIC,
             'wa_number' => '6281111111111',
             'wa_float_enabled' => '1',
             'wa_float_label' => WaMessages::DEFAULT_FLOAT_LABEL,
@@ -76,6 +79,10 @@ class SiteBrandingTest extends TestCase
             'wa_msg_package' => WaMessages::DEFAULT_PACKAGE,
             'wa_msg_register' => WaMessages::DEFAULT_REGISTER,
             'wa_msg_inquiry_reply' => WaMessages::DEFAULT_INQUIRY_REPLY,
+            'haji_exchange_rate_enabled' => '1',
+            'haji_exchange_rate_mode' => HajiExchangeRate::MODE_MANUAL,
+            'haji_exchange_rate_currency' => 'SAR',
+            'haji_exchange_rate' => 17735,
         ], $overrides);
     }
 
@@ -89,10 +96,31 @@ class SiteBrandingTest extends TestCase
 
         $this->assertSame('Arminareka Perdana', Setting::getValue('site_name'));
         $this->assertSame('6281111111111', Setting::getValue('wa_number'));
+        $this->assertSame(SiteProfile::CARD_STYLE_CLASSIC, Setting::getValue('package_card_style'));
 
         $this->get('/')
             ->assertOk()
             ->assertSee('Arminareka Perdana')
             ->assertSee('Katalog umroh.');
+    }
+
+    public function test_admin_can_switch_package_card_style(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.settings.edit'))
+            ->assertOk()
+            ->assertSee('Tampilan katalog')
+            ->assertSee('Klasik')
+            ->assertSee('Katalog');
+
+        $this->actingAs($admin)
+            ->put(route('admin.settings.update'), $this->settingsPayload([
+                'package_card_style' => SiteProfile::CARD_STYLE_CATALOG,
+            ]))
+            ->assertRedirect(route('admin.settings.edit'));
+
+        $this->assertSame(SiteProfile::CARD_STYLE_CATALOG, Setting::getValue('package_card_style'));
     }
 }

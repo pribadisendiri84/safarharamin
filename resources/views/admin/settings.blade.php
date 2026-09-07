@@ -31,6 +31,29 @@
   </fieldset>
 
   <fieldset>
+    <legend>Tampilan katalog</legend>
+    <p class="sub">Pilih susunan kartu yang dipakai di beranda, katalog paket, dan rekomendasi paket.</p>
+    <div class="card-style-options">
+      <label class="card-style-option">
+        <input type="radio" name="package_card_style" value="{{ \App\Support\SiteProfile::CARD_STYLE_CLASSIC }}"
+          @checked(old('package_card_style', $site->packageCardStyle) === \App\Support\SiteProfile::CARD_STYLE_CLASSIC)>
+        <span>
+          <b>Klasik</b>
+          <small>Flyer tinggi dengan informasi ringkas dan grid ikon.</small>
+        </span>
+      </label>
+      <label class="card-style-option">
+        <input type="radio" name="package_card_style" value="{{ \App\Support\SiteProfile::CARD_STYLE_CATALOG }}"
+          @checked(old('package_card_style', $site->packageCardStyle) === \App\Support\SiteProfile::CARD_STYLE_CATALOG)>
+        <span>
+          <b>Katalog</b>
+          <small>Harga dan judul menonjol, dilengkapi logo maskapai serta hotel.</small>
+        </span>
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset>
     <legend>WhatsApp</legend>
     <label>Nomor WhatsApp (kode negara, tanpa +)
       <input name="wa_number" value="{{ old('wa_number', $site->waNumber) }}" required>
@@ -90,8 +113,52 @@
     </div>
   </fieldset>
 
+  <fieldset>
+    <legend>Kurs haji</legend>
+    <p class="sub">Ditampilkan di halaman Haji Plus. Bisa diisi manual atau diperbarui otomatis dari kurs {{ old('haji_exchange_rate_currency', $hajiExchangeRate['currency']) }} → IDR.</p>
+    <label class="check">
+      <input type="checkbox" name="haji_exchange_rate_enabled" value="1" @checked(old('haji_exchange_rate_enabled', $hajiExchangeRate['enabled']) === '1')>
+      Tampilkan kurs di halaman haji
+    </label>
+    <label>Mata uang
+      <input name="haji_exchange_rate_currency" value="{{ old('haji_exchange_rate_currency', $hajiExchangeRate['currency']) }}" maxlength="8" required>
+    </label>
+    <div class="card-style-options">
+      <label class="card-style-option">
+        <input type="radio" name="haji_exchange_rate_mode" value="{{ \App\Support\HajiExchangeRate::MODE_MANUAL }}"
+          @checked(old('haji_exchange_rate_mode', $hajiExchangeRate['mode']) === \App\Support\HajiExchangeRate::MODE_MANUAL)>
+        <span>
+          <b>Manual</b>
+          <small>Admin mengisi nilai kurs sendiri.</small>
+        </span>
+      </label>
+      <label class="card-style-option">
+        <input type="radio" name="haji_exchange_rate_mode" value="{{ \App\Support\HajiExchangeRate::MODE_AUTO }}"
+          @checked(old('haji_exchange_rate_mode', $hajiExchangeRate['mode']) === \App\Support\HajiExchangeRate::MODE_AUTO)>
+        <span>
+          <b>Otomatis</b>
+          <small>Diperbarui otomatis setiap 6 jam saat halaman haji dibuka.</small>
+        </span>
+      </label>
+    </div>
+    <label>Nilai kurs (IDR per 1 mata uang)
+      <input type="number" name="haji_exchange_rate" value="{{ old('haji_exchange_rate', $hajiExchangeRate['rate']) }}" min="1" step="1" placeholder="17735">
+    </label>
+    @if($hajiExchangeRate['updated_at'])
+      <p class="sub">Terakhir diperbarui: {{ \Carbon\Carbon::parse($hajiExchangeRate['updated_at'])->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</p>
+    @endif
+  </fieldset>
+
   <div class="form-actions">
     <button class="btn" type="submit">Simpan</button>
   </div>
 </form>
+
+@if(old('haji_exchange_rate_mode', $hajiExchangeRate['mode']) === \App\Support\HajiExchangeRate::MODE_AUTO)
+<form method="post" action="{{ route('admin.settings.refresh-exchange-rate') }}" class="panel form-pad form-narrow settings-refresh-form">
+  @csrf
+  <p class="sub">Mode otomatis aktif. Klik untuk tarik kurs terbaru tanpa menunggu pembaruan 6 jam.</p>
+  <button class="btn gray" type="submit">Perbarui kurs sekarang</button>
+</form>
+@endif
 @endsection

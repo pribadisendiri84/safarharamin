@@ -27,14 +27,11 @@
 @endunless
 
 <div class="panel">
-  <div class="table-wrap">
-    <table>
+  <div class="table-wrap master-table-wrap">
+    <table class="master-table">
       <thead>
         <tr>
           <th>Tipe paket</th>
-          <th>Urutan</th>
-          <th>Status</th>
-          <th>Waktu</th>
           <th></th>
         </tr>
       </thead>
@@ -44,20 +41,18 @@
             <td>
               @if($kind->trashed())
                 <b>{{ $kind->name }}</b>
+                <span class="badge draft">Terhapus</span>
               @else
-                <form method="post" action="{{ route('admin.package-kinds.update', $kind) }}" class="form user-edit">
+                <form method="post" action="{{ route('admin.package-kinds.update', $kind) }}" class="form master-row-edit">
                   @csrf
                   @method('PUT')
-                  <input name="name" value="{{ old('name', $kind->name) }}" required>
-                  <input type="number" name="sort_order" value="{{ old('sort_order', $kind->sort_order) }}" min="0">
+                  <input name="name" value="{{ old('name', $kind->name) }}" required placeholder="Nama tipe paket">
+                  <input type="number" name="sort_order" value="{{ old('sort_order', $kind->sort_order) }}" min="0" aria-label="Urutan">
                   <label class="check"><input type="checkbox" name="is_active" value="1" @checked($kind->is_active)> Aktif</label>
                   <button class="btn gray compact" type="submit">Update</button>
                 </form>
               @endif
             </td>
-            <td>{{ $kind->sort_order }}</td>
-            <td><span class="badge {{ $kind->is_active && ! $kind->trashed() ? 'published' : 'draft' }}">{{ $kind->trashed() ? 'Terhapus' : ($kind->is_active ? 'Aktif' : 'Nonaktif') }}</span></td>
-            <td>@include('admin.partials.timestamps', ['model' => $kind])</td>
             <td>
               @include('admin.partials.row-actions', [
                 'item' => $kind,
@@ -68,7 +63,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="5" class="empty-state">{{ $trashed ? 'Tidak ada tipe paket terhapus.' : 'Belum ada tipe paket.' }}</td></tr>
+          <tr><td colspan="2" class="empty-state">{{ $trashed ? 'Tidak ada tipe paket terhapus.' : 'Belum ada tipe paket.' }}</td></tr>
         @endforelse
       </tbody>
     </table>

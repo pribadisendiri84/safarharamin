@@ -14,12 +14,16 @@
 @unless($trashed)
 <div class="panel form-narrow">
   <div class="panel-head">@include('admin.partials.icon', ['name' => 'plus']) Tambah maskapai</div>
-  <form class="form form-pad" method="post" action="{{ route('admin.airlines.store') }}">
+  <form class="form form-pad" method="post" enctype="multipart/form-data" action="{{ route('admin.airlines.store') }}">
     @csrf
     <div class="row2">
       <label>Nama maskapai<input name="name" value="{{ old('name') }}" required placeholder="Contoh: Saudia"></label>
       <label>Urutan<input type="number" name="sort_order" value="{{ old('sort_order', 0) }}" min="0"></label>
     </div>
+    <label>Logo maskapai
+      <input type="file" name="logo" accept="image/png,image/jpeg,image/webp">
+      <span class="sub">Opsional. PNG transparan atau WebP disarankan, maksimal 2 MB.</span>
+    </label>
     <label class="check"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', true))> Tampil di pilihan</label>
     <button class="btn" type="submit">Tambah maskapai</button>
   </form>
@@ -27,14 +31,11 @@
 @endunless
 
 <div class="panel">
-  <div class="table-wrap">
-    <table>
+  <div class="table-wrap master-table-wrap">
+    <table class="master-table">
       <thead>
         <tr>
           <th>Maskapai</th>
-          <th>Urutan</th>
-          <th>Status</th>
-          <th>Waktu</th>
           <th></th>
         </tr>
       </thead>
@@ -44,20 +45,19 @@
             <td>
               @if($airline->trashed())
                 <b>{{ $airline->name }}</b>
+                <span class="badge draft">Terhapus</span>
               @else
-                <form method="post" action="{{ route('admin.airlines.update', $airline) }}" class="form user-edit">
+                <form method="post" enctype="multipart/form-data" action="{{ route('admin.airlines.update', $airline) }}" class="form master-row-edit">
                   @csrf
                   @method('PUT')
-                  <input name="name" value="{{ old('name', $airline->name) }}" required>
-                  <input type="number" name="sort_order" value="{{ old('sort_order', $airline->sort_order) }}" min="0">
+                  @include('admin.partials.master-logo-field', ['logo' => $airline->logo])
+                  <input name="name" value="{{ old('name', $airline->name) }}" required placeholder="Nama maskapai">
+                  <input type="number" name="sort_order" value="{{ old('sort_order', $airline->sort_order) }}" min="0" aria-label="Urutan">
                   <label class="check"><input type="checkbox" name="is_active" value="1" @checked($airline->is_active)> Aktif</label>
                   <button class="btn gray compact" type="submit">Update</button>
                 </form>
               @endif
             </td>
-            <td>{{ $airline->sort_order }}</td>
-            <td><span class="badge {{ $airline->is_active && ! $airline->trashed() ? 'published' : 'draft' }}">{{ $airline->trashed() ? 'Terhapus' : ($airline->is_active ? 'Aktif' : 'Nonaktif') }}</span></td>
-            <td>@include('admin.partials.timestamps', ['model' => $airline])</td>
             <td>
               @include('admin.partials.row-actions', [
                 'item' => $airline,
@@ -68,7 +68,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="5" class="empty-state">{{ $trashed ? 'Tidak ada maskapai terhapus.' : 'Belum ada maskapai.' }}</td></tr>
+          <tr><td colspan="2" class="empty-state">{{ $trashed ? 'Tidak ada maskapai terhapus.' : 'Belum ada maskapai.' }}</td></tr>
         @endforelse
       </tbody>
     </table>

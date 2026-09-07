@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Concerns\FiltersTrashed;
 use App\Http\Controllers\Controller;
 use App\Models\GalleryItem;
 use App\Services\PackageImageStore;
+use App\Support\YoutubeUrl;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -115,7 +116,7 @@ class GalleryController extends Controller
             $payload['item'] = [
                 'id' => $gallery->id,
                 'title' => $gallery->title,
-                'thumb' => $gallery->image,
+                'thumb' => $gallery->displayImage(),
             ];
         }
 
@@ -163,7 +164,7 @@ class GalleryController extends Controller
     }
 
     /**
-     * @return array{title: string, caption: ?string, category: string, group_name: ?string, sort_order: int, show_on_home: bool, image: string}
+     * @return array{title: string, caption: ?string, category: string, group_name: ?string, sort_order: int, show_on_home: bool, image: string, video_url: ?string}
      */
     private function validated(Request $request, PackageImageStore $images, ?GalleryItem $existingItem = null): array
     {
@@ -175,20 +176,30 @@ class GalleryController extends Controller
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'show_on_home' => ['nullable', 'boolean'],
             'image_url' => ['nullable', 'url', 'max:500'],
+            'video_url' => ['nullable', 'string', 'max:500'],
             'photo' => ['nullable', 'image', 'max:5120'],
         ]);
 
         $showOnHome = $request->boolean('show_on_home');
+        $videoUrl = filled($data['video_url'] ?? null) ? trim($data['video_url']) : null;
+        if ($videoUrl !== null && YoutubeUrl::extractId($videoUrl) === null) {
+            throw ValidationException::withMessages([
+                'video_url' => 'URL YouTube tidak valid.',
+            ]);
+        }
+
         $image = $existingItem?->image;
         if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
             $image = $images->store($request->file('photo'), $data['title'], 'gallery');
         } elseif (filled($data['image_url'] ?? null)) {
             $image = $data['image_url'];
+        } elseif ($videoUrl !== null) {
+            $image = YoutubeUrl::thumbnailUrl($videoUrl);
         }
 
         if (! $image) {
             throw ValidationException::withMessages([
-                'photo' => 'Unggah foto atau isi URL gambar.',
+                'photo' => 'Unggah foto, isi URL gambar, atau link video YouTube.',
             ]);
         }
 
@@ -201,6 +212,7 @@ class GalleryController extends Controller
             'show_on_home' => $showOnHome,
             'home_sort' => $this->resolveHomeSort($showOnHome, $existingItem),
             'image' => $image,
+            'video_url' => $videoUrl,
         ];
     }
 

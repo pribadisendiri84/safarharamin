@@ -48,4 +48,25 @@ class PackageImageStoreTest extends TestCase
         $this->assertSame(800, $info[0]);
         $this->assertSame(1100, $info[1]);
     }
+
+    public function test_store_cover_resizes_to_catalog_ratio(): void
+    {
+        if (! extension_loaded('gd')) {
+            $this->markTestSkipped('GD extension required.');
+        }
+
+        Storage::fake('public');
+
+        $store = new PackageImageStore;
+        $path = $store->storeCover(UploadedFile::fake()->image('cover.jpg', 2400, 1600), 'Paket Cover');
+
+        $storedPath = str_replace('/storage/', '', $path);
+        $contents = Storage::disk('public')->get($storedPath);
+        $info = getimagesizefromstring($contents);
+
+        $this->assertNotFalse($info);
+        $this->assertLessThanOrEqual(1200, $info[0]);
+        $this->assertLessThanOrEqual(600, $info[1]);
+        $this->assertStringContainsString('/storage/packages/covers/', $path);
+    }
 }
