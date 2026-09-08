@@ -1497,6 +1497,15 @@ img { max-width: 100%; display: block; }
   padding: 18px;
 }
 .haji-detail-block h3 { margin: 0 0 10px; font-size: 16px; }
+.haji-itinerary-block {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 20px;
+}
+.haji-itinerary-block h2 { margin: 0 0 8px; font-size: 18px; }
+.haji-itinerary-block h2:not(:first-child) { margin-top: 22px; }
 .haji-checks { margin: 0; }
 
 .haji-legal-note { margin: 18px 0 0; font-size: 13px; color: var(--muted); text-align: center; }

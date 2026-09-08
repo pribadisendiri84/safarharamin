@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Airline;
 use App\Models\Hotel;
-use App\Models\Package;
 use App\Models\User;
 use App\Support\HajiPlusPage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,29 +12,6 @@ use Tests\TestCase;
 class HajiPlusPageTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Package::query()->create([
-            'title' => 'Haji Plus Contoh',
-            'slug' => 'haji-plus-contoh',
-            'type' => 'haji_plus',
-            'departure_city' => 'jakarta',
-            'duration_days' => 40,
-            'price' => 60000000,
-            'price_quad' => 60000000,
-            'hotel_makkah' => 'Swissotel Makkah',
-            'hotel_madinah' => 'Madinah Pullman',
-            'airline' => 'Saudia',
-            'room_type' => 'quad',
-            'seats_total' => 200,
-            'seats_left' => 50,
-            'status' => 'published',
-            'images' => ['/images/placeholder-kaaba.svg'],
-        ]);
-    }
 
     public function test_admin_can_open_haji_plus_page_editor(): void
     {
@@ -47,6 +23,7 @@ class HajiPlusPageTest extends TestCase
             ->assertSee('Halaman Haji Plus')
             ->assertSee('Kartu kamar')
             ->assertSee('Hotel & maskapai')
+            ->assertSee('Itinerary')
             ->assertSee('Quad');
     }
 

@@ -3,9 +3,10 @@
 namespace App\Support;
 
 use App\Models\Airline;
+use App\Models\HajiPageItinerary;
 use App\Models\Hotel;
-use App\Models\Package;
 use App\Models\Setting;
+use Illuminate\Support\Collection;
 
 class HajiPlusPage
 {
@@ -23,15 +24,15 @@ class HajiPlusPage
      *   cta: array<string, mixed>
      * }
      */
-    public static function content(?Package $package = null): array
+    public static function content(): array
     {
-        $defaults = self::defaults($package);
+        $defaults = self::defaults();
         $stored = self::stored();
 
         $hotels = self::resolveHotels(self::mergeHotels($defaults['hotels'], $stored['hotels'] ?? []));
         $partnerAirlines = self::mergePartnerAirlines($defaults['partner_airlines'], $stored['partner_airlines'] ?? []);
         $airline = array_replace($defaults['airline'], $stored['airline'] ?? []);
-        $airline['title'] = self::airlineTitle($partnerAirlines, $package);
+        $airline['title'] = self::airlineTitle($partnerAirlines);
 
         return [
             'hero' => array_replace($defaults['hero'], $stored['hero'] ?? []),
@@ -69,6 +70,89 @@ class HajiPlusPage
     }
 
     /**
+     * Field defaults untuk form keberangkatan operasional (salin, bukan relasi live).
+     *
+     * @return array<string, mixed>
+     */
+    public static function departureDefaults(): array
+    {
+        $page = self::content();
+        $hero = $page['hero'];
+        $hotels = collect($page['hotels']);
+        $madinah = $hotels->first(fn (array $hotel) => ($hotel['master_location'] ?? '') === Hotel::LOCATION_MADINAH);
+        $makkah = $hotels->first(fn (array $hotel) => ($hotel['master_location'] ?? '') === Hotel::LOCATION_MAKKAH);
+        $season = trim((string) ($hero['season'] ?? ''));
+        $title = trim((string) ($hero['title'] ?? HajiPlusProgram::HERO_TITLE));
+        $programName = $season !== '' ? "{$title} — {$season}" : $title;
+
+        return [
+            'program_name' => $programName,
+            'program_kind' => 'haji',
+            'airline' => implode(' / ', $page['partner_airlines'] ?? []),
+            'hotel_madinah' => (string) ($madinah['title'] ?? $madinah['master_name'] ?? ''),
+            'hotel_makkah' => (string) ($makkah['title'] ?? $makkah['master_name'] ?? ''),
+            'departure_date' => null,
+            'flight_number' => null,
+            'hotel_transit' => null,
+            'hotel_maktab' => null,
+            'notes' => null,
+        ];
+    }
+
+    /**
+     * Snapshot program haji saat masuk operasional — tidak berubah meski halaman/katalog diubah.
+     *
+     * @return array<string, mixed>
+     */
+    public static function operationalSnapshot(): array
+    {
+        $page = self::content();
+
+        return [
+            'captured_at' => now()->toIso8601String(),
+            'hero' => $page['hero'],
+            'rooms' => $page['rooms'],
+            'hotels' => $page['hotels'],
+            'partner_airlines' => $page['partner_airlines'],
+            'airline' => $page['airline'],
+            'benefits' => $page['benefits'],
+            'official_itineraries' => self::officialItineraries()
+                ->map(fn (HajiPageItinerary $item) => [
+                    'departure_date' => $item->departure_date?->toDateString(),
+                    'file_path' => $item->file_path,
+                    'label' => $item->displayLabel(),
+                ])
+                ->values()
+                ->all(),
+            'departure_defaults' => self::departureDefaults(),
+        ];
+    }
+
+    /**
+     * @return Collection<int, HajiPageItinerary>
+     */
+    public static function officialItineraries(): Collection
+    {
+        return HajiPageItinerary::query()->official()->ordered()->get();
+    }
+
+    /**
+     * @return Collection<int, HajiPageItinerary>
+     */
+    public static function sampleItineraries(): Collection
+    {
+        return HajiPageItinerary::query()->sample()->ordered()->get();
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function facilities(): array
+    {
+        return HajiPlusProgram::facilities();
+    }
+
+    /**
      * @return array{
      *   hero: array<string, mixed>,
      *   rooms: list<array<string, mixed>>,
@@ -80,11 +164,9 @@ class HajiPlusPage
      *   cta: array<string, mixed>
      * }
      */
-    public static function defaults(?Package $package = null): array
+    public static function defaults(): array
     {
-        $package ??= HajiPlusProgram::primary();
-        $rooms = HajiPlusProgram::roomOptions($package);
-        $hotels = HajiPlusProgram::hotelShowcase($package);
+        $rooms = HajiPlusProgram::roomOptions();
 
         return [
             'hero' => [
@@ -93,7 +175,7 @@ class HajiPlusPage
                 'title' => HajiPlusProgram::HERO_TITLE,
                 'subtitle' => HajiPlusProgram::HERO_SUBTITLE,
                 'starting_price' => '',
-                'show_quota' => HajiPlusProgram::showLimitedQuota($package) ? '1' : '0',
+                'show_quota' => '0',
                 'image' => 'https://images.unsplash.com/photo-1564769625905-50e93615e769?w=1600&q=80',
             ],
             'rooms' => array_map(function (array $room) {
@@ -115,23 +197,20 @@ class HajiPlusPage
             'hotels' => [
                 self::hotelRow(
                     masterLocation: Hotel::LOCATION_MADINAH,
-                    masterName: (string) ($package?->hotel_madinah ?? ''),
-                    distance: $hotels[0]['distance'] ?? '±100 m dari Masjid Nabawi',
+                    masterName: 'Madinah Pullman',
+                    distance: '±100 m dari Masjid Nabawi',
                     featuresText: "Lokasi strategis\nAkses mudah ke masjid",
                 ),
                 self::hotelRow(
                     masterLocation: Hotel::LOCATION_MAKKAH,
-                    masterName: (string) ($package?->hotel_makkah ?? ''),
-                    distance: $hotels[1]['distance'] ?? '±100 m dari Masjidil Haram',
+                    masterName: 'Swissotel Makkah',
+                    distance: '±100 m dari Masjidil Haram',
                     featuresText: "Lokasi strategis\nAkses mudah ke masjid",
                 ),
             ],
-            'partner_airlines' => array_values(array_map(
-                fn (array $airline) => $airline['name'],
-                HajiPlusProgram::partnerAirlines($package),
-            )),
+            'partner_airlines' => ['Garuda Indonesia', 'Saudia'],
             'airline' => [
-                'title' => self::airlineTitle([], $package),
+                'title' => self::airlineTitle(['Garuda Indonesia', 'Saudia']),
                 'description' => 'Penerbangan langsung dengan layanan maskapai terpercaya untuk perjalanan ibadah yang nyaman.',
                 'image' => 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=900&q=80',
                 'points_text' => "Jadwal penerbangan fleksibel\nLayanan bagasi sesuai program\nKabin nyaman untuk perjalanan jauh",
@@ -187,13 +266,13 @@ class HajiPlusPage
     /**
      * @return list<array{name: string, logo: string|null}>
      */
-    public static function partnerAirlines(?Package $package = null, ?array $page = null): array
+    public static function partnerAirlines(?array $page = null): array
     {
-        $page ??= self::content($package);
+        $page ??= self::content();
         $names = $page['partner_airlines'] ?? [];
 
         if ($names === []) {
-            return HajiPlusProgram::partnerAirlines($package);
+            return HajiPlusProgram::partnerAirlines();
         }
 
         return array_values(array_map(
@@ -236,7 +315,7 @@ class HajiPlusPage
     /**
      * @param  list<string>  $partnerAirlines
      */
-    public static function airlineTitle(array $partnerAirlines, ?Package $package = null): string
+    public static function airlineTitle(array $partnerAirlines): string
     {
         $names = array_values(array_filter(array_map('trim', $partnerAirlines)));
 
@@ -244,7 +323,7 @@ class HajiPlusPage
             return implode(' / ', $names);
         }
 
-        return HajiPlusProgram::airlineLabel($package);
+        return HajiPlusProgram::airlineLabel();
     }
 
     /**
@@ -323,7 +402,6 @@ class HajiPlusPage
                 }
             }
 
-            // Migrasi data lama: pakai title custom sebagai master_name jika belum ada.
             if (empty($merged['master_name']) && filled($row['title'] ?? null) && ($row['source'] ?? '') === 'custom') {
                 $merged['master_name'] = (string) $row['title'];
             }
@@ -333,6 +411,7 @@ class HajiPlusPage
 
         return $rows;
     }
+
     /**
      * @param  list<array<string, mixed>>  $defaults
      * @param  list<array<string, mixed>>  $stored

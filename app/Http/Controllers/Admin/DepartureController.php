@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\Concerns\FiltersTrashed;
 use App\Http\Controllers\Controller;
 use App\Models\Departure;
 use App\Models\Package;
+use App\Support\HajiPlusPage;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -40,6 +41,20 @@ class DepartureController extends Controller
 
     public function create(Request $request)
     {
+        if ($request->string('from')->toString() === 'haji_page') {
+            return view('admin.operations.departures.form', [
+                'departure' => new Departure(array_merge(
+                    HajiPlusPage::departureDefaults(),
+                    [
+                        'source' => Departure::SOURCE_HAJI_PAGE,
+                        'package_id' => null,
+                    ],
+                )),
+                'fromHajiPage' => true,
+                ...$this->departureFormData(),
+            ]);
+        }
+
         $package = $request->filled('package_id')
             ? Package::query()->find($request->integer('package_id'))
             : null;
@@ -48,10 +63,11 @@ class DepartureController extends Controller
 
         return view('admin.operations.departures.form', [
             'departure' => new Departure(array_merge(
-                ['program_kind' => 'umroh'],
+                ['program_kind' => 'umroh', 'source' => $package ? Departure::SOURCE_PACKAGE : Departure::SOURCE_MANUAL],
                 $defaults,
                 ['package_id' => $package?->id],
             )),
+            'fromHajiPage' => false,
             ...$this->departureFormData(),
         ]);
     }
@@ -69,13 +85,14 @@ class DepartureController extends Controller
     {
         return view('admin.operations.departures.form', [
             'departure' => $departure,
+            'fromHajiPage' => false,
             ...$this->departureFormData(),
         ]);
     }
 
     public function update(Request $request, Departure $departure)
     {
-        $departure->update($this->validated($request));
+        $departure->update($this->validated($request, $departure));
 
         return redirect()
             ->route('admin.operations.departures.index')
@@ -101,10 +118,15 @@ class DepartureController extends Controller
     }
 
     /** @return array<string, mixed> */
-    private function validated(Request $request): array
+    private function validated(Request $request, ?Departure $existing = null): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'package_id' => ['nullable', 'exists:packages,id'],
+            'source' => ['nullable', Rule::in([
+                Departure::SOURCE_MANUAL,
+                Departure::SOURCE_PACKAGE,
+                Departure::SOURCE_HAJI_PAGE,
+            ])],
             'program_name' => ['required', 'string', 'max:180'],
             'program_kind' => ['required', Rule::in(array_keys(Departure::KINDS))],
             'departure_date' => ['nullable', 'date'],
@@ -116,12 +138,37 @@ class DepartureController extends Controller
             'hotel_maktab' => ['nullable', 'string', 'max:180'],
             'notes' => ['nullable', 'string'],
         ]);
+
+        return $this->applyOperationalSnapshot($data, $existing);
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function applyOperationalSnapshot(array $data, ?Departure $existing = null): array
+    {
+        if (($data['program_kind'] ?? '') !== 'haji') {
+            return $data;
+        }
+
+        if (($data['source'] ?? Departure::SOURCE_MANUAL) === Departure::SOURCE_HAJI_PAGE) {
+            $data['package_id'] = null;
+        }
+
+        if ($existing?->program_snapshot) {
+            return $data;
+        }
+
+        $data['program_snapshot'] = HajiPlusPage::operationalSnapshot();
+
+        return $data;
     }
 
     /** @return array{packages: \Illuminate\Support\Collection<int, Package>, packageCatalog: array<int, array<string, string|null>>} */
     private function departureFormData(): array
     {
-        $packages = Package::query()->orderBy('title')->get();
+        $packages = Package::query()
+            ->whereNotIn('type', Package::HAJI_TYPES)
+            ->orderBy('title')
+            ->get();
 
         return [
             'packages' => $packages,

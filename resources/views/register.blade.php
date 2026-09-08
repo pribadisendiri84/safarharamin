@@ -38,6 +38,9 @@
   @else
   <form class="form" method="post" action="{{ route('register.store') }}">
     @csrf
+    @if(!empty($isHajiProgram))
+      <input type="hidden" name="program_kind" value="haji">
+    @endif
     <label>Nama lengkap<input name="name" value="{{ old('name') }}" required></label>
     <label>WhatsApp<input name="phone" value="{{ old('phone') }}" required></label>
     <label>Email<input type="email" name="email" value="{{ old('email') }}"></label>
@@ -49,6 +52,7 @@
         'placeholder' => 'Cari kota asal…',
       ])
     </label>
+    @if(empty($isHajiProgram))
     <label>Paket
       <select name="package_id">
         <option value="">Belum tentukan</option>
@@ -57,6 +61,7 @@
         @endforeach
       </select>
     </label>
+    @endif
     <label>Jumlah jamaah<input type="number" name="pax" value="{{ old('pax', 1) }}" min="1" max="20" required></label>
     <label>Catatan<textarea name="notes" rows="3">{{ old('notes', $defaultNotes ?? '') }}</textarea></label>
     <button class="btn" type="submit">Kirim pendaftaran</button>

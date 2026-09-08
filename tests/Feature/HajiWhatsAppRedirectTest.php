@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Departure;
 use App\Models\Inquiry;
-use App\Models\Package;
+use App\Models\User;
 use App\Models\VisitorEvent;
+use App\Support\HajiPlusPage;
 use App\Support\HajiPlusProgram;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -13,31 +15,8 @@ class HajiWhatsAppRedirectTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function seedHajiPackage(): Package
-    {
-        return Package::query()->create([
-            'title' => 'Haji Plus Contoh',
-            'slug' => 'haji-plus-contoh',
-            'type' => 'haji_plus',
-            'departure_city' => 'jakarta',
-            'duration_days' => 40,
-            'price' => 60000000,
-            'price_quad' => 60000000,
-            'hotel_makkah' => 'Makkah Clock Tower',
-            'hotel_madinah' => 'Madinah Pullman',
-            'airline' => 'Saudia',
-            'room_type' => 'quad',
-            'seats_total' => 200,
-            'seats_left' => 50,
-            'status' => 'published',
-            'images' => ['/images/placeholder-kaaba.svg'],
-        ]);
-    }
-
     public function test_haji_consult_whatsapp_click_creates_inquiry_and_redirects(): void
     {
-        $package = $this->seedHajiPackage();
-
         $response = $this->from('/haji-khusus')
             ->get(route('go.haji.whatsapp', ['intent' => 'consult']));
 
@@ -47,8 +26,9 @@ class HajiWhatsAppRedirectTest extends TestCase
         $this->assertDatabaseHas('inquiries', [
             'kind' => 'tanya',
             'source' => Inquiry::SOURCE_WEBSITE,
+            'program_kind' => 'haji',
             'name' => 'Pengunjung Haji',
-            'package_id' => $package->id,
+            'package_id' => null,
             'status' => Inquiry::STATUS_NEW,
         ]);
 
@@ -68,17 +48,17 @@ class HajiWhatsAppRedirectTest extends TestCase
             ->assertRedirect();
 
         $inquiry = Inquiry::query()->latest('id')->first();
+        $this->assertSame('haji', $inquiry->program_kind);
         $this->assertStringContainsString('Quad', (string) $inquiry->notes);
     }
 
-    public function test_register_page_preselects_haji_package_from_query(): void
+    public function test_register_page_for_haji_program_has_no_package_picker(): void
     {
-        $package = $this->seedHajiPackage();
-
         $this->get(HajiPlusProgram::registerUrl('Triple'))
             ->assertOk()
             ->assertSee('Pendaftaran Haji Plus')
-            ->assertSee('value="'.$package->id.'" selected', false)
+            ->assertSee('name="program_kind" value="haji"', false)
+            ->assertDontSee('name="package_id"', false)
             ->assertSee('Minat program Haji Plus — tipe kamar Triple.');
     }
 

@@ -8,15 +8,26 @@
 <div class="page-head">
   <div>
     <h1>{{ $departure->exists ? 'Edit keberangkatan' : 'Tambah keberangkatan' }}</h1>
-    <p class="sub">Data operasional keberangkatan jamaah. Pilih paket katalog untuk mengisi default — tetap bisa diedit sebelum simpan.</p>
+    <p class="sub">@if(!empty($fromHajiPage))
+      Data operasional Haji Plus dari halaman khusus. Field bisa disesuaikan — setelah simpan, snapshot program tersimpan (tidak ikut berubah jika halaman/katalog diubah).
+    @else
+      Data operasional keberangkatan jamaah. Pilih paket katalog umroh untuk mengisi default — tetap bisa diedit sebelum simpan.
+    @endif</p>
   </div>
+  @if(! $departure->exists && empty($fromHajiPage))
+    <div class="head-actions">
+      <a class="btn ghost" href="{{ route('admin.operations.departures.create', ['from' => 'haji_page']) }}">Buat dari Halaman Haji</a>
+    </div>
+  @endif
 </div>
 
 <form class="form panel form-pad" method="post" action="{{ $departure->exists ? route('admin.operations.departures.update', $departure) : route('admin.operations.departures.store') }}">
   @csrf
   @if($departure->exists) @method('PUT') @endif
+  <input type="hidden" name="source" value="{{ old('source', $departure->source ?? ($fromHajiPage ?? false ? \App\Models\Departure::SOURCE_HAJI_PAGE : \App\Models\Departure::SOURCE_MANUAL)) }}">
 
-  <label>Paket katalog (opsional)
+  @unless(!empty($fromHajiPage) || old('program_kind', $departure->program_kind) === 'haji')
+  <label>Paket katalog umroh (opsional)
     <select name="package_id" id="departure-package">
       <option value="">— Manual —</option>
       @foreach($packages as $package)
@@ -25,6 +36,11 @@
     </select>
   </label>
   <p class="sub">Ganti paket katalog untuk mengisi ulang field dari katalog. Field bisa disesuaikan sebelum simpan.</p>
+  @endunless
+
+  @if($departure->exists && !empty($departure->program_snapshot['captured_at']))
+    <p class="sub">Snapshot program tersimpan {{ \Carbon\Carbon::parse($departure->program_snapshot['captured_at'])->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB.</p>
+  @endif
 
   <label>Nama program<input name="program_name" id="departure-program-name" value="{{ old('program_name', $departure->program_name) }}" required></label>
 

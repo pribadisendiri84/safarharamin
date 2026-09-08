@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'package_id',
+    'source',
     'program_name',
     'program_kind',
     'departure_date',
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'hotel_transit',
     'hotel_maktab',
     'notes',
+    'program_snapshot',
 ])]
 class Departure extends Model
 {
@@ -31,10 +33,17 @@ class Departure extends Model
         'haji' => 'Haji',
     ];
 
+    public const SOURCE_MANUAL = 'manual';
+
+    public const SOURCE_PACKAGE = 'package';
+
+    public const SOURCE_HAJI_PAGE = 'haji_page';
+
     protected function casts(): array
     {
         return [
             'departure_date' => 'date',
+            'program_snapshot' => 'array',
         ];
     }
 
@@ -56,6 +65,25 @@ class Departure extends Model
     public function isHaji(): bool
     {
         return $this->program_kind === 'haji';
+    }
+
+    public function isFromHajiPage(): bool
+    {
+        return $this->source === self::SOURCE_HAJI_PAGE;
+    }
+
+    /** @return array<string, mixed>|null */
+    public function snapshotRoom(string $roomKey): ?array
+    {
+        $rooms = $this->program_snapshot['rooms'] ?? [];
+
+        foreach ($rooms as $room) {
+            if (($room['key'] ?? '') === $roomKey) {
+                return $room;
+            }
+        }
+
+        return null;
     }
 
     public function kindLabel(): string

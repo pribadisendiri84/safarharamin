@@ -97,7 +97,6 @@ class HajiPlusProgram
      */
     public static function roomOptions(?Package $package = null): array
     {
-        $package ??= self::primary();
         $flyer = collect(self::flyerRooms())->keyBy('key');
         $priced = $package
             ? collect($package->roomPriceList())->keyBy('key')
@@ -205,15 +204,8 @@ class HajiPlusProgram
     /**
      * @return list<string>
      */
-    public static function facilities(?Package $package = null): array
+    public static function facilities(): array
     {
-        $package ??= self::primary();
-        $items = $package?->facilities ?? [];
-
-        if ($items !== []) {
-            return $items;
-        }
-
         return [
             'Visa haji resmi',
             'Tiket pesawat pulang-pergi (penerbangan langsung)',
@@ -416,32 +408,19 @@ class HajiPlusProgram
     /**
      * @return list<array{name: string, logo: string|null}>
      */
-    public static function partnerAirlines(?Package $package = null): array
+    public static function partnerAirlines(): array
     {
-        $package ??= self::primary();
-        $names = [];
-
-        if ($programAirline = $package?->airline) {
-            $names[] = $programAirline;
-        }
-
-        foreach (['Garuda Indonesia', 'Saudia'] as $fallback) {
-            if (! in_array($fallback, $names, true)) {
-                $names[] = $fallback;
-            }
-        }
+        $names = ['Garuda Indonesia', 'Saudia'];
 
         return array_map(
             fn (string $name) => ['name' => $name, 'logo' => Airline::logoFor($name)],
-            array_slice($names, 0, 3),
+            $names,
         );
     }
 
-    public static function airlineLabel(?Package $package = null): string
+    public static function airlineLabel(): string
     {
-        $package ??= self::primary();
-
-        return $package?->airline ?: 'Garuda Indonesia / Saudia';
+        return 'Garuda Indonesia / Saudia';
     }
 
     /**

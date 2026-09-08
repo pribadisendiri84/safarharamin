@@ -4,19 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\GalleryItem;
 use App\Models\Testimonial;
-use App\Support\HajiExchangeRate;
 use App\Support\HajiPlusPage;
-use App\Support\HajiPlusProgram;
+use App\Support\HajiExchangeRate;
 
 class PageController extends Controller
 {
     public function hajiKhusus()
     {
-        $program = HajiPlusProgram::primary();
-
         return view('pages.haji-khusus', [
-            'program' => $program,
-            'page' => HajiPlusPage::content($program),
+            'page' => HajiPlusPage::content(),
+            'officialItineraries' => HajiPlusPage::officialItineraries(),
+            'sampleItineraries' => HajiPlusPage::sampleItineraries(),
             'hajiExchangeRate' => HajiExchangeRate::display(),
         ]);
     }

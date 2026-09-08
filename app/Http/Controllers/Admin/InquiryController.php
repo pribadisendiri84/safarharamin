@@ -123,8 +123,12 @@ class InquiryController extends Controller
         $inquiry->load(['package', 'followUps.author', 'creator', 'pic', 'pilgrims.departure']);
 
         $departureQuery = Departure::query()->orderBy('departure_date')->orderBy('program_name');
-        if ($inquiry->package_id) {
-            $matchedDepartures = (clone $departureQuery)->where('package_id', $inquiry->package_id)->get(['id', 'program_name', 'departure_date', 'package_id']);
+        if ($inquiry->isHaji()) {
+            $matchedDepartures = (clone $departureQuery)
+                ->where('program_kind', 'haji')
+                ->get(['id', 'program_name', 'departure_date', 'package_id', 'source']);
+        } elseif ($inquiry->package_id) {
+            $matchedDepartures = (clone $departureQuery)->where('package_id', $inquiry->package_id)->get(['id', 'program_name', 'departure_date', 'package_id', 'source']);
         } else {
             $matchedDepartures = collect();
         }
@@ -150,7 +154,11 @@ class InquiryController extends Controller
             'status' => ['required', Rule::in(array_keys(Inquiry::STATUSES))],
             'pic_id' => ['nullable', 'exists:users,id'],
             'package_id' => [
-                Rule::requiredIf($request->input('status') === Inquiry::STATUS_SOLD && ! $inquiry->package_id),
+                Rule::requiredIf(
+                    $request->input('status') === Inquiry::STATUS_SOLD
+                    && ! $inquiry->package_id
+                    && ! $inquiry->isHaji()
+                ),
                 'nullable',
                 'exists:packages,id',
             ],
@@ -180,7 +188,7 @@ class InquiryController extends Controller
             $data['sold_pax'] = $data['sold_pax'] ?? $inquiry->sold_pax ?? $inquiry->pax ?? 1;
             $data['closed_at'] = $data['closed_at'] ?? $inquiry->closed_at ?? now();
 
-            if (! isset($data['sold_amount'])) {
+            if (! isset($data['sold_amount']) && ! $inquiry->isHaji()) {
                 $package = Package::query()->find($data['package_id']);
                 $data['sold_amount'] = $package ? $package->price * (int) $data['sold_pax'] : ($inquiry->sold_amount ?? 0);
             }
@@ -192,7 +200,9 @@ class InquiryController extends Controller
         });
 
         $message = $inquiry->isSold()
-            ? 'Closing dicatat. Seat paket sudah dikurangi.'
+            ? ($inquiry->isHaji()
+                ? 'Closing haji dicatat.'
+                : 'Closing dicatat. Seat paket sudah dikurangi.')
             : 'Pengajuan diperbarui.';
 
         return redirect()->route('admin.inquiries.show', $inquiry)->with('ok', $message);

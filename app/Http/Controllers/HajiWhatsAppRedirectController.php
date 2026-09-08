@@ -19,7 +19,6 @@ class HajiWhatsAppRedirectController extends Controller
         }
 
         $room = trim($request->string('room')->toString());
-        $package = HajiPlusProgram::primary();
 
         $notes = $intent === 'room' && $room !== ''
             ? "Haji Plus — minat tipe kamar {$room} (klik dari halaman Haji)"
@@ -28,9 +27,10 @@ class HajiWhatsAppRedirectController extends Controller
         Inquiry::query()->create([
             'kind' => 'tanya',
             'source' => Inquiry::SOURCE_WEBSITE,
+            'program_kind' => 'haji',
             'name' => 'Pengunjung Haji',
             'phone' => '—',
-            'package_id' => $package?->id,
+            'package_id' => null,
             'notes' => $notes,
             'status' => Inquiry::STATUS_NEW,
             'pax' => 1,

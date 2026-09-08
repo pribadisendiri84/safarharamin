@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'budget',
     'notes',
     'package_id',
+    'program_kind',
     'pic_id',
     'status',
     'sold_pax',
@@ -154,6 +155,11 @@ class Inquiry extends Model
     public function isSold(): bool
     {
         return $this->status === self::STATUS_SOLD;
+    }
+
+    public function isHaji(): bool
+    {
+        return $this->program_kind === 'haji';
     }
 
     public function isOpen(): bool

@@ -48,7 +48,7 @@
         <div class="haji-hero-panel-partners">
           <span class="haji-hero-panel-label">Didukung maskapai terbaik</span>
           <div class="haji-partner-logos">
-            @foreach(HajiPlusPage::partnerAirlines($program ?? null, $page) as $airline)
+            @foreach(HajiPlusPage::partnerAirlines($page) as $airline)
               @if($airline['logo'])
                 <img src="{{ $airline['logo'] }}" alt="{{ $airline['name'] }}" loading="lazy">
               @else
@@ -137,7 +137,7 @@
       <div class="haji-airline-copy">
         <span class="haji-section-badge">Penerbangan</span>
         <h2>{{ $page['airline']['title'] }}</h2>
-        @php $airlinePartners = HajiPlusPage::partnerAirlines($program ?? null, $page); @endphp
+        @php $airlinePartners = HajiPlusPage::partnerAirlines($page); @endphp
         @if($airlinePartners !== [])
           <div class="haji-airline-logos">
             @foreach($airlinePartners as $airline)
@@ -196,7 +196,7 @@
       <div class="haji-detail-block">
         <h3>Fasilitas</h3>
         <ul class="checks haji-checks">
-          @foreach(HajiPlusProgram::facilities($program ?? null) as $item)
+          @foreach(HajiPlusPage::facilities() as $item)
             <li>{{ $item }}</li>
           @endforeach
         </ul>
@@ -218,6 +218,22 @@
         </ul>
       </div>
     </div>
+
+    @if($officialItineraries->isNotEmpty() || $sampleItineraries->isNotEmpty())
+      <div class="haji-itinerary-block">
+        @include('partials.itinerary-pdf-list', [
+          'items' => $officialItineraries,
+          'heading' => 'Itinerary musim ini',
+          'note' => 'Pilih tanggal keberangkatan untuk melihat PDF itinerary resmi.',
+        ])
+        @include('partials.itinerary-pdf-list', [
+          'items' => $sampleItineraries,
+          'heading' => 'Contoh itinerary',
+          'note' => 'Referensi dari musim sebelumnya — detail resmi dapat disesuaikan dengan jadwal maskapai & hotel.',
+        ])
+        @include('partials.itinerary-pdf-viewer')
+      </div>
+    @endif
 
     <div class="haji-faq">
       @foreach(HajiPlusProgram::faq() as $item)

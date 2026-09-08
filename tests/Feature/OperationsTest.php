@@ -121,10 +121,10 @@ class OperationsTest extends TestCase
             ->assertSee('"program_kind":"umroh"', false);
     }
 
-    public function test_departure_create_prefills_haji_hotels_from_catalog_package(): void
+    public function test_departure_create_prefills_haji_from_page_not_catalog_package(): void
     {
         $admin = $this->admin();
-        $package = Package::query()->create([
+        Package::query()->create([
             'title' => 'Haji Plus Katalog',
             'slug' => 'haji-plus-katalog',
             'type' => 'haji_plus',
@@ -145,13 +145,16 @@ class OperationsTest extends TestCase
         ]);
 
         $this->actingAs($admin)
-            ->get(route('admin.operations.departures.create', ['package_id' => $package->id]))
+            ->get(route('admin.operations.departures.create'))
             ->assertOk()
-            ->assertSee('value="Haji Plus Katalog"', false)
-            ->assertSee('value="Saudia"', false)
-            ->assertSee('value="Transit Jeddah"', false)
-            ->assertSee('value="Maktab Mina 5"', false)
-            ->assertSee('"program_kind":"haji"', false);
+            ->assertDontSee('Haji Plus Katalog');
+
+        $this->actingAs($admin)
+            ->get(route('admin.operations.departures.create', ['from' => 'haji_page']))
+            ->assertOk()
+            ->assertSee('Haji Khusus Arminareka')
+            ->assertSee('value="haji" selected', false)
+            ->assertSee('value="haji_page"', false);
     }
 
     public function test_auto_grouping_respects_room_capacity(): void
