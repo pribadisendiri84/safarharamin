@@ -29,14 +29,17 @@ class HajiPlusPage
         $stored = self::stored();
 
         $hotels = self::resolveHotels(self::mergeHotels($defaults['hotels'], $stored['hotels'] ?? []));
+        $partnerAirlines = self::mergePartnerAirlines($defaults['partner_airlines'], $stored['partner_airlines'] ?? []);
+        $airline = array_replace($defaults['airline'], $stored['airline'] ?? []);
+        $airline['title'] = self::airlineTitle($partnerAirlines, $package);
 
         return [
             'hero' => array_replace($defaults['hero'], $stored['hero'] ?? []),
             'rooms' => self::mergeList($defaults['rooms'], $stored['rooms'] ?? [], ['key', 'label', 'occupancy', 'price_label', 'price_note', 'image', 'is_featured']),
             'benefits' => self::mergeList($defaults['benefits'], $stored['benefits'] ?? [], ['title', 'description', 'icon']),
             'hotels' => $hotels,
-            'partner_airlines' => self::mergePartnerAirlines($defaults['partner_airlines'], $stored['partner_airlines'] ?? []),
-            'airline' => array_replace($defaults['airline'], $stored['airline'] ?? []),
+            'partner_airlines' => $partnerAirlines,
+            'airline' => $airline,
             'flow' => self::mergeList($defaults['flow'], $stored['flow'] ?? [], ['title', 'description', 'icon']),
             'cta' => array_replace($defaults['cta'], $stored['cta'] ?? []),
         ];
@@ -111,20 +114,16 @@ class HajiPlusPage
             ], HajiPlusProgram::benefits()),
             'hotels' => [
                 self::hotelRow(
-                    source: 'custom',
-                    city: $hotels[0]['city'] ?? 'Madinah',
-                    title: 'Hotel Madinah',
+                    masterLocation: Hotel::LOCATION_MADINAH,
+                    masterName: (string) ($package?->hotel_madinah ?? ''),
                     distance: $hotels[0]['distance'] ?? '±100 m dari Masjid Nabawi',
-                    featuresText: "Al Ansar / setara\nLokasi strategis, akses mudah",
-                    image: $hotels[0]['image'] ?? '',
+                    featuresText: "Lokasi strategis\nAkses mudah ke masjid",
                 ),
                 self::hotelRow(
-                    source: 'custom',
-                    city: $hotels[1]['city'] ?? 'Makkah',
-                    title: 'Hotel Makkah',
+                    masterLocation: Hotel::LOCATION_MAKKAH,
+                    masterName: (string) ($package?->hotel_makkah ?? ''),
                     distance: $hotels[1]['distance'] ?? '±100 m dari Masjidil Haram',
-                    featuresText: "Dar Al Eiman / setara\nLokasi strategis, akses mudah",
-                    image: $hotels[1]['image'] ?? '',
+                    featuresText: "Lokasi strategis\nAkses mudah ke masjid",
                 ),
             ],
             'partner_airlines' => array_values(array_map(
@@ -132,7 +131,7 @@ class HajiPlusPage
                 HajiPlusProgram::partnerAirlines($package),
             )),
             'airline' => [
-                'title' => HajiPlusProgram::airlineLabel($package),
+                'title' => self::airlineTitle([], $package),
                 'description' => 'Penerbangan langsung dengan layanan maskapai terpercaya untuk perjalanan ibadah yang nyaman.',
                 'image' => 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=900&q=80',
                 'points_text' => "Jadwal penerbangan fleksibel\nLayanan bagasi sesuai program\nKabin nyaman untuk perjalanan jauh",
@@ -210,30 +209,42 @@ class HajiPlusPage
     public static function resolveHotels(array $hotels): array
     {
         return array_map(function (array $hotel): array {
-            if (($hotel['source'] ?? 'custom') !== 'master' || ! filled($hotel['master_name'] ?? null)) {
-                return $hotel;
-            }
-
             $location = (string) ($hotel['master_location'] ?? Hotel::LOCATION_MAKKAH);
-            $name = (string) $hotel['master_name'];
+            $name = trim((string) ($hotel['master_name'] ?? ''));
 
-            if (! filled($hotel['title'] ?? null)) {
-                $hotel['title'] = $name;
+            if ($name === '') {
+                return array_merge($hotel, [
+                    'title' => 'Pilih hotel master',
+                    'city' => Hotel::LOCATIONS[$location] ?? ucfirst($location),
+                    'image' => $hotel['image'] ?? '',
+                ]);
             }
 
-            if (! filled($hotel['city'] ?? null)) {
-                $hotel['city'] = Hotel::LOCATIONS[$location] ?? ucfirst($location);
-            }
+            $stars = Hotel::starsFor($location, $name);
+            $hotel['title'] = $name;
+            $hotel['city'] = Hotel::LOCATIONS[$location] ?? ucfirst($location);
+            $hotel['image'] = Hotel::logoFor($location, $name) ?: ($hotel['image'] ?? '');
 
-            if (empty($hotel['image'])) {
-                $logo = Hotel::logoFor($location, $name);
-                if ($logo) {
-                    $hotel['image'] = $logo;
-                }
+            if ($stars && ! str_contains((string) ($hotel['features_text'] ?? ''), '★')) {
+                $hotel['features_text'] = trim($stars."★\n".($hotel['features_text'] ?? ''));
             }
 
             return $hotel;
         }, $hotels);
+    }
+
+    /**
+     * @param  list<string>  $partnerAirlines
+     */
+    public static function airlineTitle(array $partnerAirlines, ?Package $package = null): string
+    {
+        $names = array_values(array_filter(array_map('trim', $partnerAirlines)));
+
+        if ($names !== []) {
+            return implode(' / ', $names);
+        }
+
+        return HajiPlusProgram::airlineLabel($package);
     }
 
     /**
@@ -242,12 +253,10 @@ class HajiPlusPage
     public static function blankHotel(): array
     {
         return self::hotelRow(
-            source: 'custom',
-            city: 'Makkah',
-            title: 'Hotel baru',
-            distance: '±100 m dari Masjidil Haram',
-            featuresText: "Lokasi strategis\nAkses mudah",
-            image: '',
+            masterLocation: Hotel::LOCATION_MADINAH,
+            masterName: '',
+            distance: '±100 m dari Masjid Nabawi',
+            featuresText: "Lokasi strategis\nAkses mudah ke masjid",
         );
     }
 
@@ -255,25 +264,17 @@ class HajiPlusPage
      * @return array<string, mixed>
      */
     private static function hotelRow(
-        string $source,
-        string $city,
-        string $title,
+        string $masterLocation,
+        string $masterName,
         string $distance,
         string $featuresText,
-        string $image = '',
-        string $masterName = '',
-        string $masterLocation = Hotel::LOCATION_MAKKAH,
         string $badge = 'Hotel pilihan',
     ): array {
         return [
-            'source' => $source,
             'master_name' => $masterName,
             'master_location' => $masterLocation,
-            'city' => $city,
-            'title' => $title,
             'distance' => $distance,
             'features_text' => $featuresText,
-            'image' => $image,
             'badge' => $badge,
         ];
     }
@@ -304,8 +305,7 @@ class HajiPlusPage
             return $defaults;
         }
 
-        $keys = ['source', 'master_name', 'master_location', 'city', 'title', 'distance', 'features_text', 'image', 'badge'];
-        $alwaysApply = ['source', 'master_name', 'master_location', 'image'];
+        $keys = ['master_name', 'master_location', 'distance', 'features_text', 'badge'];
         $fallback = $defaults[0] ?? self::blankHotel();
         $rows = [];
 
@@ -318,9 +318,14 @@ class HajiPlusPage
                     continue;
                 }
 
-                if (in_array($key, $alwaysApply, true) || ($row[$key] !== null && $row[$key] !== '')) {
+                if ($row[$key] !== null && $row[$key] !== '') {
                     $merged[$key] = $row[$key];
                 }
+            }
+
+            // Migrasi data lama: pakai title custom sebagai master_name jika belum ada.
+            if (empty($merged['master_name']) && filled($row['title'] ?? null) && ($row['source'] ?? '') === 'custom') {
+                $merged['master_name'] = (string) $row['title'];
             }
 
             $rows[] = $merged;

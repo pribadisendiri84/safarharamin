@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Airline;
 use App\Models\Hotel;
+use App\Models\Package;
 use App\Models\User;
 use App\Support\HajiPlusPage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,6 +13,29 @@ use Tests\TestCase;
 class HajiPlusPageTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Package::query()->create([
+            'title' => 'Haji Plus Contoh',
+            'slug' => 'haji-plus-contoh',
+            'type' => 'haji_plus',
+            'departure_city' => 'jakarta',
+            'duration_days' => 40,
+            'price' => 60000000,
+            'price_quad' => 60000000,
+            'hotel_makkah' => 'Swissotel Makkah',
+            'hotel_madinah' => 'Madinah Pullman',
+            'airline' => 'Saudia',
+            'room_type' => 'quad',
+            'seats_total' => 200,
+            'seats_left' => 50,
+            'status' => 'published',
+            'images' => ['/images/placeholder-kaaba.svg'],
+        ]);
+    }
 
     public function test_admin_can_open_haji_plus_page_editor(): void
     {
@@ -22,7 +46,7 @@ class HajiPlusPageTest extends TestCase
             ->assertOk()
             ->assertSee('Halaman Haji Plus')
             ->assertSee('Kartu kamar')
-            ->assertSee('Maskapai')
+            ->assertSee('Hotel & maskapai')
             ->assertSee('Quad');
     }
 
@@ -34,7 +58,10 @@ class HajiPlusPageTest extends TestCase
         $payload = $this->payloadFrom($page, [
             'rooms.0.label' => 'Quad Premium',
             'rooms.0.price_label' => 'Rp 275 Jt',
-            'hotels.0.title' => 'Hotel Nabawi Pilihan',
+            'hotels.0.master_name' => 'Madinah Pullman',
+            'hotels.0.master_location' => Hotel::LOCATION_MADINAH,
+            'hotels.0.distance' => '±150 m dari Masjid Nabawi',
+            'hotels.0.features_text' => "5★\nDekat masjid",
             'cta.title' => 'Siap berangkat bersama kami?',
         ]);
 
@@ -46,7 +73,7 @@ class HajiPlusPageTest extends TestCase
             ->assertOk()
             ->assertSee('Quad Premium')
             ->assertSee('Rp 275 Jt')
-            ->assertSee('Hotel Nabawi Pilihan')
+            ->assertSee('Madinah Pullman')
             ->assertSee('Siap berangkat bersama kami?')
             ->assertDontSee('4 paket');
     }
@@ -63,11 +90,8 @@ class HajiPlusPageTest extends TestCase
         $page = HajiPlusPage::content();
         $payload = $this->payloadFrom($page, [
             'partner_airlines' => ['Garuda Indonesia', 'Saudia'],
-            'hotels.0.source' => 'master',
             'hotels.0.master_location' => Hotel::LOCATION_MADINAH,
             'hotels.0.master_name' => 'Madinah Pullman',
-            'hotels.0.title' => 'Pullman Madinah',
-            'hotels.0.city' => 'Madinah',
             'hotels.0.distance' => '±150 m dari Masjid Nabawi',
             'hotels.0.features_text' => "5★\nDekat masjid",
             'hotels.0.badge' => 'Hotel premium',
@@ -79,7 +103,8 @@ class HajiPlusPageTest extends TestCase
 
         $this->get('/haji-khusus')
             ->assertOk()
-            ->assertSee('Pullman Madinah')
+            ->assertSee('Madinah Pullman')
+            ->assertSee('Garuda Indonesia / Saudia')
             ->assertSee('/storage/hotels/pullman.png', false)
             ->assertSee('/storage/airlines/garuda.png', false)
             ->assertSee('Saudia');
@@ -111,17 +136,13 @@ class HajiPlusPageTest extends TestCase
             'benefits' => $page['benefits'],
             'partner_airlines' => $page['partner_airlines'],
             'hotels' => array_map(fn (array $hotel) => [
-                'source' => $hotel['source'] ?? 'custom',
                 'master_name' => $hotel['master_name'] ?? '',
                 'master_location' => $hotel['master_location'] ?? Hotel::LOCATION_MADINAH,
-                'city' => $hotel['city'],
-                'title' => $hotel['title'],
                 'distance' => $hotel['distance'],
                 'features_text' => $hotel['features_text'],
                 'badge' => $hotel['badge'],
             ], $page['hotels']),
             'airline' => [
-                'title' => $page['airline']['title'],
                 'description' => $page['airline']['description'],
                 'points_text' => $page['airline']['points_text'],
             ],

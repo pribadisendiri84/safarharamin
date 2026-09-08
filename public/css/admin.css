@@ -637,22 +637,235 @@ tr.sortable-ghost { opacity: .45; }
 .form-section { margin: 8px 0 0; font-size: 15px; font-weight: 700; color: var(--ink); }
 .settings-form { gap: 20px; }
 .settings-form > fieldset { gap: 14px; background: #fff; }
-.haji-admin-form { max-width: 860px; }
-.haji-admin-card {
+.admin-editor-form,
+.haji-admin-form { max-width: 920px; display: grid; gap: 0; }
+.admin-editor,
+.haji-editor { max-width: 920px; }
+.admin-editor-nav,
+.haji-editor-nav {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 5px;
+  margin-bottom: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  position: sticky;
+  top: 12px;
+  z-index: 15;
+  scrollbar-width: none;
+}
+.admin-editor-nav::-webkit-scrollbar,
+.haji-editor-nav::-webkit-scrollbar { display: none; }
+.admin-editor-nav button,
+.haji-editor-nav button {
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s ease, color .15s ease;
+}
+.admin-editor-nav button:hover,
+.haji-editor-nav button:hover { background: var(--soft); color: var(--ink); }
+.admin-editor-nav button.is-active,
+.haji-editor-nav button.is-active { background: var(--accent-soft); color: var(--brand); font-weight: 700; }
+.admin-editor-body,
+.haji-editor-body { display: grid; gap: 0; min-height: 360px; }
+.admin-editor-section,
+.haji-section { display: none; }
+.admin-editor-section.is-active,
+.haji-section.is-active { display: block; animation: adminEditorFadeIn .18s ease; }
+@keyframes adminEditorFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.admin-panel,
+.haji-panel {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+}
+.admin-panel--aside { margin-top: 12px; }
+.admin-panel-head,
+.haji-panel-head { display: grid; gap: 4px; padding-bottom: 4px; }
+.admin-panel-title,
+.haji-panel-title { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -.2px; }
+.admin-panel-desc,
+.haji-panel-desc { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.admin-panel-desc a,
+.haji-panel-desc a { color: var(--brand); font-weight: 600; }
+.admin-label-hint,
+.haji-label-hint { font-weight: 500; color: var(--muted); font-size: 11px; }
+.admin-subblock,
+.haji-subblock { display: grid; gap: 12px; padding-top: 6px; border-top: 1px solid var(--line); }
+.admin-subblock:first-of-type,
+.haji-subblock:first-of-type { border-top: 0; padding-top: 0; }
+.admin-subblock-title,
+.haji-subblock-title { margin: 0; font-size: 13px; font-weight: 800; color: var(--ink); }
+.admin-inline-note,
+.haji-inline-note { margin: 0; font-size: 12px; color: var(--muted); }
+.admin-media-preview,
+.haji-media-preview { width: 100%; max-width: 280px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); }
+.admin-brand-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.admin-brand-row .admin-file-pick { flex: 1; min-width: 200px; }
+.admin-logo-preview {
+  height: 56px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--soft);
+}
+.admin-file-pick,
+.haji-file-pick {
+  display: grid !important;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.admin-file-pick span,
+.haji-file-pick span { display: block; }
+.admin-file-pick input[type="file"],
+.haji-file-pick input[type="file"] {
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--soft);
+  border-style: dashed;
+}
+.admin-editor-footer,
+.haji-editor-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, .94);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 -8px 24px rgba(16, 24, 40, .06);
+}
+.admin-editor-footer-note,
+.haji-editor-footer-note { margin: 0; font-size: 12px; color: var(--muted); }
+.admin-editor-footer-actions,
+.haji-editor-footer-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+
+.haji-room-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.haji-room-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fafbfd 0%, #fff 100%);
+}
+.haji-room-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.haji-room-key { font-size: 12px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: .04em; }
+.haji-room-preview { width: 52px; height: 36px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.haji-room-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.haji-room-card-foot .haji-file-pick { flex: 1; min-width: 140px; }
+
+.haji-benefit-list { display: grid; gap: 8px; }
+.haji-benefit-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 1.4fr;
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fafbfd;
+}
+.haji-benefit-desc { min-width: 0; }
+
+.haji-hotel-admin-list { display: grid; gap: 10px; }
+.haji-hotel-admin-card {
   display: grid;
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #f8fafc;
+  border-radius: 14px;
+  background: #fafbfd;
 }
-.haji-admin-card > b { font-size: 13px; color: var(--brand); }
-.haji-admin-thumb { max-width: 180px; max-height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
-.haji-hotel-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-.haji-hotel-source { display: flex; flex-wrap: wrap; gap: 12px 18px; margin-bottom: 12px; }
-.haji-airline-picks { display: grid; gap: 8px; }
-.haji-airline-pick { display: inline-flex; align-items: center; gap: 8px; }
-.haji-airline-pick-logo { height: 22px; width: auto; max-width: 90px; object-fit: contain; }
+.haji-hotel-admin-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.haji-hotel-admin-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.haji-hotel-admin-title b { display: block; font-size: 13px; }
+.haji-hotel-admin-title small { display: block; color: var(--muted); font-size: 11px; font-weight: 500; margin-top: 2px; }
+.haji-hotel-admin-logo { width: 40px; height: 40px; object-fit: contain; border-radius: 10px; background: #fff; border: 1px solid var(--line); padding: 4px; }
+.haji-hotel-admin-num {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--brand);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.haji-airline-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.haji-airline-chip { margin: 0; cursor: pointer; }
+.haji-airline-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.haji-airline-chip-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.haji-airline-chip:has(input:checked) .haji-airline-chip-body {
+  border-color: var(--brand);
+  background: #eef4ff;
+  box-shadow: 0 0 0 1px var(--brand);
+}
+.haji-airline-chip-logo { height: 22px; width: auto; max-width: 72px; object-fit: contain; flex-shrink: 0; }
+
+.haji-flow-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.haji-flow-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fafbfd;
+}
+.haji-flow-step { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--brand); }
+
+@media (max-width: 860px) {
+  .haji-room-grid,
+  .haji-flow-grid { grid-template-columns: 1fr; }
+  .haji-benefit-row { grid-template-columns: 1fr; }
+  .admin-editor-footer,
+  .haji-editor-footer { flex-direction: column; align-items: stretch; }
+  .admin-editor-footer-actions,
+  .haji-editor-footer-actions { margin-left: 0; width: 100%; }
+  .admin-editor-footer-actions .btn,
+  .haji-editor-footer-actions .btn { flex: 1; }
+}
 .card-style-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .card-style-option {
   display: flex !important;

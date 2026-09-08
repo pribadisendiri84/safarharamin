@@ -53,24 +53,16 @@ class HajiPlusPageController extends Controller
             'partner_airlines' => ['nullable', 'array', 'max:8'],
             'partner_airlines.*' => ['required', 'string', 'max:80'],
             'hotels' => ['required', 'array', 'min:1', 'max:6'],
-            'hotels.*.source' => ['required', Rule::in(['master', 'custom'])],
-            'hotels.*.master_name' => ['nullable', 'string', 'max:80'],
-            'hotels.*.master_location' => ['nullable', Rule::in([
+            'hotels.*.master_name' => ['required', 'string', 'max:80'],
+            'hotels.*.master_location' => ['required', Rule::in([
                 Hotel::LOCATION_MADINAH,
                 Hotel::LOCATION_MAKKAH,
-                Hotel::LOCATION_TRANSIT,
-                Hotel::LOCATION_MAKTAB,
             ])],
-            'hotels.*.city' => ['required', 'string', 'max:40'],
-            'hotels.*.title' => ['required', 'string', 'max:80'],
             'hotels.*.distance' => ['required', 'string', 'max:80'],
             'hotels.*.features_text' => ['required', 'string', 'max:400'],
             'hotels.*.badge' => ['required', 'string', 'max:40'],
-            'hotels.*.image_file' => ['nullable', 'image', 'max:4096'],
-            'airline.title' => ['required', 'string', 'max:80'],
             'airline.description' => ['required', 'string', 'max:400'],
             'airline.points_text' => ['required', 'string', 'max:400'],
-            'airline.image_file' => ['nullable', 'image', 'max:4096'],
             'flow' => ['required', 'array', 'size:4'],
             'flow.*.title' => ['required', 'string', 'max:60'],
             'flow.*.description' => ['required', 'string', 'max:160'],
@@ -103,29 +95,15 @@ class HajiPlusPageController extends Controller
 
         $hotels = [];
         foreach ($data['hotels'] as $index => $hotel) {
-            $source = $hotel['source'];
-            $masterName = trim((string) ($hotel['master_name'] ?? ''));
-            $masterLocation = trim((string) ($hotel['master_location'] ?? Hotel::LOCATION_MAKKAH));
-
-            if ($source === 'master' && $masterName === '') {
-                return back()
-                    ->withInput()
-                    ->withErrors(['hotels.'.$index.'.master_name' => 'Pilih hotel dari master atau ubah ke pengaturan khusus.']);
-            }
-
-            $previousImage = $current['hotels'][$index]['image'] ?? '';
-            $customImage = $this->storeImage($request, $images, 'hotels.'.$index.'.image_file', 'haji-hotel-'.$index, $previousImage);
+            $masterName = trim((string) $hotel['master_name']);
+            $masterLocation = trim((string) $hotel['master_location']);
 
             $hotels[] = [
-                'source' => $source,
-                'master_name' => $source === 'master' ? $masterName : '',
-                'master_location' => $source === 'master' ? $masterLocation : '',
-                'city' => trim($hotel['city']),
-                'title' => trim($hotel['title']),
+                'master_name' => $masterName,
+                'master_location' => $masterLocation,
                 'distance' => trim($hotel['distance']),
                 'features_text' => trim($hotel['features_text']),
                 'badge' => trim($hotel['badge']),
-                'image' => $request->hasFile('hotels.'.$index.'.image_file') ? $customImage : ($source === 'master' ? '' : $previousImage),
             ];
         }
 
@@ -134,9 +112,11 @@ class HajiPlusPageController extends Controller
             $data['partner_airlines'] ?? [],
         )));
 
-        $airline = $data['airline'];
-        $airline['image'] = $this->storeImage($request, $images, 'airline.image_file', 'haji-airline', $current['airline']['image'] ?? '');
-        unset($airline['image_file']);
+        $airline = [
+            'description' => trim($data['airline']['description']),
+            'points_text' => trim($data['airline']['points_text']),
+            'image' => $current['airline']['image'] ?? HajiPlusPage::defaults()['airline']['image'],
+        ];
 
         HajiPlusPage::save([
             'hero' => $hero,
