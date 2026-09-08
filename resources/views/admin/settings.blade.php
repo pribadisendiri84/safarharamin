@@ -115,7 +115,7 @@
 
   <fieldset>
     <legend>Kurs haji</legend>
-    <p class="sub">Ditampilkan di halaman Haji Plus. Bisa diisi manual atau diperbarui otomatis dari kurs {{ old('haji_exchange_rate_currency', $hajiExchangeRate['currency']) }} → IDR.</p>
+    <p class="sub">Ditampilkan di halaman Haji Khusus. Bisa diisi manual atau diperbarui otomatis dari kurs {{ old('haji_exchange_rate_currency', $hajiExchangeRate['currency']) }} → IDR.</p>
     <label class="check">
       <input type="checkbox" name="haji_exchange_rate_enabled" value="1" @checked(old('haji_exchange_rate_enabled', $hajiExchangeRate['enabled']) === '1')>
       Tampilkan kurs di halaman haji

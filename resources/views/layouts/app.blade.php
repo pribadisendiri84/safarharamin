@@ -29,7 +29,7 @@
       <a href="{{ route('packages.index', ['kelompok' => 'umroh']) }}" class="{{ $navUmroh ? 'on' : '' }}">Umroh</a>
       <a href="{{ route('haji') }}" class="{{ $navHaji ? 'on' : '' }}">Haji</a>
       <a href="{{ route('gallery') }}" class="{{ request()->routeIs('gallery') ? 'on' : '' }}">Gallery</a>
-      <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'on' : '' }}">About</a>
+      <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'on' : '' }}">Tentang kami</a>
       <a href="{{ route('register') }}" class="{{ request()->routeIs('register') ? 'on' : '' }}">Daftar</a>
     </nav>
     <a class="btn ghost" href="{{ route('go.whatsapp', ['from' => 'header']) }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i>Chat WhatsApp</a>
@@ -59,13 +59,13 @@
     </div>
     <div>
       <b>Tentang</b>
-      <a href="{{ route('about') }}">About Arminareka</a>
+      <a href="{{ route('about') }}">Tentang kami</a>
       <a href="{{ route('gallery') }}">Gallery</a>
       <a href="{{ route('testimonials') }}">Testimoni</a>
     </div>
     <div>
       <b>Haji &amp; layanan</b>
-      <a href="{{ route('haji') }}">Haji plus</a>
+      <a href="{{ route('haji') }}">Haji Khusus</a>
       <a href="{{ route('register') }}">Daftar sekarang</a>
     </div>
   </div>

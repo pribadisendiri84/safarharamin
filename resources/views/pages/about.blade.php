@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'About Arminareka | PT Arminareka Perdana')
+@section('title', 'Tentang Kami | PT Arminareka Perdana')
 @section('meta', 'Mengenal Arminareka dan PT Arminareka Perdana, penyelenggara perjalanan ibadah Umrah dan Haji Khusus dengan pengalaman melayani jamaah sejak 1990.')
 
 @section('content')
@@ -13,7 +13,7 @@
 <section class="about-hero">
   <div class="wrap about-hero-inner">
     <p class="eyebrow">Tentang kami</p>
-    <h1>About Arminareka</h1>
+    <h1>Tentang Kami</h1>
     <p class="about-hero-lead">
       Mengenal Arminareka dan {{ $legalName }} sebagai penyelenggara perjalanan ibadah Umrah dan Haji Khusus.
     </p>

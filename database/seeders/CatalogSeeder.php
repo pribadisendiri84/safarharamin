@@ -57,7 +57,7 @@ class CatalogSeeder extends Seeder
 
         foreach ($rows as $i => $row) {
             [$title, $type, $city, $date, $days, $price, $original, $stars, $airline, $room, $total, $left, $featured, $hot] = $row;
-            $rooms = $this->roomPrices($price);
+            $rooms = $this->roomPrices($price, in_array($type, Package::HAJI_TYPES, true));
             $homeSort = null;
             if ($featured) {
                 $featuredSlot++;
@@ -81,6 +81,7 @@ class CatalogSeeder extends Seeder
                     'price_quad' => $rooms['quad'],
                     'price_triple' => $rooms['triple'],
                     'price_double' => $rooms['double'],
+                    'price_double_plus' => $rooms['double_plus'] ?? null,
                     'original_price' => $original,
                     'price_note' => 'Harga dapat berubah sesuai kebijakan perusahaan.',
                     'hotel_makkah' => $makkahHotel,
@@ -156,14 +157,20 @@ class CatalogSeeder extends Seeder
     }
 
     /**
-     * @return array{quad: int, triple: int, double: int}
+     * @return array{quad: int, triple: int, double: int, double_plus?: int}
      */
-    private function roomPrices(int $quad): array
+    private function roomPrices(int $quad, bool $haji = false): array
     {
-        return [
+        $prices = [
             'quad' => $quad,
             'triple' => $quad + 1100000,
             'double' => $quad + 3400000,
         ];
+
+        if ($haji) {
+            $prices['double_plus'] = $quad + 5500000;
+        }
+
+        return $prices;
     }
 }

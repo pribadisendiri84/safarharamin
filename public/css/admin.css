@@ -637,6 +637,22 @@ tr.sortable-ghost { opacity: .45; }
 .form-section { margin: 8px 0 0; font-size: 15px; font-weight: 700; color: var(--ink); }
 .settings-form { gap: 20px; }
 .settings-form > fieldset { gap: 14px; background: #fff; }
+.haji-admin-form { max-width: 860px; }
+.haji-admin-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+.haji-admin-card > b { font-size: 13px; color: var(--brand); }
+.haji-admin-thumb { max-width: 180px; max-height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.haji-hotel-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.haji-hotel-source { display: flex; flex-wrap: wrap; gap: 12px 18px; margin-bottom: 12px; }
+.haji-airline-picks { display: grid; gap: 8px; }
+.haji-airline-pick { display: inline-flex; align-items: center; gap: 8px; }
+.haji-airline-pick-logo { height: 22px; width: auto; max-width: 90px; object-fit: contain; }
 .card-style-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .card-style-option {
   display: flex !important;

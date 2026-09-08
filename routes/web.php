@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DepartureController;
 use App\Http\Controllers\Admin\DepartureRecapController;
 use App\Http\Controllers\Admin\GalleryController;
+use App\Http\Controllers\Admin\HajiPlusPageController;
 use App\Http\Controllers\Admin\HistoryController;
 use App\Http\Controllers\Admin\HotelController;
 use App\Http\Controllers\Admin\InquiryController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\TrafficController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\HajiWhatsAppRedirectController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PageController;
@@ -33,6 +35,7 @@ use App\Http\Middleware\AdminAuthenticate;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/go/wa', WhatsAppRedirectController::class)->name('go.whatsapp');
+Route::get('/go/haji-wa', HajiWhatsAppRedirectController::class)->name('go.haji.whatsapp');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/paket', [PackageController::class, 'index'])->name('packages.index');
@@ -40,7 +43,8 @@ Route::get('/paket/{package:slug}', [PackageController::class, 'show'])->name('p
 Route::post('/paket/{package:slug}/tanya', [PackageController::class, 'inquire'])->name('packages.inquire');
 Route::get('/daftar', [RegisterController::class, 'create'])->name('register');
 Route::post('/daftar', [RegisterController::class, 'store'])->name('register.store');
-Route::get('/haji-plus', [PageController::class, 'haji'])->name('haji');
+Route::get('/haji-khusus', [PageController::class, 'hajiKhusus'])->name('haji');
+Route::get('/haji-plus', [PageController::class, 'hajiKhusus']);
 Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/galeri', [PageController::class, 'gallery'])->name('gallery');
 Route::get('/testimoni', [PageController::class, 'testimonials'])->name('testimonials');
@@ -95,6 +99,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('package-kinds/{package_kind}', [PackageKindController::class, 'update'])->name('package-kinds.update');
             Route::delete('package-kinds/{package_kind}', [PackageKindController::class, 'destroy'])->name('package-kinds.destroy');
             Route::post('package-kinds/{package_kind}/restore', [PackageKindController::class, 'restore'])->withTrashed()->name('package-kinds.restore');
+            Route::get('haji-plus', [HajiPlusPageController::class, 'edit'])->name('haji-plus.edit');
+            Route::put('haji-plus', [HajiPlusPageController::class, 'update'])->name('haji-plus.update');
             Route::get('settings', [SettingController::class, 'edit'])->name('settings.edit');
             Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
             Route::post('settings/refresh-exchange-rate', [SettingController::class, 'refreshExchangeRate'])->name('settings.refresh-exchange-rate');

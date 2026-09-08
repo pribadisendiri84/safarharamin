@@ -12,6 +12,7 @@
       'label' => 'Website',
       'items' => [
         ['route' => 'admin.packages.*', 'href' => route('admin.packages.index'), 'label' => 'Paket', 'icon' => 'plane', 'ability' => 'manage-catalog'],
+        ['route' => 'admin.haji-plus.*', 'href' => route('admin.haji-plus.edit'), 'label' => 'Haji Plus', 'icon' => 'pin', 'ability' => 'manage-catalog'],
         ['route' => 'admin.gallery.*', 'href' => route('admin.gallery.index'), 'label' => 'Galeri', 'icon' => 'image', 'ability' => 'manage-catalog'],
         ['route' => 'admin.testimonials.*', 'href' => route('admin.testimonials.index'), 'label' => 'Testimoni', 'icon' => 'quote', 'ability' => 'manage-catalog'],
       ],

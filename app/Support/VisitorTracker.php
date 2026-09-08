@@ -16,7 +16,7 @@ class VisitorTracker
 
     public const COOKIE_MINUTES = 60 * 24 * 30;
 
-    public const PLACEMENTS = ['header', 'float', 'form'];
+    public const PLACEMENTS = ['header', 'float', 'form', 'haji'];
 
     private static ?bool $tableReady = null;
 

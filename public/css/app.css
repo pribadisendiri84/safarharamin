@@ -1192,6 +1192,362 @@ img { max-width: 100%; display: block; }
 }
 .haji-kurs-meta { margin: 6px 0 0; font-size: 13px; color: var(--muted); }
 .haji-kurs-updated { display: block; margin-top: 10px; font-size: 11px; color: var(--muted); line-height: 1.4; }
+
+/* ——— Haji Plus landing (/haji-khusus) ——— */
+.haji-landing { --haji-gold: #f3c86b; --haji-gold-soft: #fff6e8; }
+.haji-hero {
+  background:
+    linear-gradient(105deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.94) 42%, rgba(248,250,252,.78) 58%, rgba(248,250,252,.35) 100%),
+    url('https://images.unsplash.com/photo-1564769625905-50e93615e769?w=1600&q=80') center/cover;
+  padding: 56px 0 64px;
+  border-bottom: 1px solid var(--line);
+}
+.haji-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+  gap: 36px;
+  align-items: center;
+}
+.haji-hero-copy {
+  display: grid;
+  gap: 20px;
+  max-width: 560px;
+}
+.haji-hero-badge {
+  display: inline-flex;
+  align-self: start;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #e8eef8;
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.haji-hero h1 {
+  margin: 0;
+  font-size: clamp(32px, 4.5vw, 46px);
+  line-height: 1.1;
+  letter-spacing: -.5px;
+  color: var(--brand-dark);
+}
+.haji-hero-lead {
+  margin: 0;
+  max-width: 48ch;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.haji-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 10px;
+}
+.haji-price-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--haji-gold-soft);
+  border: 1px solid #f0d79a;
+}
+.haji-price-prefix { font-size: 13px; font-weight: 700; color: #8a6a1f; }
+.haji-price-value {
+  font-size: 22px;
+  font-weight: 850;
+  color: var(--brand-dark);
+  letter-spacing: -.03em;
+  line-height: 1;
+}
+.haji-price-value small {
+  margin-left: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.haji-quota-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fff5f6;
+  border: 1px solid #ffd6dc;
+  color: var(--hot);
+  font-size: 12px;
+  font-weight: 800;
+}
+.haji-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+.haji-hero-detail-link {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--brand);
+  text-decoration: none;
+}
+.haji-hero-detail-link:hover {
+  color: var(--brand-dark);
+  text-decoration: underline;
+}
+.haji-landing .haji-btn-consult,
+.haji-landing .haji-btn-consult:hover {
+  background: var(--brand);
+  color: #fff;
+  border: 0;
+}
+.haji-landing .haji-btn-consult:hover { background: var(--brand-dark); }
+.haji-landing .haji-btn-register {
+  min-height: 46px;
+  padding-inline: 18px;
+}
+.haji-btn-consult-lg { padding: 14px 24px; font-size: 16px; }
+
+.haji-hero-panel {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 16px 40px rgba(1, 49, 128, .08);
+  display: grid;
+  gap: 14px;
+  max-width: 300px;
+  justify-self: end;
+}
+.haji-hero-panel .haji-kurs-card {
+  width: 100%;
+  box-shadow: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  text-align: center;
+}
+.haji-hero-panel .haji-kurs-card-compact .haji-kurs-chip {
+  margin-bottom: 8px;
+}
+.haji-hero-panel .haji-kurs-card-compact .haji-kurs-value {
+  font-size: clamp(24px, 3.5vw, 32px);
+  margin: 4px 0;
+}
+.haji-hero-panel .haji-kurs-card-compact .haji-kurs-meta {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+.haji-hero-panel .haji-kurs-card-compact .haji-kurs-updated {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.haji-hero-panel-partners {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+}
+.haji-hero-panel-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.haji-partner-logos { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.haji-partner-logos img { height: 26px; width: auto; max-width: 110px; object-fit: contain; }
+.haji-partner-logos span { font-size: 12px; font-weight: 800; color: var(--brand-dark); }
+
+.haji-section { padding: 52px 0; }
+.haji-section-head { margin-bottom: 24px; max-width: 680px; }
+.haji-section-head-center { text-align: center; margin-inline: auto; }
+.haji-section-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--brand);
+}
+.haji-section-head h2 { margin: 0 0 8px; font-size: clamp(26px, 3vw, 34px); letter-spacing: -.4px; }
+.haji-section-head p { margin: 0; color: var(--muted); line-height: 1.55; }
+
+.haji-room-showcase {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.haji-room-showcase-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(1, 49, 128, .06);
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+.haji-room-showcase-card.is-featured { border-color: #f0d79a; box-shadow: 0 14px 34px rgba(246, 136, 31, .14); }
+.haji-room-featured-badge {
+  position: absolute; top: 12px; left: 12px; z-index: 1;
+  padding: 5px 10px; border-radius: 999px;
+  background: linear-gradient(135deg, #f6881f, #f3c86b);
+  color: #fff; font-size: 10px; font-weight: 800; letter-spacing: .04em;
+}
+.haji-room-showcase-image { aspect-ratio: 4 / 3; overflow: hidden; background: var(--soft); }
+.haji-room-showcase-image img { width: 100%; height: 100%; object-fit: cover; }
+.haji-room-showcase-body { padding: 16px; display: grid; gap: 8px; align-content: start; }
+.haji-room-showcase-body h3 { margin: 0; font-size: 20px; color: var(--brand-dark); }
+.haji-room-showcase-cap { margin: 0; font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
+.haji-room-showcase-price { margin: 0; display: flex; align-items: baseline; gap: 4px; }
+.haji-room-showcase-price strong { font-size: 22px; color: var(--brand); letter-spacing: -.03em; }
+.haji-room-showcase-price span { font-size: 12px; color: var(--muted); font-weight: 700; }
+.haji-room-select { margin-top: 4px; }
+
+.haji-benefits-band { background: linear-gradient(180deg, #eef3fb 0%, #f8fafc 100%); padding: 28px 0; border-block: 1px solid var(--line); }
+.haji-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+.haji-benefit-item { text-align: center; padding: 8px 6px; }
+.haji-benefit-icon {
+  width: 44px; height: 44px; margin: 0 auto 10px; border-radius: 999px;
+  display: grid; place-items: center; background: #fff; color: var(--brand);
+  border: 1px solid var(--line); font-size: 18px;
+}
+.haji-benefit-item b { display: block; margin-bottom: 4px; font-size: 13px; }
+.haji-benefit-item p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+.haji-hotel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.haji-hotel-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(1, 49, 128, .06);
+}
+.haji-hotel-image { position: relative; aspect-ratio: 16 / 10; }
+.haji-hotel-image img { width: 100%; height: 100%; object-fit: cover; }
+.haji-hotel-badge {
+  position: absolute; top: 12px; left: 12px;
+  padding: 5px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.92); font-size: 11px; font-weight: 800; color: var(--brand);
+}
+.haji-hotel-body { padding: 18px; }
+.haji-hotel-city { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--brand); }
+.haji-hotel-body h3 { margin: 6px 0 4px; font-size: 20px; }
+.haji-hotel-distance { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.haji-hotel-features { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.haji-hotel-features li { font-size: 13px; color: #3d4a63; display: flex; gap: 6px; align-items: center; }
+.haji-hotel-features .bi { color: var(--brand); }
+
+.haji-airline-section { padding-top: 36px; }
+.haji-airline-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; }
+.haji-airline-visual { border-radius: 18px; overflow: hidden; aspect-ratio: 4 / 3; box-shadow: 0 12px 32px rgba(1, 49, 128, .1); }
+.haji-airline-visual img { width: 100%; height: 100%; object-fit: cover; }
+.haji-airline-copy h2 { margin: 8px 0 10px; font-size: clamp(24px, 3vw, 32px); letter-spacing: -.3px; }
+.haji-airline-logos { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin: 0 0 12px; }
+.haji-airline-logos img { height: 28px; width: auto; max-width: 120px; object-fit: contain; }
+.haji-airline-logos span { font-size: 13px; font-weight: 800; color: var(--brand-dark); }
+.haji-airline-copy p { margin: 0 0 14px; color: var(--muted); line-height: 1.55; }
+
+.haji-flow {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.haji-flow-step {
+  flex: 1 1 180px;
+  max-width: 220px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  text-align: center;
+  box-shadow: 0 8px 22px rgba(1, 49, 128, .05);
+}
+.haji-flow-num {
+  width: 36px; height: 36px; margin: 0 auto 10px; border-radius: 999px;
+  display: grid; place-items: center; background: var(--brand); color: #fff; font-weight: 800;
+}
+.haji-flow-step b { display: block; margin-bottom: 6px; font-size: 15px; }
+.haji-flow-step p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.haji-flow-arrow { align-self: center; color: var(--brand); font-size: 18px; opacity: .55; }
+.haji-flow-cta {
+  margin: 24px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.haji-detail-section { background: var(--soft); border-radius: 24px; margin-bottom: 0; padding-inline: clamp(16px, 3vw, 28px); }
+.haji-detail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+.haji-detail-block {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+.haji-detail-block h3 { margin: 0 0 10px; font-size: 16px; }
+.haji-checks { margin: 0; }
+
+.haji-legal-note { margin: 18px 0 0; font-size: 13px; color: var(--muted); text-align: center; }
+.haji-faq { display: grid; gap: 10px; margin-top: 8px; }
+.haji-faq-item { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 0 16px; }
+.haji-faq-item summary { cursor: pointer; font-weight: 700; padding: 14px 0; list-style: none; }
+.haji-faq-item summary::-webkit-details-marker { display: none; }
+.haji-faq-item p { margin: 0 0 14px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+
+.haji-final-cta {
+  margin-top: 0;
+  background:
+    linear-gradient(135deg, rgba(0, 35, 93, .92), rgba(1, 49, 128, .88)),
+    url('https://images.unsplash.com/photo-1564769625905-50e93615e769?w=1400&q=70') center/cover;
+  color: #fff;
+  padding: 56px 0 64px;
+}
+.haji-final-cta-inner { text-align: center; max-width: 720px; }
+.haji-final-cta-inner h2 { margin: 0 0 10px; font-size: clamp(28px, 4vw, 38px); }
+.haji-final-cta-inner > div p { margin: 0 0 22px; opacity: .92; line-height: 1.55; }
+.haji-final-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.haji-final-cta .haji-btn-register {
+  background: #fff;
+  color: var(--brand-dark);
+  border: 0;
+  min-height: 48px;
+  padding-inline: 22px;
+}
+.haji-final-cta .haji-btn-register:hover {
+  background: #f4f6fb;
+}
+.haji-final-cta .haji-btn-consult {
+  background: var(--wa);
+  color: #fff;
+  border: 0;
+  min-height: 48px;
+  padding-inline: 22px;
+}
+.haji-final-cta .haji-btn-consult:hover {
+  background: #1ebe57;
+}
+.haji-final-note { margin: 12px 0 0; font-size: 13px; opacity: .78; }
+
 .gallery-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
 .gallery-tabs a { padding: 10px 16px; border-radius: 999px; font-size: 14px; font-weight: 700; color: var(--muted); background: var(--soft); text-decoration: none; }
 .gallery-tabs a.on { background: var(--brand); color: #fff; }
@@ -1302,9 +1658,18 @@ img { max-width: 100%; display: block; }
   .about-cta-box { flex-direction: column; align-items: stretch; }
   .page-head-with-kurs .page-head-grid { grid-template-columns: 1fr; gap: 20px; }
   .haji-kurs-card { width: 100%; text-align: left; }
+  .haji-hero-grid { grid-template-columns: 1fr; gap: 28px; }
+  .haji-hero-copy { max-width: none; }
+  .haji-hero-panel { max-width: 100%; justify-self: stretch; }
+  .haji-room-showcase { grid-template-columns: 1fr 1fr; }
+  .haji-benefits-grid { grid-template-columns: 1fr 1fr; }
+  .haji-hotel-grid { grid-template-columns: 1fr; }
+  .haji-airline-grid { grid-template-columns: 1fr; }
+  .haji-detail-grid { grid-template-columns: 1fr; }
+  .haji-flow-arrow { display: none; }
 }
 @media (max-width: 560px) {
-  .grid, .why-grid, .quote-grid, .gallery-home, .gallery-home.gallery-page, .stats-row, .split-pick, .trust-row, .steps, .scheme-flow, .scheme-row, .room-prices { grid-template-columns: 1fr; }
+  .grid, .why-grid, .quote-grid, .gallery-home, .gallery-home.gallery-page, .stats-row, .split-pick, .trust-row, .steps, .scheme-flow, .scheme-row, .room-prices, .haji-room-showcase, .haji-benefits-grid { grid-template-columns: 1fr; }
   .listing-layout .grid { grid-template-columns: 1fr; }
   .cta-actions { flex-direction: column; }
   .cta-actions .btn { flex: 0 0 auto; }

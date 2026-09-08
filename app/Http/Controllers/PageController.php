@@ -3,23 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\GalleryItem;
-use App\Models\Package;
 use App\Models\Testimonial;
 use App\Support\HajiExchangeRate;
+use App\Support\HajiPlusPage;
+use App\Support\HajiPlusProgram;
 
 class PageController extends Controller
 {
-    public function haji()
+    public function hajiKhusus()
     {
-        $samples = Package::query()
-            ->published()
-            ->whereIn('type', Package::HAJI_TYPES)
-            ->with('packageKind')
-            ->orderBy('price')
-            ->get();
+        $program = HajiPlusProgram::primary();
 
-        return view('pages.haji', [
-            'samples' => $samples,
+        return view('pages.haji-khusus', [
+            'program' => $program,
+            'page' => HajiPlusPage::content($program),
             'hajiExchangeRate' => HajiExchangeRate::display(),
         ]);
     }

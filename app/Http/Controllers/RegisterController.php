@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Inquiry;
 use App\Models\Package;
+use App\Support\HajiPlusProgram;
 use App\Support\WaMessages;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,8 +13,19 @@ class RegisterController extends Controller
 {
     public function create()
     {
+        $program = request()->string('program')->toString();
+        $room = trim(request()->string('room')->toString());
+        $hajiPackage = $program === 'haji' ? HajiPlusProgram::primary() : null;
+        $selectedPackageId = request('package_id') ?: $hajiPackage?->id;
+        $defaultNotes = ($program === 'haji' && $room !== '')
+            ? "Minat program Haji Plus — tipe kamar {$room}."
+            : ($program === 'haji' ? 'Minat program Haji Plus.' : '');
+
         return view('register', [
             'packages' => Package::query()->published()->orderBy('departure_date')->get(),
+            'selectedPackageId' => $selectedPackageId,
+            'defaultNotes' => $defaultNotes,
+            'isHajiProgram' => $program === 'haji',
         ]);
     }
 

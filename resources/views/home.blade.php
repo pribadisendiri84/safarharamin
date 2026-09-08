@@ -35,8 +35,8 @@
     </a>
     <a href="{{ route('haji') }}">
       <span class="eyebrow"><i class="bi bi-building"></i> Haji</span>
-      <b>Haji plus</b>
-      <p>{{ number_format($hajiCount, 0, ',', '.') }} paket · hotel, manasik, kuota musim ini</p>
+      <b>Haji Plus</b>
+      <p>Program Haji Khusus · pilihan kamar Quad hingga Double Plus</p>
     </a>
   </div>
 </section>

@@ -260,6 +260,7 @@ class StorefrontTest extends TestCase
         $this->get('/galeri?kategori=haji')->assertOk()->assertSee('gallery-tabs', false);
         $this->get('/testimoni')->assertOk()->assertSee('Testimoni');
         $this->get('/haji-plus')->assertOk();
+        $this->get('/haji-khusus')->assertOk();
         $this->get('/tabungan')->assertNotFound();
         $this->get('/kalkulator-cicilan')->assertNotFound();
 
@@ -907,7 +908,14 @@ class StorefrontTest extends TestCase
 
         $this->get('/haji-plus')
             ->assertOk()
-            ->assertSee('Haji plus')
+            ->assertSee('Haji Khusus Arminareka')
+            ->assertSee('Tipe kamar &amp; harga', false)
+            ->assertSee('Paling favorit')
+            ->assertSee('Pilih kamar')
+            ->assertSee('Proses pendaftaran mudah')
+            ->assertSee('Konsultasi')
+            ->assertDontSee('Konsultasi sekarang')
+            ->assertDontSee('Paket haji tersedia')
             ->assertDontSee('furoda', false);
     }
 
@@ -1060,5 +1068,30 @@ class StorefrontTest extends TestCase
         $this->get('/haji-plus')
             ->assertOk()
             ->assertSee('Rp 4.235');
+    }
+
+    public function test_homepage_links_haji_via_split_pick_not_featured_packages(): void
+    {
+        Package::query()->create([
+            'title' => 'Haji Plus Musim Ini',
+            'slug' => 'haji-plus-musim-ini',
+            'type' => 'haji_plus',
+            'departure_city' => 'jakarta',
+            'duration_days' => 27,
+            'price' => 275000000,
+            'price_quad' => 275000000,
+            'is_featured' => true,
+            'home_sort' => 1,
+            'status' => 'published',
+            'images' => ['/images/placeholder-kaaba.svg'],
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Haji Plus')
+            ->assertSee('/haji-khusus', false)
+            ->assertDontSee('Haji Khusus Arminareka')
+            ->assertDontSee('Pilihan kamar · harga per jamaah')
+            ->assertDontSee('Haji Plus Musim Ini');
     }
 }

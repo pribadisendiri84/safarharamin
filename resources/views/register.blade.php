@@ -4,9 +4,13 @@
 @section('content')
 <section class="page-head">
   <div class="wrap">
-    <p class="eyebrow">Pendaftaran</p>
+    <p class="eyebrow">Pendaftaran@if(!empty($isHajiProgram)) Haji Plus@endif</p>
     <h1>Daftar sekarang</h1>
-    <p>Isi data jamaah. Tim kami konfirmasi seat dan dokumen via WhatsApp.</p>
+    <p>@if(!empty($isHajiProgram))
+      Isi data jamaah program Haji Plus. Tim kami konfirmasi seat dan dokumen via WhatsApp.
+    @else
+      Isi data jamaah. Tim kami konfirmasi seat dan dokumen via WhatsApp.
+    @endif</p>
   </div>
 </section>
 <section class="wrap split">
@@ -49,12 +53,12 @@
       <select name="package_id">
         <option value="">Belum tentukan</option>
         @foreach($packages as $package)
-          <option value="{{ $package->id }}" @selected((string) old('package_id', request('package_id')) === (string) $package->id)>{{ $package->title }} — {{ $package->formattedStartingPrice() }}</option>
+          <option value="{{ $package->id }}" @selected((string) old('package_id', $selectedPackageId ?? request('package_id')) === (string) $package->id)>{{ $package->title }} — {{ $package->formattedStartingPrice() }}</option>
         @endforeach
       </select>
     </label>
     <label>Jumlah jamaah<input type="number" name="pax" value="{{ old('pax', 1) }}" min="1" max="20" required></label>
-    <label>Catatan<textarea name="notes" rows="3">{{ old('notes') }}</textarea></label>
+    <label>Catatan<textarea name="notes" rows="3">{{ old('notes', $defaultNotes ?? '') }}</textarea></label>
     <button class="btn" type="submit">Kirim pendaftaran</button>
   </form>
   @endif

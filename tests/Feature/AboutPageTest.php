@@ -14,7 +14,7 @@ class AboutPageTest extends TestCase
     {
         $this->get('/about')
             ->assertOk()
-            ->assertSee('About Arminareka', false)
+            ->assertSee('Tentang Kami', false)
             ->assertSee('youtube-nocookie.com/embed/k7tR0y4PFHY', false)
             ->assertSee('Tentang Arminareka', false)
             ->assertSee('Pengalaman', false)
@@ -42,6 +42,6 @@ class AboutPageTest extends TestCase
             'Mengenal Arminareka dan PT Arminareka Perdana, penyelenggara perjalanan ibadah Umrah dan Haji Khusus dengan pengalaman melayani jamaah sejak 1990.',
             false
         );
-        $response->assertSee('<title>About Arminareka | PT Arminareka Perdana —', false);
+        $response->assertSee('<title>Tentang Kami | PT Arminareka Perdana —', false);
     }
 }
