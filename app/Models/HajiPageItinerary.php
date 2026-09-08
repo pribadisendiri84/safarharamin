@@ -7,14 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class HajiPageItinerary extends Model
 {
-    public const KIND_OFFICIAL = 'official';
-
-    public const KIND_SAMPLE = 'sample';
-
     protected $fillable = [
         'kind',
         'label',
         'departure_date',
+        'hijri_label',
         'file_path',
         'sort_order',
     ];
@@ -27,51 +24,44 @@ class HajiPageItinerary extends Model
         ];
     }
 
-    public function scopeOfficial(Builder $query): Builder
-    {
-        return $query->where('kind', self::KIND_OFFICIAL);
-    }
-
-    public function scopeSample(Builder $query): Builder
-    {
-        return $query->where('kind', self::KIND_SAMPLE);
-    }
-
     public function scopeOrdered(Builder $query): Builder
     {
         return $query
-            ->orderByRaw('departure_date is null')
             ->orderBy('departure_date')
             ->orderBy('sort_order')
             ->orderBy('id');
     }
 
+    public function departureLabel(): string
+    {
+        return $this->departure_date?->translatedFormat('d F Y') ?? '';
+    }
+
+    public function hijriLabel(): string
+    {
+        return trim((string) $this->hijri_label);
+    }
+
     public function displayLabel(): string
     {
-        if ($this->kind === self::KIND_OFFICIAL && $this->departure_date !== null) {
-            return $this->departure_date->translatedFormat('d F Y');
-        }
+        $label = 'Keberangkatan '.$this->departureLabel();
+        $hijri = $this->hijriLabel();
 
-        return trim((string) $this->label) ?: 'Itinerary';
+        return $hijri !== '' ? "{$label} · {$hijri}" : $label;
     }
 
     public function downloadFilename(): string
     {
-        if ($this->kind === self::KIND_OFFICIAL && $this->departure_date !== null) {
+        if ($this->departure_date !== null) {
             return 'itinerary-'.$this->departure_date->format('Y-m-d').'.pdf';
         }
 
-        $slug = str($this->label ?: 'sample-itinerary')->slug('-');
-
-        return $slug.'.pdf';
+        return 'itinerary.pdf';
     }
 
-    public static function syncSortOrder(string $kind): void
+    public static function syncSortOrder(): void
     {
-        $items = static::query()
-            ->where('kind', $kind)
-            ->ordered()
-            ->get();
+        $items = static::query()->ordered()->get();
 
         foreach ($items as $index => $item) {
             $sortOrder = $index + 1;

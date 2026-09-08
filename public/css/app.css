@@ -1504,8 +1504,26 @@ img { max-width: 100%; display: block; }
   padding: 18px;
   margin-bottom: 20px;
 }
-.haji-itinerary-block h2 { margin: 0 0 8px; font-size: 18px; }
-.haji-itinerary-block h2:not(:first-child) { margin-top: 22px; }
+.haji-itinerary-block h2 { margin: 0 0 12px; font-size: 18px; letter-spacing: .06em; text-transform: uppercase; }
+.haji-itinerary-list .haji-itinerary-trigger {
+  align-items: center;
+  gap: 12px;
+}
+.haji-itinerary-trigger-copy {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  flex: 1;
+  min-width: 0;
+}
+.haji-itinerary-departure {
+  font-weight: 700;
+  color: var(--ink);
+}
+.haji-itinerary-hijri {
+  font-size: 14px;
+  color: var(--muted);
+}
 .haji-checks { margin: 0; }
 
 .haji-legal-note { margin: 18px 0 0; font-size: 13px; color: var(--muted); text-align: center; }

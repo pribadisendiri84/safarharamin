@@ -20,8 +20,7 @@ class HajiPlusPageController extends Controller
     {
         return view('admin.haji-plus.edit', [
             'page' => HajiPlusPage::content(),
-            'officialItineraries' => HajiPlusPage::officialItineraries(),
-            'sampleItineraries' => HajiPlusPage::sampleItineraries(),
+            'itineraries' => HajiPlusPage::itineraries(),
             'airlines' => Airline::query()->orderBy('sort_order')->orderBy('name')->get(['name', 'logo']),
             'hotelLocations' => [
                 Hotel::LOCATION_MADINAH => Hotel::LOCATIONS[Hotel::LOCATION_MADINAH],
@@ -75,18 +74,14 @@ class HajiPlusPageController extends Controller
             'cta.title' => ['required', 'string', 'max:120'],
             'cta.description' => ['required', 'string', 'max:300'],
             'cta.note' => ['required', 'string', 'max:80'],
-            'official_itinerary_departure_dates' => ['nullable', 'array'],
-            'official_itinerary_departure_dates.*' => ['nullable', 'date'],
-            'official_itinerary_pdfs' => ['nullable', 'array'],
-            'official_itinerary_pdfs.*' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
-            'delete_official_itineraries' => ['nullable', 'array'],
-            'delete_official_itineraries.*' => ['integer', 'exists:haji_page_itineraries,id'],
-            'sample_itinerary_labels' => ['nullable', 'array'],
-            'sample_itinerary_labels.*' => ['nullable', 'string', 'max:120'],
-            'sample_itinerary_pdfs' => ['nullable', 'array'],
-            'sample_itinerary_pdfs.*' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
-            'delete_sample_itineraries' => ['nullable', 'array'],
-            'delete_sample_itineraries.*' => ['integer', 'exists:haji_page_itineraries,id'],
+            'itinerary_departure_dates' => ['nullable', 'array'],
+            'itinerary_departure_dates.*' => ['nullable', 'date'],
+            'itinerary_hijri_labels' => ['nullable', 'array'],
+            'itinerary_hijri_labels.*' => ['nullable', 'string', 'max:80'],
+            'itinerary_pdfs' => ['nullable', 'array'],
+            'itinerary_pdfs.*' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
+            'delete_itineraries' => ['nullable', 'array'],
+            'delete_itineraries.*' => ['integer', 'exists:haji_page_itineraries,id'],
         ]);
 
         $current = HajiPlusPage::content();
@@ -153,95 +148,55 @@ class HajiPlusPageController extends Controller
 
     private function syncItineraries(Request $request, HajiPageItineraryStore $store): void
     {
-        $this->deleteItineraries(
-            $request->input('delete_official_itineraries', []),
-            HajiPageItinerary::KIND_OFFICIAL,
-            $store,
-        );
-        $this->deleteItineraries(
-            $request->input('delete_sample_itineraries', []),
-            HajiPageItinerary::KIND_SAMPLE,
-            $store,
-        );
+        $deleteIds = array_map('intval', $request->input('delete_itineraries', []));
+        if ($deleteIds !== []) {
+            HajiPageItinerary::query()
+                ->whereIn('id', $deleteIds)
+                ->get()
+                ->each(function (HajiPageItinerary $item) use ($store) {
+                    $store->delete($item->file_path);
+                    $item->delete();
+                });
+        }
 
-        foreach ($request->input('official_itinerary_departure_dates', []) as $index => $dateRaw) {
+        foreach ($request->input('itinerary_departure_dates', []) as $index => $dateRaw) {
             $date = trim((string) $dateRaw);
-            $files = $request->file('official_itinerary_pdfs', []);
+            $hijriLabels = $request->input('itinerary_hijri_labels', []);
+            $hijriLabel = trim((string) (is_array($hijriLabels) ? ($hijriLabels[$index] ?? '') : ''));
+            $files = $request->file('itinerary_pdfs', []);
             $file = is_array($files) ? ($files[$index] ?? null) : null;
 
-            if ($date === '' && ! $file) {
+            if ($date === '' && $hijriLabel === '' && ! $file) {
                 continue;
             }
 
             if ($date === '') {
                 throw ValidationException::withMessages([
-                    "official_itinerary_departure_dates.{$index}" => 'Isi tanggal keberangkatan untuk itinerary resmi.',
+                    "itinerary_departure_dates.{$index}" => 'Isi tanggal keberangkatan untuk itinerary.',
+                ]);
+            }
+
+            if ($hijriLabel === '') {
+                throw ValidationException::withMessages([
+                    "itinerary_hijri_labels.{$index}" => 'Isi tanggal Hijriah (mis. 1448 H).',
                 ]);
             }
 
             if (! $file || ! $file->isValid()) {
                 throw ValidationException::withMessages([
-                    "official_itinerary_pdfs.{$index}" => 'Unggah file PDF itinerary resmi.',
+                    "itinerary_pdfs.{$index}" => 'Unggah file PDF itinerary.',
                 ]);
             }
 
             HajiPageItinerary::query()->create([
-                'kind' => HajiPageItinerary::KIND_OFFICIAL,
+                'kind' => 'official',
                 'departure_date' => $date,
-                'file_path' => $store->store($file, 'haji-official '.$date),
+                'hijri_label' => $hijriLabel,
+                'file_path' => $store->store($file, 'haji-itinerary '.$date),
             ]);
         }
 
-        foreach ($request->input('sample_itinerary_labels', []) as $index => $labelRaw) {
-            $label = trim((string) $labelRaw);
-            $files = $request->file('sample_itinerary_pdfs', []);
-            $file = is_array($files) ? ($files[$index] ?? null) : null;
-
-            if ($label === '' && ! $file) {
-                continue;
-            }
-
-            if ($label === '') {
-                throw ValidationException::withMessages([
-                    "sample_itinerary_labels.{$index}" => 'Isi label untuk contoh itinerary (mis. Haji 1445).',
-                ]);
-            }
-
-            if (! $file || ! $file->isValid()) {
-                throw ValidationException::withMessages([
-                    "sample_itinerary_pdfs.{$index}" => 'Unggah file PDF contoh itinerary.',
-                ]);
-            }
-
-            HajiPageItinerary::query()->create([
-                'kind' => HajiPageItinerary::KIND_SAMPLE,
-                'label' => $label,
-                'file_path' => $store->store($file, 'haji-sample '.$label),
-            ]);
-        }
-
-        HajiPageItinerary::syncSortOrder(HajiPageItinerary::KIND_OFFICIAL);
-        HajiPageItinerary::syncSortOrder(HajiPageItinerary::KIND_SAMPLE);
-    }
-
-    /**
-     * @param  list<int|string>  $deleteIds
-     */
-    private function deleteItineraries(array $deleteIds, string $kind, HajiPageItineraryStore $store): void
-    {
-        $ids = array_map('intval', $deleteIds);
-        if ($ids === []) {
-            return;
-        }
-
-        HajiPageItinerary::query()
-            ->where('kind', $kind)
-            ->whereIn('id', $ids)
-            ->get()
-            ->each(function (HajiPageItinerary $item) use ($store) {
-                $store->delete($item->file_path);
-                $item->delete();
-            });
+        HajiPageItinerary::syncSortOrder();
     }
 
     private function storeImage(

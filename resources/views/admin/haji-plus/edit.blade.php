@@ -166,79 +166,51 @@
       <section class="admin-editor-section haji-section" data-editor-section="itinerary" hidden>
         <div class="admin-panel haji-panel">
           <header class="admin-panel-head haji-panel-head">
-            <h2 class="admin-panel-title haji-panel-title">Itinerary resmi (musim ini)</h2>
-            <p class="admin-panel-desc haji-panel-desc">Unggah PDF per tanggal keberangkatan. Tampil di halaman seperti detail paket umroh.</p>
+            <h2 class="admin-panel-title haji-panel-title">Itinerary</h2>
+            <p class="admin-panel-desc haji-panel-desc">Unggah PDF per tanggal keberangkatan. Di halaman tampil sebagai “Keberangkatan …” dan tanggal Hijriah.</p>
           </header>
 
           <fieldset class="itinerary-pdf-fieldset">
-            @if($officialItineraries->isNotEmpty())
+            @if($itineraries->isNotEmpty())
               <div class="itinerary-existing-list">
-                @foreach($officialItineraries as $item)
+                @foreach($itineraries as $item)
                   <div class="itinerary-existing-item">
                     <label class="check">
-                      <input type="checkbox" name="delete_official_itineraries[]" value="{{ $item->id }}" @checked(in_array($item->id, old('delete_official_itineraries', []), true))>
+                      <input type="checkbox" name="delete_itineraries[]" value="{{ $item->id }}" @checked(in_array($item->id, old('delete_itineraries', []), true))>
                       Hapus
                     </label>
-                    <span class="itinerary-existing-label">{{ $item->displayLabel() }}</span>
+                    <span class="itinerary-existing-label">
+                      Keberangkatan {{ $item->departureLabel() }}
+                      @if($item->hijriLabel() !== '')
+                        · {{ $item->hijriLabel() }}
+                      @endif
+                    </span>
                     <a class="btn gray compact" href="{{ $item->file_path }}" target="_blank" rel="noopener">Lihat PDF</a>
                   </div>
                 @endforeach
               </div>
             @endif
 
-            <div class="itinerary-new-rows" id="haji-official-itinerary-rows">
-              @php $officialDates = old('official_itinerary_departure_dates', ['']); @endphp
-              @foreach($officialDates as $dateValue)
-                <div class="itinerary-new-row">
+            <div class="itinerary-new-rows" id="haji-itinerary-rows">
+              @php
+                $newDates = old('itinerary_departure_dates', ['']);
+                $newHijri = old('itinerary_hijri_labels', ['']);
+              @endphp
+              @foreach($newDates as $index => $dateValue)
+                <div class="itinerary-new-row haji-itinerary-row">
                   <label>Tanggal keberangkatan
-                    <input type="date" name="official_itinerary_departure_dates[]" value="{{ $dateValue }}">
+                    <input type="date" name="itinerary_departure_dates[]" value="{{ $dateValue }}">
+                  </label>
+                  <label>Tanggal Hijriah
+                    <input type="text" name="itinerary_hijri_labels[]" value="{{ $newHijri[$index] ?? '' }}" placeholder="1448 H">
                   </label>
                   <label>File PDF
-                    <input type="file" name="official_itinerary_pdfs[]" accept="application/pdf,.pdf">
+                    <input type="file" name="itinerary_pdfs[]" accept="application/pdf,.pdf">
                   </label>
                 </div>
               @endforeach
             </div>
-            <button class="btn gray compact" type="button" id="add-haji-official-itinerary-row">+ Tambah itinerary resmi</button>
-          </fieldset>
-        </div>
-
-        <div class="admin-panel haji-panel">
-          <header class="admin-panel-head haji-panel-head">
-            <h2 class="admin-panel-title haji-panel-title">Contoh itinerary (referensi)</h2>
-            <p class="admin-panel-desc haji-panel-desc">PDF musim/tahun sebelumnya sebagai gambaran. Tetap tampil meski itinerary resmi belum tersedia.</p>
-          </header>
-
-          <fieldset class="itinerary-pdf-fieldset">
-            @if($sampleItineraries->isNotEmpty())
-              <div class="itinerary-existing-list">
-                @foreach($sampleItineraries as $item)
-                  <div class="itinerary-existing-item">
-                    <label class="check">
-                      <input type="checkbox" name="delete_sample_itineraries[]" value="{{ $item->id }}" @checked(in_array($item->id, old('delete_sample_itineraries', []), true))>
-                      Hapus
-                    </label>
-                    <span class="itinerary-existing-label">{{ $item->displayLabel() }}</span>
-                    <a class="btn gray compact" href="{{ $item->file_path }}" target="_blank" rel="noopener">Lihat PDF</a>
-                  </div>
-                @endforeach
-              </div>
-            @endif
-
-            <div class="itinerary-new-rows" id="haji-sample-itinerary-rows">
-              @php $sampleLabels = old('sample_itinerary_labels', ['']); @endphp
-              @foreach($sampleLabels as $labelValue)
-                <div class="itinerary-new-row haji-sample-itinerary-row">
-                  <label>Label
-                    <input type="text" name="sample_itinerary_labels[]" value="{{ $labelValue }}" placeholder="Haji 1445">
-                  </label>
-                  <label>File PDF
-                    <input type="file" name="sample_itinerary_pdfs[]" accept="application/pdf,.pdf">
-                  </label>
-                </div>
-              @endforeach
-            </div>
-            <button class="btn gray compact" type="button" id="add-haji-sample-itinerary-row">+ Tambah contoh itinerary</button>
+            <button class="btn gray compact" type="button" id="add-haji-itinerary-row">+ Tambah itinerary</button>
           </fieldset>
         </div>
       </section>
@@ -402,17 +374,11 @@
   }
 
   bindItineraryRows(
-    'haji-official-itinerary-rows',
-    'add-haji-official-itinerary-row',
-    '<label>Tanggal keberangkatan<input type="date" name="official_itinerary_departure_dates[]"></label>' +
-    '<label>File PDF<input type="file" name="official_itinerary_pdfs[]" accept="application/pdf,.pdf"></label>'
-  );
-
-  bindItineraryRows(
-    'haji-sample-itinerary-rows',
-    'add-haji-sample-itinerary-row',
-    '<label>Label<input type="text" name="sample_itinerary_labels[]" placeholder="Haji 1445"></label>' +
-    '<label>File PDF<input type="file" name="sample_itinerary_pdfs[]" accept="application/pdf,.pdf"></label>'
+    'haji-itinerary-rows',
+    'add-haji-itinerary-row',
+    '<label>Tanggal keberangkatan<input type="date" name="itinerary_departure_dates[]"></label>' +
+    '<label>Tanggal Hijriah<input type="text" name="itinerary_hijri_labels[]" placeholder="1448 H"></label>' +
+    '<label>File PDF<input type="file" name="itinerary_pdfs[]" accept="application/pdf,.pdf"></label>'
   );
 })();
 </script>

@@ -14,7 +14,7 @@ class HajiPageItineraryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_can_upload_official_and_sample_itineraries(): void
+    public function test_admin_can_upload_itinerary_with_hijri_label(): void
     {
         Storage::fake('public');
         $user = User::factory()->create();
@@ -23,70 +23,55 @@ class HajiPageItineraryTest extends TestCase
         $this->actingAs($user)
             ->put(route('admin.haji-plus.update'), [
                 ...$this->payloadFrom($page),
-                'official_itinerary_departure_dates' => ['2026-11-15'],
-                'official_itinerary_pdfs' => [
-                    UploadedFile::fake()->create('official.pdf', 120, 'application/pdf'),
-                ],
-                'sample_itinerary_labels' => ['Haji 1445'],
-                'sample_itinerary_pdfs' => [
-                    UploadedFile::fake()->create('sample.pdf', 120, 'application/pdf'),
+                'itinerary_departure_dates' => ['2026-09-11'],
+                'itinerary_hijri_labels' => ['1448 H'],
+                'itinerary_pdfs' => [
+                    UploadedFile::fake()->create('itinerary.pdf', 120, 'application/pdf'),
                 ],
             ])
             ->assertRedirect(route('admin.haji-plus.edit'));
 
-        $official = HajiPageItinerary::query()->official()->get();
-        $sample = HajiPageItinerary::query()->sample()->get();
-
-        $this->assertCount(1, $official);
-        $this->assertSame('2026-11-15', $official[0]->departure_date->toDateString());
-        $this->assertStringStartsWith('/storage/haji-page-itineraries/', $official[0]->file_path);
-
-        $this->assertCount(1, $sample);
-        $this->assertSame('Haji 1445', $sample[0]->label);
+        $item = HajiPageItinerary::query()->first();
+        $this->assertNotNull($item);
+        $this->assertSame('2026-09-11', $item->departure_date->toDateString());
+        $this->assertSame('1448 H', $item->hijri_label);
+        $this->assertStringStartsWith('/storage/haji-page-itineraries/', $item->file_path);
     }
 
-    public function test_haji_page_shows_official_and_sample_itineraries_like_package_detail(): void
+    public function test_haji_page_shows_itinerary_with_departure_and_hijri_labels(): void
     {
         HajiPageItinerary::query()->create([
-            'kind' => HajiPageItinerary::KIND_OFFICIAL,
-            'departure_date' => '2026-11-15',
+            'kind' => 'official',
+            'departure_date' => '2026-09-11',
+            'hijri_label' => '1448 H',
             'file_path' => '/storage/haji-page-itineraries/official.pdf',
-        ]);
-        HajiPageItinerary::query()->create([
-            'kind' => HajiPageItinerary::KIND_SAMPLE,
-            'label' => 'Haji 1445',
-            'file_path' => '/storage/haji-page-itineraries/sample-1445.pdf',
         ]);
 
         $this->get('/haji-khusus')
             ->assertOk()
-            ->assertSee('Itinerary musim ini')
-            ->assertSee('Contoh itinerary')
-            ->assertSee('15 November 2026')
-            ->assertSee('Haji 1445')
+            ->assertSee('Itinerary')
+            ->assertSee('Keberangkatan 11 September 2026')
+            ->assertSee('1448 H')
             ->assertSee('itinerary-pdf-trigger', false)
             ->assertSee('itinerary-pdf-modal', false)
             ->assertSee('/storage/haji-page-itineraries/official.pdf', false)
-            ->assertSee('/storage/haji-page-itineraries/sample-1445.pdf', false);
+            ->assertDontSee('Contoh itinerary');
     }
 
-    public function test_operational_snapshot_includes_official_itineraries_only(): void
+    public function test_operational_snapshot_includes_itineraries_with_hijri_label(): void
     {
         HajiPageItinerary::query()->create([
-            'kind' => HajiPageItinerary::KIND_OFFICIAL,
-            'departure_date' => '2026-11-15',
+            'kind' => 'official',
+            'departure_date' => '2026-09-11',
+            'hijri_label' => '1448 H',
             'file_path' => '/storage/haji-page-itineraries/official.pdf',
-        ]);
-        HajiPageItinerary::query()->create([
-            'kind' => HajiPageItinerary::KIND_SAMPLE,
-            'label' => 'Haji 1445',
-            'file_path' => '/storage/haji-page-itineraries/sample-1445.pdf',
         ]);
 
         $snapshot = HajiPlusPage::operationalSnapshot();
 
         $this->assertCount(1, $snapshot['official_itineraries']);
-        $this->assertSame('2026-11-15', $snapshot['official_itineraries'][0]['departure_date']);
+        $this->assertSame('2026-09-11', $snapshot['official_itineraries'][0]['departure_date']);
+        $this->assertSame('1448 H', $snapshot['official_itineraries'][0]['hijri_label']);
         $this->assertSame('/storage/haji-page-itineraries/official.pdf', $snapshot['official_itineraries'][0]['file_path']);
     }
 

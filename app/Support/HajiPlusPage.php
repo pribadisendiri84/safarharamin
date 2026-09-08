@@ -116,9 +116,10 @@ class HajiPlusPage
             'partner_airlines' => $page['partner_airlines'],
             'airline' => $page['airline'],
             'benefits' => $page['benefits'],
-            'official_itineraries' => self::officialItineraries()
+            'official_itineraries' => self::itineraries()
                 ->map(fn (HajiPageItinerary $item) => [
                     'departure_date' => $item->departure_date?->toDateString(),
+                    'hijri_label' => $item->hijriLabel(),
                     'file_path' => $item->file_path,
                     'label' => $item->displayLabel(),
                 ])
@@ -131,17 +132,9 @@ class HajiPlusPage
     /**
      * @return Collection<int, HajiPageItinerary>
      */
-    public static function officialItineraries(): Collection
+    public static function itineraries(): Collection
     {
-        return HajiPageItinerary::query()->official()->ordered()->get();
-    }
-
-    /**
-     * @return Collection<int, HajiPageItinerary>
-     */
-    public static function sampleItineraries(): Collection
-    {
-        return HajiPageItinerary::query()->sample()->ordered()->get();
+        return HajiPageItinerary::query()->ordered()->get();
     }
 
     /**

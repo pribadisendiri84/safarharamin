@@ -219,18 +219,9 @@
       </div>
     </div>
 
-    @if($officialItineraries->isNotEmpty() || $sampleItineraries->isNotEmpty())
+    @if($itineraries->isNotEmpty())
       <div class="haji-itinerary-block">
-        @include('partials.itinerary-pdf-list', [
-          'items' => $officialItineraries,
-          'heading' => 'Itinerary musim ini',
-          'note' => 'Pilih tanggal keberangkatan untuk melihat PDF itinerary resmi.',
-        ])
-        @include('partials.itinerary-pdf-list', [
-          'items' => $sampleItineraries,
-          'heading' => 'Contoh itinerary',
-          'note' => 'Referensi dari musim sebelumnya — detail resmi dapat disesuaikan dengan jadwal maskapai & hotel.',
-        ])
+        @include('partials.haji-itinerary-list', ['items' => $itineraries])
         @include('partials.itinerary-pdf-viewer')
       </div>
     @endif
