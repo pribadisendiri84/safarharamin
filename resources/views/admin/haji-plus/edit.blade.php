@@ -22,6 +22,7 @@
       <button type="button" data-editor-tab="rooms">Kartu kamar</button>
       <button type="button" data-editor-tab="benefits">Manfaat</button>
       <button type="button" data-editor-tab="travel">Hotel &amp; maskapai</button>
+      <button type="button" data-editor-tab="itinerary">Itinerary</button>
       <button type="button" data-editor-tab="flow">Alur daftar</button>
       <button type="button" data-editor-tab="cta">CTA</button>
     </nav>
@@ -191,6 +192,80 @@
               <textarea name="airline[points_text]" rows="3" required>{{ old('airline.points_text', $page['airline']['points_text']) }}</textarea>
             </label>
           </div>
+        </div>
+      </section>
+
+      <section class="admin-editor-section haji-section" data-editor-section="itinerary" hidden>
+        <div class="admin-panel haji-panel">
+          <header class="admin-panel-head haji-panel-head">
+            <h2 class="admin-panel-title haji-panel-title">Itinerary</h2>
+            <p class="admin-panel-desc haji-panel-desc">
+              Itinerary diinput per <strong>keberangkatan haji</strong> — bukan di tab konten ini.
+              Setiap tanggal berangkat: isi tanggal Masehi, Hijriah, dan upload PDF di menu Operasi → Keberangkatan (tab Haji).
+            </p>
+          </header>
+
+          <div class="haji-itinerary-admin-actions">
+            <a class="btn" href="{{ route('admin.operations.departures.create', ['from' => 'haji_page']) }}">+ Tambah keberangkatan &amp; itinerary</a>
+            <a class="btn ghost" href="{{ route('admin.operations.departures.index', ['kind' => 'haji']) }}">Buka Keberangkatan (Haji)</a>
+          </div>
+
+          @php
+            $visibleItineraryIds = array_map(
+              'intval',
+              old('itinerary_visible_departures', $hajiDepartures->where('show_on_haji_page', true)->pluck('id')->all()),
+            );
+          @endphp
+
+          @if($hajiDepartures->isNotEmpty())
+            <div class="table-wrap haji-itinerary-admin-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Tampilkan</th>
+                    <th>Tanggal berangkat</th>
+                    <th>Hijriah</th>
+                    <th>PDF</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach($hajiDepartures as $departure)
+                    <tr>
+                      <td>
+                        @if($departure->itinerary_pdf_path)
+                          <label class="check haji-itinerary-visible-check">
+                            <input type="checkbox"
+                              name="itinerary_visible_departures[]"
+                              value="{{ $departure->id }}"
+                              @checked(in_array($departure->id, $visibleItineraryIds, true))>
+                            Halaman Haji
+                          </label>
+                        @else
+                          <span class="muted">Upload PDF dulu</span>
+                        @endif
+                      </td>
+                      <td>{{ $departure->departureLabel() ?: '—' }}</td>
+                      <td>{{ $departure->hijriLabel() ?: '—' }}</td>
+                      <td>
+                        @if($departure->itinerary_pdf_path)
+                          <a href="{{ $departure->itinerary_pdf_path }}" target="_blank" rel="noopener">Ada PDF</a>
+                        @else
+                          <span class="muted">Belum ada</span>
+                        @endif
+                      </td>
+                      <td class="row-actions-cell">
+                        <a class="btn gray compact" href="{{ route('admin.operations.departures.edit', $departure) }}">Edit / upload PDF</a>
+                      </td>
+                    </tr>
+                  @endforeach
+                </tbody>
+              </table>
+            </div>
+            <p class="sub">Centang <strong>Halaman Haji</strong> lalu <strong>Simpan</strong> — hanya itinerary tercentang yang tampil di <a href="{{ route('haji') }}" target="_blank" rel="noopener">/haji-khusus</a>. Upload PDF tetap di Keberangkatan.</p>
+          @else
+            <p class="sub haji-itinerary-admin-empty">Belum ada keberangkatan haji. Klik <strong>Tambah keberangkatan &amp; itinerary</strong> untuk mulai.</p>
+          @endif
         </div>
       </section>
 

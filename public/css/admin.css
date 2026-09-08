@@ -753,6 +753,10 @@ tr.sortable-ghost { opacity: .45; }
   word-break: break-all;
 }
 .haji-hero-image-delete { margin: 0; font-size: 13px; }
+.haji-itinerary-admin-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.haji-itinerary-admin-table { margin-bottom: 10px; }
+.haji-itinerary-admin-empty { margin: 0; padding: 12px 0; }
+.haji-itinerary-visible-check { margin: 0; white-space: nowrap; font-size: 13px; }
 .admin-brand-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .admin-brand-row .admin-file-pick { flex: 1; min-width: 200px; }
 .admin-logo-preview {

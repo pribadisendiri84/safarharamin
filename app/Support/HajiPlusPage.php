@@ -130,6 +130,7 @@ class HajiPlusPage
         return Departure::query()
             ->where('program_kind', 'haji')
             ->where('source', Departure::SOURCE_HAJI_PAGE)
+            ->where('show_on_haji_page', true)
             ->whereNotNull('itinerary_pdf_path')
             ->orderBy('departure_date')
             ->orderBy('id')

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Airline;
+use App\Models\Departure;
 use App\Models\Hotel;
 use App\Services\PackageImageStore;
 use App\Support\HajiPlusPage;
@@ -18,6 +19,12 @@ class HajiPlusPageController extends Controller
         return view('admin.haji-plus.edit', [
             'page' => HajiPlusPage::content(),
             'defaultHeroImage' => HajiPlusPage::defaultHeroImage(),
+            'hajiDepartures' => Departure::query()
+                ->where('program_kind', 'haji')
+                ->where('source', Departure::SOURCE_HAJI_PAGE)
+                ->orderBy('departure_date')
+                ->orderBy('id')
+                ->get(),
             'airlines' => Airline::query()->orderBy('sort_order')->orderBy('name')->get(['name', 'logo']),
             'hotelLocations' => [
                 Hotel::LOCATION_MADINAH => Hotel::LOCATIONS[Hotel::LOCATION_MADINAH],
@@ -74,6 +81,8 @@ class HajiPlusPageController extends Controller
             'cta.title' => ['required', 'string', 'max:120'],
             'cta.description' => ['required', 'string', 'max:300'],
             'cta.note' => ['required', 'string', 'max:80'],
+            'itinerary_visible_departures' => ['nullable', 'array'],
+            'itinerary_visible_departures.*' => ['integer', 'exists:departures,id'],
         ]);
 
         $current = HajiPlusPage::content();
@@ -133,7 +142,29 @@ class HajiPlusPageController extends Controller
             'cta' => $data['cta'],
         ]);
 
+        $this->syncItineraryVisibility($request);
+
         return redirect()->route('admin.haji-plus.edit')->with('ok', 'Halaman Haji Plus tersimpan.');
+    }
+
+    private function syncItineraryVisibility(Request $request): void
+    {
+        $visibleIds = array_map('intval', $request->input('itinerary_visible_departures', []));
+
+        Departure::query()
+            ->where('program_kind', 'haji')
+            ->where('source', Departure::SOURCE_HAJI_PAGE)
+            ->update(['show_on_haji_page' => false]);
+
+        if ($visibleIds === []) {
+            return;
+        }
+
+        Departure::query()
+            ->where('program_kind', 'haji')
+            ->where('source', Departure::SOURCE_HAJI_PAGE)
+            ->whereIn('id', $visibleIds)
+            ->update(['show_on_haji_page' => true]);
     }
 
     /**

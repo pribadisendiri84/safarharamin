@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'departure_date',
     'hijri_label',
     'itinerary_pdf_path',
+    'show_on_haji_page',
     'airline',
     'flight_number',
     'hotel_makkah',
@@ -46,6 +47,7 @@ class Departure extends Model
         return [
             'departure_date' => 'date',
             'program_snapshot' => 'array',
+            'show_on_haji_page' => 'boolean',
         ];
     }
 
