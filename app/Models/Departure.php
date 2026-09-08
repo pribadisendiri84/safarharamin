@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'program_name',
     'program_kind',
     'departure_date',
+    'hijri_label',
+    'itinerary_pdf_path',
     'airline',
     'flight_number',
     'hotel_makkah',
@@ -94,6 +96,33 @@ class Departure extends Model
     public function formattedDepartureDate(): string
     {
         return $this->departure_date?->translatedFormat('d M Y') ?? 'Jadwal menyusul';
+    }
+
+    public function departureLabel(): string
+    {
+        return $this->departure_date?->translatedFormat('d F Y') ?? '';
+    }
+
+    public function hijriLabel(): string
+    {
+        return trim((string) $this->hijri_label);
+    }
+
+    public function itineraryDisplayLabel(): string
+    {
+        $label = 'Keberangkatan '.$this->departureLabel();
+        $hijri = $this->hijriLabel();
+
+        return $hijri !== '' ? "{$label} · {$hijri}" : $label;
+    }
+
+    public function itineraryDownloadFilename(): string
+    {
+        if ($this->departure_date !== null) {
+            return 'itinerary-'.$this->departure_date->format('Y-m-d').'.pdf';
+        }
+
+        return 'itinerary.pdf';
     }
 
     /** @return array<string, int|float> */

@@ -1,5 +1,5 @@
 @php
-  /** @var \Illuminate\Support\Collection<int, \App\Models\HajiPageItinerary> $items */
+  /** @var \Illuminate\Support\Collection<int, \App\Models\Departure> $items */
 @endphp
 @if($items->isNotEmpty())
   <h2 class="haji-itinerary-heading">Itinerary</h2>
@@ -8,9 +8,9 @@
       <li>
         <button type="button"
           class="itinerary-pdf-trigger haji-itinerary-trigger"
-          data-pdf="{{ $item->file_path }}"
-          data-label="{{ $item->displayLabel() }}"
-          data-download="{{ $item->downloadFilename() }}">
+          data-pdf="{{ $item->itinerary_pdf_path }}"
+          data-label="{{ $item->itineraryDisplayLabel() }}"
+          data-download="{{ $item->itineraryDownloadFilename() }}">
           <span class="haji-itinerary-trigger-copy">
             <span class="haji-itinerary-departure">Keberangkatan {{ $item->departureLabel() }}</span>
             @if($item->hijriLabel() !== '')

@@ -23,7 +23,6 @@ class HajiPlusPageTest extends TestCase
             ->assertSee('Halaman Haji Plus')
             ->assertSee('Kartu kamar')
             ->assertSee('Hotel & maskapai')
-            ->assertSee('Itinerary')
             ->assertSee('Quad');
     }
 

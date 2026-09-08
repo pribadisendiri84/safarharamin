@@ -60,7 +60,7 @@ class HajiOperationalSnapshotTest extends TestCase
                 'hotel_madinah' => $defaults['hotel_madinah'],
                 'hotel_makkah' => $defaults['hotel_makkah'],
             ])
-            ->assertRedirect(route('admin.operations.departures.index'));
+            ->assertRedirect(route('admin.operations.departures.index', ['kind' => 'haji']));
 
         $departure = Departure::query()->first();
         $this->assertNotNull($departure);

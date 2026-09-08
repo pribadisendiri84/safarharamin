@@ -65,7 +65,7 @@ class OperationsTest extends TestCase
                 'hotel_makkah' => 'Swissotel',
                 'hotel_madinah' => 'Anwar Al Madinah',
             ])
-            ->assertRedirect(route('admin.operations.departures.index'));
+            ->assertRedirect(route('admin.operations.departures.index', ['kind' => 'umroh']));
 
         $departure = Departure::query()->firstOrFail();
 
@@ -595,7 +595,7 @@ class OperationsTest extends TestCase
                 'hotel_transit' => 'Transit Jeddah',
                 'hotel_maktab' => 'Maktab Arafah',
             ])
-            ->assertRedirect(route('admin.operations.departures.index'));
+            ->assertRedirect(route('admin.operations.departures.index', ['kind' => 'haji']));
 
         $this->assertDatabaseHas('departures', [
             'program_name' => 'Haji 2026',

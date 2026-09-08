@@ -22,7 +22,6 @@
       <button type="button" data-editor-tab="rooms">Kartu kamar</button>
       <button type="button" data-editor-tab="benefits">Manfaat</button>
       <button type="button" data-editor-tab="travel">Hotel &amp; maskapai</button>
-      <button type="button" data-editor-tab="itinerary">Itinerary</button>
       <button type="button" data-editor-tab="flow">Alur daftar</button>
       <button type="button" data-editor-tab="cta">CTA</button>
     </nav>
@@ -163,58 +162,6 @@
         </div>
       </section>
 
-      <section class="admin-editor-section haji-section" data-editor-section="itinerary" hidden>
-        <div class="admin-panel haji-panel">
-          <header class="admin-panel-head haji-panel-head">
-            <h2 class="admin-panel-title haji-panel-title">Itinerary</h2>
-            <p class="admin-panel-desc haji-panel-desc">Unggah PDF per tanggal keberangkatan. Di halaman tampil sebagai “Keberangkatan …” dan tanggal Hijriah.</p>
-          </header>
-
-          <fieldset class="itinerary-pdf-fieldset">
-            @if($itineraries->isNotEmpty())
-              <div class="itinerary-existing-list">
-                @foreach($itineraries as $item)
-                  <div class="itinerary-existing-item">
-                    <label class="check">
-                      <input type="checkbox" name="delete_itineraries[]" value="{{ $item->id }}" @checked(in_array($item->id, old('delete_itineraries', []), true))>
-                      Hapus
-                    </label>
-                    <span class="itinerary-existing-label">
-                      Keberangkatan {{ $item->departureLabel() }}
-                      @if($item->hijriLabel() !== '')
-                        · {{ $item->hijriLabel() }}
-                      @endif
-                    </span>
-                    <a class="btn gray compact" href="{{ $item->file_path }}" target="_blank" rel="noopener">Lihat PDF</a>
-                  </div>
-                @endforeach
-              </div>
-            @endif
-
-            <div class="itinerary-new-rows" id="haji-itinerary-rows">
-              @php
-                $newDates = old('itinerary_departure_dates', ['']);
-                $newHijri = old('itinerary_hijri_labels', ['']);
-              @endphp
-              @foreach($newDates as $index => $dateValue)
-                <div class="itinerary-new-row haji-itinerary-row">
-                  <label>Tanggal keberangkatan
-                    <input type="date" name="itinerary_departure_dates[]" value="{{ $dateValue }}">
-                  </label>
-                  <label>Tanggal Hijriah
-                    <input type="text" name="itinerary_hijri_labels[]" value="{{ $newHijri[$index] ?? '' }}" placeholder="1448 H">
-                  </label>
-                  <label>File PDF
-                    <input type="file" name="itinerary_pdfs[]" accept="application/pdf,.pdf">
-                  </label>
-                </div>
-              @endforeach
-            </div>
-            <button class="btn gray compact" type="button" id="add-haji-itinerary-row">+ Tambah itinerary</button>
-          </fieldset>
-        </div>
-      </section>
-
       <section class="haji-section" data-editor-section="flow" hidden>
         <div class="haji-panel">
           <header class="haji-panel-head">
@@ -264,7 +211,8 @@
     <footer class="admin-editor-footer haji-editor-footer">
       <p class="admin-editor-footer-note haji-editor-footer-note">Perubahan langsung tampil di halaman publik setelah disimpan.</p>
       <div class="admin-editor-footer-actions haji-editor-footer-actions">
-        <a class="btn ghost" href="{{ route('admin.operations.departures.create', ['from' => 'haji_page']) }}">Buat keberangkatan</a>
+        <a class="btn ghost" href="{{ route('admin.operations.departures.index', ['kind' => 'haji']) }}">Kelola keberangkatan</a>
+        <a class="btn ghost" href="{{ route('admin.operations.departures.create', ['from' => 'haji_page']) }}">Tambah keberangkatan</a>
         <a class="btn ghost" href="{{ route('haji') }}" target="_blank" rel="noopener">Lihat halaman</a>
         <button class="btn" type="submit">Simpan</button>
       </div>
@@ -357,29 +305,6 @@
 
   list.querySelectorAll('[data-hotel-card]').forEach(bindCard);
   reindexCards();
-})();
-
-(function () {
-  function bindItineraryRows(wrapId, addBtnId, rowHtml) {
-    var rowsWrap = document.getElementById(wrapId);
-    var addBtn = document.getElementById(addBtnId);
-    if (!rowsWrap || !addBtn) return;
-
-    addBtn.addEventListener('click', function () {
-      var row = document.createElement('div');
-      row.className = 'itinerary-new-row';
-      row.innerHTML = rowHtml;
-      rowsWrap.appendChild(row);
-    });
-  }
-
-  bindItineraryRows(
-    'haji-itinerary-rows',
-    'add-haji-itinerary-row',
-    '<label>Tanggal keberangkatan<input type="date" name="itinerary_departure_dates[]"></label>' +
-    '<label>Tanggal Hijriah<input type="text" name="itinerary_hijri_labels[]" placeholder="1448 H"></label>' +
-    '<label>File PDF<input type="file" name="itinerary_pdfs[]" accept="application/pdf,.pdf"></label>'
-  );
 })();
 </script>
 @endpush

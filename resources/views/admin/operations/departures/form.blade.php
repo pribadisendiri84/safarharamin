@@ -21,7 +21,7 @@
   @endif
 </div>
 
-<form class="form panel form-pad" method="post" action="{{ $departure->exists ? route('admin.operations.departures.update', $departure) : route('admin.operations.departures.store') }}">
+<form class="form panel form-pad" method="post" enctype="multipart/form-data" action="{{ $departure->exists ? route('admin.operations.departures.update', $departure) : route('admin.operations.departures.store') }}">
   @csrf
   @if($departure->exists) @method('PUT') @endif
   <input type="hidden" name="source" value="{{ old('source', $departure->source ?? ($fromHajiPage ?? false ? \App\Models\Departure::SOURCE_HAJI_PAGE : \App\Models\Departure::SOURCE_MANUAL)) }}">
@@ -46,14 +46,40 @@
 
   <div class="row2">
     <label>Jenis
-      <select name="program_kind" id="departure-kind" required>
+      <select name="program_kind" id="departure-kind" required @if(!empty($fromHajiPage)) disabled @endif>
         @foreach(\App\Models\Departure::KINDS as $key => $label)
           <option value="{{ $key }}" @selected(old('program_kind', $departure->program_kind) === $key)>{{ $label }}</option>
         @endforeach
       </select>
+      @if(!empty($fromHajiPage))
+        <input type="hidden" name="program_kind" value="haji">
+      @endif
     </label>
     <label>Tanggal keberangkatan<input type="date" name="departure_date" id="departure-date" value="{{ old('departure_date', optional($departure->departure_date)->format('Y-m-d')) }}"></label>
   </div>
+
+  <fieldset class="haji-itinerary-fields itinerary-pdf-fieldset" @unless($isHaji) hidden @endunless>
+    <legend>Itinerary (halaman Haji Plus)</legend>
+    <p class="sub">Tampil di <a href="{{ route('haji') }}" target="_blank" rel="noopener">/haji-khusus</a> sebagai daftar keberangkatan + PDF.</p>
+    <div class="row2">
+      <label>Tanggal Hijriah
+        <input type="text" name="hijri_label" id="departure-hijri-label" value="{{ old('hijri_label', $departure->hijri_label) }}" placeholder="1448 H">
+      </label>
+      <label>PDF itinerary
+        <input type="file" name="itinerary_pdf" accept="application/pdf,.pdf">
+      </label>
+    </div>
+    @if($departure->itinerary_pdf_path)
+      <div class="itinerary-existing-item">
+        <span class="itinerary-existing-label">PDF saat ini</span>
+        <a class="btn gray compact" href="{{ $departure->itinerary_pdf_path }}" target="_blank" rel="noopener">Lihat PDF</a>
+        <label class="check">
+          <input type="checkbox" name="remove_itinerary_pdf" value="1" @checked(old('remove_itinerary_pdf'))>
+          Hapus PDF
+        </label>
+      </div>
+    @endif
+  </fieldset>
 
   <div class="row2">
     <label>Maskapai
@@ -120,6 +146,7 @@
   var kindSelect = document.getElementById('departure-kind');
   var packageSelect = document.getElementById('departure-package');
   var hajiExtraHotels = document.querySelector('.haji-extra-hotels');
+  var hajiItineraryFields = document.querySelector('.haji-itinerary-fields');
   var legend = document.getElementById('hotel-fields-legend');
   var packageCatalog = @json($packageCatalog);
 
@@ -137,6 +164,7 @@
   function syncKind() {
     var isHaji = kindSelect && kindSelect.value === 'haji';
     if (hajiExtraHotels) hajiExtraHotels.hidden = !isHaji;
+    if (hajiItineraryFields) hajiItineraryFields.hidden = !isHaji;
     if (legend) legend.textContent = isHaji ? 'Hotel haji' : 'Hotel';
   }
 

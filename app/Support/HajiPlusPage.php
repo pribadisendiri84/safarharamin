@@ -3,7 +3,7 @@
 namespace App\Support;
 
 use App\Models\Airline;
-use App\Models\HajiPageItinerary;
+use App\Models\Departure;
 use App\Models\Hotel;
 use App\Models\Setting;
 use Illuminate\Support\Collection;
@@ -116,25 +116,24 @@ class HajiPlusPage
             'partner_airlines' => $page['partner_airlines'],
             'airline' => $page['airline'],
             'benefits' => $page['benefits'],
-            'official_itineraries' => self::itineraries()
-                ->map(fn (HajiPageItinerary $item) => [
-                    'departure_date' => $item->departure_date?->toDateString(),
-                    'hijri_label' => $item->hijriLabel(),
-                    'file_path' => $item->file_path,
-                    'label' => $item->displayLabel(),
-                ])
-                ->values()
-                ->all(),
             'departure_defaults' => self::departureDefaults(),
         ];
     }
 
     /**
-     * @return Collection<int, HajiPageItinerary>
+     * Itinerary di halaman Haji Plus = keberangkatan haji (sumber data halaman).
+     *
+     * @return Collection<int, Departure>
      */
     public static function itineraries(): Collection
     {
-        return HajiPageItinerary::query()->ordered()->get();
+        return Departure::query()
+            ->where('program_kind', 'haji')
+            ->where('source', Departure::SOURCE_HAJI_PAGE)
+            ->whereNotNull('itinerary_pdf_path')
+            ->orderBy('departure_date')
+            ->orderBy('id')
+            ->get();
     }
 
     /**
