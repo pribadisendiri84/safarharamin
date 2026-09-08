@@ -758,6 +758,8 @@ tr.sortable-ghost { opacity: .45; }
 .haji-itinerary-admin-table { margin-bottom: 10px; }
 .haji-itinerary-admin-empty { margin: 0; padding: 12px 0; }
 .haji-itinerary-visible-check { margin: 0; white-space: nowrap; font-size: 13px; }
+.haji-sample-itinerary-admin { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.umroh-sample-itinerary-admin { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
 .admin-brand-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .admin-brand-row .admin-file-pick { flex: 1; min-width: 200px; }
 .admin-logo-preview {
@@ -813,17 +815,58 @@ tr.sortable-ghost { opacity: .45; }
 .haji-room-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .haji-room-card {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: linear-gradient(180deg, #fafbfd 0%, #fff 100%);
 }
-.haji-room-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.haji-room-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .haji-room-key { font-size: 12px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: .04em; }
-.haji-room-preview { width: 52px; height: 36px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
-.haji-room-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.haji-room-card-foot .haji-file-pick { flex: 1; min-width: 140px; }
+.haji-room-featured-check { margin: 0; font-size: 12px; white-space: nowrap; }
+.haji-room-photo {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.haji-room-photo-preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.haji-room-photo-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  background:
+    linear-gradient(135deg, rgba(1, 49, 128, .04) 0%, rgba(1, 49, 128, 0) 55%),
+    repeating-linear-gradient(-45deg, #f6f8fc, #f6f8fc 8px, #eef2f8 8px, #eef2f8 16px);
+}
+.haji-room-photo-upload {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  box-shadow: 0 4px 14px rgba(16, 24, 40, .12);
+}
+.haji-room-photo-upload .ico { width: 18px; height: 18px; }
 
 .haji-benefit-list { display: grid; gap: 8px; }
 .haji-benefit-row {

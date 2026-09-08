@@ -29,6 +29,9 @@
             <span class="haji-price-prefix">{{ $starting['prefix'] }}</span>
             <span class="haji-price-value">{{ $starting['amount'] }}<small>{{ $starting['unit'] }}</small></span>
           </div>
+          @if(!empty($starting['idr_estimate']))
+            <p class="haji-price-idr-estimate">{{ $starting['idr_estimate'] }} <span class="haji-price-idr-note">estimasi</span></p>
+          @endif
           @if(($hero['show_quota'] ?? '0') === '1')
             <span class="haji-quota-badge"><i class="bi bi-hourglass-split" aria-hidden="true"></i> Kuota terbatas</span>
           @endif
@@ -85,6 +88,9 @@
               <strong>{{ $room['price_label'] }}</strong>
               <span>{{ $room['price_note'] }}</span>
             </p>
+            @if(!empty($room['price_idr_label']))
+              <p class="haji-room-showcase-idr">{{ $room['price_idr_label'] }} <span>estimasi</span></p>
+            @endif
           </div>
         </article>
       @endforeach
@@ -226,9 +232,20 @@
       </div>
     </div>
 
-    @if($itineraries->isNotEmpty())
+    @if($itineraries->isNotEmpty() || ($sampleItineraries ?? []) !== [])
       <div class="haji-itinerary-block">
-        @include('partials.haji-itinerary-list', ['items' => $itineraries])
+        @if($itineraries->isNotEmpty())
+          @include('partials.haji-itinerary-list', ['items' => $itineraries])
+        @endif
+        @if(($sampleItineraries ?? []) !== [])
+          @include('partials.haji-sample-itinerary-list', [
+            'items' => $sampleItineraries,
+            'heading' => $itineraries->isNotEmpty() ? 'Itinerary tentatif (contoh)' : 'Itinerary tentatif',
+            'note' => $itineraries->isNotEmpty()
+              ? 'Contoh dari musim sebelumnya — itinerary resmi mengikuti keberangkatan di atas.'
+              : 'Itinerary resmi per keberangkatan akan diumumkan mendekati jadwal berangkat. Berikut contoh referensi.',
+          ])
+        @endif
         @include('partials.itinerary-pdf-viewer')
       </div>
     @endif

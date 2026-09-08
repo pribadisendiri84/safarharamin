@@ -93,6 +93,50 @@ class HajiExchangeRate
     }
 
     /**
+     * Estimasi IDR dari harga USD paket haji (butuh kurs USD → IDR aktif di admin).
+     */
+    public static function convertUsdToIdr(int $usd): ?int
+    {
+        if ($usd <= 0 || ! self::enabled()) {
+            return null;
+        }
+
+        if (self::currency() !== 'USD') {
+            return null;
+        }
+
+        $rate = self::storedRate();
+        if ($rate === null || $rate <= 0) {
+            return null;
+        }
+
+        return (int) round($usd * $rate);
+    }
+
+    /**
+     * Snapshot kurs saat program haji masuk operasional.
+     *
+     * @return array{currency: string, rate: int, captured_at: string|null}|null
+     */
+    public static function snapshot(): ?array
+    {
+        if (! self::enabled()) {
+            return null;
+        }
+
+        $rate = self::storedRate();
+        if ($rate === null || $rate <= 0) {
+            return null;
+        }
+
+        return [
+            'currency' => self::currency(),
+            'rate' => $rate,
+            'captured_at' => Setting::getValue(self::KEY_UPDATED_AT) ?: null,
+        ];
+    }
+
+    /**
      * @return array{enabled: string, mode: string, currency: string, rate: string, updated_at: string}
      */
     public static function adminForm(): array

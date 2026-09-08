@@ -36,7 +36,7 @@ class HajiPlusPageTest extends TestCase
 
         $payload = $this->payloadFrom($page, [
             'rooms.0.label' => 'Quad Premium',
-            'rooms.0.price' => 280_000_000,
+            'rooms.0.price' => 18_000,
             'hotels.0.master_name' => 'Madinah Pullman',
             'hotels.0.master_location' => Hotel::LOCATION_MADINAH,
             'hotels.0.distance' => '±150 m dari Masjid Nabawi',
@@ -51,7 +51,7 @@ class HajiPlusPageTest extends TestCase
         $this->get('/haji-khusus')
             ->assertOk()
             ->assertSee('Quad Premium')
-            ->assertSee('Rp 280 Jt')
+            ->assertSee('$18.000')
             ->assertSee('Madinah Pullman')
             ->assertSee('Siap berangkat bersama kami?')
             ->assertDontSee('4 paket');
@@ -191,8 +191,30 @@ class HajiPlusPageTest extends TestCase
             ->assertSee('haji-airline-logos--primary', false);
     }
 
-    public function test_legacy_price_label_is_parsed_into_nominal(): void
+    public function test_haji_room_shows_idr_estimate_when_usd_rate_enabled(): void
     {
+        \App\Support\HajiExchangeRate::saveManual(16_500, 'USD', true, \App\Support\HajiExchangeRate::MODE_MANUAL);
+
+        $user = User::factory()->create();
+        $page = HajiPlusPage::content();
+        $payload = $this->payloadFrom($page, [
+            'rooms.0.price' => 16_750,
+        ]);
+
+        $this->actingAs($user)
+            ->put(route('admin.haji-plus.update'), $payload)
+            ->assertRedirect(route('admin.haji-plus.edit'));
+
+        $this->get('/haji-khusus')
+            ->assertOk()
+            ->assertSee('$16.750')
+            ->assertSee('≈ Rp 276,3 Jt', false);
+    }
+
+    public function test_legacy_idr_price_label_is_converted_to_usd_when_rate_set(): void
+    {
+        \App\Support\HajiExchangeRate::saveManual(16_500, 'USD', true, \App\Support\HajiExchangeRate::MODE_MANUAL);
+
         HajiPlusPage::save([
             'rooms' => [
                 ['key' => 'quad', 'label' => 'Quad', 'occupancy' => '4 orang', 'price_label' => 'Rp 280 Jt', 'price_note' => '/jamaah'],
@@ -200,8 +222,8 @@ class HajiPlusPageTest extends TestCase
         ]);
 
         $room = HajiPlusPage::content()['rooms'][0] ?? [];
-        $this->assertSame(280_000_000, (int) ($room['price'] ?? 0));
-        $this->assertSame('Rp 280 Jt', $room['price_label'] ?? null);
+        $this->assertSame(16_970, (int) ($room['price'] ?? 0));
+        $this->assertSame('$16.970', $room['price_label'] ?? null);
     }
 
     /**

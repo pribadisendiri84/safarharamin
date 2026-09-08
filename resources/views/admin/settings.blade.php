@@ -74,6 +74,42 @@
               </span>
             </label>
           </div>
+
+          @php
+            $umrohSamples = $umrohSampleItineraries ?? [];
+            $umrohSampleCount = count($umrohSamples);
+          @endphp
+          <div class="admin-subblock umroh-sample-itinerary-admin">
+            <h3 class="admin-subblock-title">Itinerary tentatif umroh (contoh)</h3>
+            <p class="admin-panel-desc">Maksimal 2 PDF contoh — ditampilkan di detail setiap paket umroh sebelum itinerary resmi per tanggal tersedia.</p>
+
+            @foreach($umrohSamples as $sample)
+              <div class="itinerary-existing-item">
+                <label class="check">
+                  <input type="checkbox" name="delete_umroh_sample_itineraries[]" value="{{ $sample['file_path'] }}" @checked(in_array($sample['file_path'], old('delete_umroh_sample_itineraries', []), true))>
+                  Hapus
+                </label>
+                <label>Judul contoh
+                  <input type="text" name="umroh_sample_itinerary_existing[{{ $loop->index }}][label]" value="{{ old('umroh_sample_itinerary_existing.'.$loop->index.'.label', $sample['label']) }}">
+                </label>
+                <input type="hidden" name="umroh_sample_itinerary_existing[{{ $loop->index }}][file_path]" value="{{ $sample['file_path'] }}">
+                <a class="btn gray compact" href="{{ $sample['file_path'] }}" target="_blank" rel="noopener">Lihat PDF</a>
+              </div>
+            @endforeach
+
+            @if($umrohSampleCount < 2)
+              @for($index = 0; $index < min(2 - $umrohSampleCount, 2); $index++)
+                <div class="itinerary-new-row">
+                  <label>Judul contoh
+                    <input type="text" name="umroh_sample_itinerary_labels[]" value="{{ old('umroh_sample_itinerary_labels.'.$index) }}" placeholder="Contoh musim 1446H">
+                  </label>
+                  <label>File PDF
+                    <input type="file" name="umroh_sample_itinerary_pdfs[]" accept="application/pdf,.pdf">
+                  </label>
+                </div>
+              @endfor
+            @endif
+          </div>
         </div>
       </section>
 
@@ -148,7 +184,7 @@
         <div class="admin-panel">
           <header class="admin-panel-head">
             <h2 class="admin-panel-title">Kurs haji</h2>
-            <p class="admin-panel-desc">Ditampilkan di halaman Haji Khusus. Kurs {{ old('haji_exchange_rate_currency', $hajiExchangeRate['currency']) }} → IDR.</p>
+            <p class="admin-panel-desc">Ditampilkan di halaman Haji Khusus. Untuk <strong>estimasi Rp harga paket (USD)</strong>, set mata uang ke <strong>USD</strong>. Kurs {{ old('haji_exchange_rate_currency', $hajiExchangeRate['currency']) }} → IDR.</p>
           </header>
 
           <label class="check">

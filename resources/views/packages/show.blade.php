@@ -106,8 +106,20 @@
           @include('partials.itinerary-pdf-list', [
             'items' => $package->pdfItineraries,
             'heading' => 'Itinerary',
-            'note' => 'Pilih tanggal keberangkatan untuk melihat PDF itinerary.',
+            'note' => 'Pilih tanggal keberangkatan untuk melihat PDF itinerary resmi.',
           ])
+        @endif
+        @if(($umrohSampleItineraries ?? []) !== [])
+          @include('partials.itinerary-pdf-list', [
+            'items' => collect($umrohSampleItineraries),
+            'heading' => $package->pdfItineraries->isNotEmpty() ? 'Itinerary tentatif (contoh)' : 'Itinerary tentatif',
+            'note' => $package->pdfItineraries->isNotEmpty()
+              ? 'Contoh dari musim sebelumnya — itinerary resmi mengikuti tanggal keberangkatan di atas.'
+              : 'Itinerary resmi per tanggal keberangkatan akan diumumkan mendekati jadwal berangkat. Berikut contoh referensi.',
+            'sample' => true,
+          ])
+        @endif
+        @if($package->pdfItineraries->isNotEmpty() || ($umrohSampleItineraries ?? []) !== [])
           @include('partials.itinerary-pdf-viewer')
         @elseif($package->itinerary)
           <h2>Itinerary</h2>

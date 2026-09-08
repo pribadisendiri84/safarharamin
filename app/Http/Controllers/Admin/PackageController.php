@@ -77,7 +77,7 @@ class PackageController extends Controller
 
     public function edit(Package $package)
     {
-        $package->load('pdfItineraries');
+        $package->load(['pdfItineraries']);
 
         return view('admin.packages.form', ['package' => $package]);
     }
@@ -505,6 +505,7 @@ class PackageController extends Controller
 
             PackageItinerary::query()->create([
                 'package_id' => $package->id,
+                'kind' => PackageItinerary::KIND_OFFICIAL,
                 'departure_date' => $date,
                 'file_path' => $store->store($file, $package->title.' '.$date),
             ]);

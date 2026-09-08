@@ -424,7 +424,22 @@ class HajiPlusProgram
     }
 
     /**
-     * Referensi harga IDR per tipe kamar (nominal penuh, bukan teks tampilan).
+     * Referensi harga USD per tipe kamar (nominal flyer, tanpa simbol).
+     *
+     * @return array{quad: int, triple: int, double: int, double_plus: int}
+     */
+    public static function defaultRoomPricesUsd(): array
+    {
+        return [
+            'quad' => 16_750,
+            'triple' => 17_750,
+            'double' => 18_500,
+            'double_plus' => 19_800,
+        ];
+    }
+
+    /**
+     * @deprecated Gunakan defaultRoomPricesUsd(); harga haji dalam USD.
      *
      * @return array{quad: int, triple: int, double: int, double_plus: int}
      */

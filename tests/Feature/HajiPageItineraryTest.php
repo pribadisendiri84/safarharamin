@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Departure;
 use App\Models\Hotel;
+use App\Models\Setting;
 use App\Models\User;
 use App\Support\HajiPlusPage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -122,6 +123,74 @@ class HajiPageItineraryTest extends TestCase
             ->get(route('admin.operations.departures.index', ['kind' => 'haji']))
             ->assertOk()
             ->assertSee('Haji Plus diisi dari data halaman khusus');
+    }
+
+    public function test_admin_can_upload_sample_itineraries_on_haji_plus_page(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $page = HajiPlusPage::content();
+
+        $payload = $this->hajiPlusPayload($page, [
+            'sample_itinerary_labels' => ['Contoh musim 1446H', 'Contoh musim 1445H'],
+            'sample_itinerary_pdfs' => [
+                UploadedFile::fake()->create('sample-1446.pdf', 120, 'application/pdf'),
+                UploadedFile::fake()->create('sample-1445.pdf', 120, 'application/pdf'),
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->put(route('admin.haji-plus.update'), $payload)
+            ->assertRedirect(route('admin.haji-plus.edit'));
+
+        $samples = HajiPlusPage::sampleItineraries();
+        $this->assertCount(2, $samples);
+        $this->assertSame('Contoh musim 1446H', $samples[0]['label']);
+        $this->assertSame('Contoh musim 1445H', $samples[1]['label']);
+        $this->assertStringStartsWith('/storage/haji-page-itineraries/', $samples[0]['file_path']);
+    }
+
+    public function test_haji_page_shows_sample_itineraries_before_official(): void
+    {
+        Setting::setValue(HajiPlusPage::KEY, json_encode([
+            'sample_itineraries' => [
+                ['label' => 'Contoh musim 1446H', 'file_path' => '/storage/haji-page-itineraries/sample-1446.pdf'],
+            ],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}');
+
+        $this->get('/haji-khusus')
+            ->assertOk()
+            ->assertSee('Itinerary tentatif')
+            ->assertSee('Contoh musim 1446H')
+            ->assertSee('/storage/haji-page-itineraries/sample-1446.pdf', false)
+            ->assertSee('contoh tentatif');
+    }
+
+    public function test_haji_page_shows_official_and_sample_itineraries(): void
+    {
+        Setting::setValue(HajiPlusPage::KEY, json_encode([
+            'sample_itineraries' => [
+                ['label' => 'Contoh musim 1446H', 'file_path' => '/storage/haji-page-itineraries/sample-1446.pdf'],
+            ],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '{}');
+
+        Departure::query()->create([
+            'source' => Departure::SOURCE_HAJI_PAGE,
+            'program_kind' => 'haji',
+            'program_name' => 'Haji Khusus Arminareka — 1447H/2026M',
+            'departure_date' => '2026-09-11',
+            'hijri_label' => '1448 H',
+            'itinerary_pdf_path' => '/storage/haji-page-itineraries/official.pdf',
+            'show_on_haji_page' => true,
+            'program_snapshot' => HajiPlusPage::operationalSnapshot(),
+        ]);
+
+        $response = $this->get('/haji-khusus')->assertOk();
+        $response->assertSeeInOrder([
+            'Keberangkatan 11 September 2026',
+            'Itinerary tentatif (contoh)',
+            'Contoh musim 1446H',
+        ]);
     }
 
     /**

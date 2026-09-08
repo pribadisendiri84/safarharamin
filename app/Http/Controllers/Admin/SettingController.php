@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\PackageImageStore;
+use App\Services\PackageItineraryStore;
 use App\Support\HajiExchangeRate;
 use App\Support\SiteProfile;
+use App\Support\UmrohSampleItineraries;
 use App\Support\WaMessages;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -20,10 +22,11 @@ class SettingController extends Controller
             'site' => SiteProfile::current(),
             'waMessages' => WaMessages::adminTemplates(),
             'hajiExchangeRate' => HajiExchangeRate::adminForm(),
+            'umrohSampleItineraries' => UmrohSampleItineraries::all(),
         ]);
     }
 
-    public function update(Request $request, PackageImageStore $images)
+    public function update(Request $request, PackageImageStore $images, PackageItineraryStore $itineraryStore)
     {
         $data = $request->validate([
             'site_name' => ['required', 'string', 'max:120'],
@@ -43,6 +46,15 @@ class SettingController extends Controller
             'haji_exchange_rate_mode' => ['required', Rule::in([HajiExchangeRate::MODE_MANUAL, HajiExchangeRate::MODE_AUTO])],
             'haji_exchange_rate_currency' => ['required', 'string', 'max:8'],
             'haji_exchange_rate' => ['nullable', 'integer', 'min:1', 'max:99999999'],
+            'delete_umroh_sample_itineraries' => ['nullable', 'array', 'max:2'],
+            'delete_umroh_sample_itineraries.*' => ['string', 'max:500'],
+            'umroh_sample_itinerary_existing' => ['nullable', 'array', 'max:2'],
+            'umroh_sample_itinerary_existing.*.label' => ['nullable', 'string', 'max:120'],
+            'umroh_sample_itinerary_existing.*.file_path' => ['nullable', 'string', 'max:500'],
+            'umroh_sample_itinerary_labels' => ['nullable', 'array', 'max:2'],
+            'umroh_sample_itinerary_labels.*' => ['nullable', 'string', 'max:120'],
+            'umroh_sample_itinerary_pdfs' => ['nullable', 'array', 'max:2'],
+            'umroh_sample_itinerary_pdfs.*' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
         ]);
 
         Setting::setValue('site_name', trim($data['site_name']));
@@ -87,7 +99,71 @@ class SettingController extends Controller
             HajiExchangeRate::refreshFromApi();
         }
 
+        UmrohSampleItineraries::save($this->syncUmrohSampleItineraries($request, $itineraryStore));
+
         return redirect()->route('admin.settings.edit')->with('ok', 'Pengaturan tersimpan.');
+    }
+
+    /**
+     * @return list<array{label: string, file_path: string}>
+     */
+    private function syncUmrohSampleItineraries(Request $request, PackageItineraryStore $store): array
+    {
+        $items = [];
+
+        foreach ($request->input('umroh_sample_itinerary_existing', []) as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $path = trim((string) ($row['file_path'] ?? ''));
+            $label = trim((string) ($row['label'] ?? ''));
+
+            if ($path === '' || $label === '') {
+                continue;
+            }
+
+            if (in_array($path, $request->input('delete_umroh_sample_itineraries', []), true)) {
+                $store->delete($path);
+                continue;
+            }
+
+            $items[] = [
+                'label' => $label,
+                'file_path' => $path,
+            ];
+        }
+
+        $labels = $request->input('umroh_sample_itinerary_labels', []);
+        $files = $request->file('umroh_sample_itinerary_pdfs', []);
+
+        foreach ($labels as $index => $labelRaw) {
+            if (count($items) >= 2) {
+                break;
+            }
+
+            $label = trim((string) $labelRaw);
+            $file = is_array($files) ? ($files[$index] ?? null) : null;
+
+            if ($label === '' && ! $file) {
+                continue;
+            }
+
+            if ($label === '') {
+                continue;
+            }
+
+            if (! $file || ! $file->isValid()) {
+                continue;
+            }
+
+            $items[] = [
+                'label' => $label,
+                'file_path' => $store->store($file, 'Umroh contoh '.$label),
+            ];
+        }
+
+        return UmrohSampleItineraries::normalize($items);
     }
 
     public function refreshExchangeRate()

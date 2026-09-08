@@ -175,8 +175,8 @@
   <label>Deskripsi (opsional)<textarea name="description" rows="3">{{ old('description', $package->description) }}</textarea></label>
 
   <fieldset class="itinerary-pdf-fieldset">
-    <legend>Itinerary PDF</legend>
-    <p class="sub">Unggah PDF per tanggal keberangkatan. Judul di website mengikuti tanggal. Klik link untuk membuka PDF.</p>
+    <legend>Itinerary PDF resmi</legend>
+    <p class="sub">Unggah PDF per tanggal keberangkatan. Judul di website mengikuti tanggal. Itinerary contoh umroh diatur sekali di <a href="{{ route('admin.settings.edit') }}">Pengaturan → Tampilan katalog</a>.</p>
 
     @if($package->pdfItineraries?->isNotEmpty())
       <div class="itinerary-existing-list">

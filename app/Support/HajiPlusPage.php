@@ -50,7 +50,47 @@ class HajiPlusPage
             'airline' => $airline,
             'flow' => self::mergeList($defaults['flow'], $stored['flow'] ?? [], ['title', 'description', 'icon']),
             'cta' => array_replace($defaults['cta'], $stored['cta'] ?? []),
+            'sample_itineraries' => self::normalizeSampleItineraries($stored['sample_itineraries'] ?? []),
         ];
+    }
+
+    /**
+     * @return list<array{label: string, file_path: string}>
+     */
+    public static function sampleItineraries(?array $page = null): array
+    {
+        $page ??= self::content();
+
+        return self::normalizeSampleItineraries($page['sample_itineraries'] ?? []);
+    }
+
+    /**
+     * @param  list<mixed>  $items
+     * @return list<array{label: string, file_path: string}>
+     */
+    public static function normalizeSampleItineraries(array $items): array
+    {
+        $rows = [];
+
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $label = trim((string) ($item['label'] ?? ''));
+            $path = trim((string) ($item['file_path'] ?? ''));
+
+            if ($label === '' || $path === '') {
+                continue;
+            }
+
+            $rows[] = [
+                'label' => $label,
+                'file_path' => $path,
+            ];
+        }
+
+        return array_slice($rows, 0, 2);
     }
 
     /**
@@ -117,6 +157,7 @@ class HajiPlusPage
 
         return [
             'captured_at' => now()->toIso8601String(),
+            'exchange_rate' => HajiExchangeRate::snapshot(),
             'hero' => $page['hero'],
             'rooms' => $page['rooms'],
             'hotels' => $page['hotels'],
@@ -180,14 +221,15 @@ class HajiPlusPage
                 'images' => [],
             ],
             'rooms' => array_map(function (array $room) {
-                $prices = HajiPlusProgram::defaultRoomPricesIdr();
-                $price = $prices[$room['key']] ?? 0;
+                $prices = HajiPlusProgram::defaultRoomPricesUsd();
+                $priceUsd = $prices[$room['key']] ?? 0;
 
                 return [
                     'key' => $room['key'],
                     'label' => $room['label'],
                     'occupancy' => str_replace('org/kamar', 'orang', $room['occupancy_label']),
-                    'price' => $price,
+                    'price' => $priceUsd,
+                    'price_currency' => 'USD',
                     'price_note' => '/jamaah',
                     'image' => HajiPlusProgram::roomImage($room['key']),
                     'is_featured' => $room['key'] === HajiPlusProgram::featuredRoomKey() ? '1' : '0',
@@ -231,36 +273,69 @@ class HajiPlusPage
                 'description' => 'Konsultasikan tipe kamar dan jadwal keberangkatan dengan tim kami.',
                 'note' => 'Tim kami siap membantu 24/7',
             ],
+            'sample_itineraries' => [],
         ];
     }
 
     /**
-     * @return array{prefix: string, amount: string, unit: string}
+     * @return array{prefix: string, amount: string, unit: string, idr_estimate: string|null}
      */
     public static function startingPrice(array $hero, array $rooms): array
     {
         $override = (int) ($hero['starting_price'] ?? 0);
         if ($override > 0) {
-            return [
-                'prefix' => 'Mulai',
-                'amount' => self::formatRoomPrice($override),
-                'unit' => '/jamaah',
-            ];
+            return self::priceDisplay($override);
         }
 
         $first = $rooms[0] ?? null;
-        $firstPrice = (int) ($first['price'] ?? 0);
+        $firstUsd = (int) ($first['price'] ?? 0);
+
+        if ($firstUsd > 0) {
+            return self::priceDisplay($firstUsd, (string) ($first['price_note'] ?? '/jamaah'));
+        }
 
         return [
             'prefix' => 'Mulai',
-            'amount' => $firstPrice > 0
-                ? self::formatRoomPrice($firstPrice)
-                : (string) ($first['price_label'] ?? '$16.750'),
+            'amount' => (string) ($first['price_label'] ?? '$16.750'),
             'unit' => (string) ($first['price_note'] ?? '/jamaah'),
+            'idr_estimate' => $first['price_idr_label'] ?? null,
         ];
     }
 
-    public static function formatRoomPrice(int $amount): string
+    /**
+     * @return array{prefix: string, amount: string, unit: string, idr_estimate: string|null}
+     */
+    public static function priceDisplay(int $usd, string $unit = '/jamaah'): array
+    {
+        $idr = self::estimateIdrFromUsd($usd);
+
+        return [
+            'prefix' => 'Mulai',
+            'amount' => self::formatUsdPrice($usd),
+            'unit' => $unit,
+            'idr_estimate' => $idr !== null ? self::formatIdrEstimate($idr) : null,
+        ];
+    }
+
+    public static function formatUsdPrice(int $usd): string
+    {
+        if ($usd <= 0) {
+            return '';
+        }
+
+        return '$'.number_format($usd, 0, ',', '.');
+    }
+
+    public static function formatIdrEstimate(int $idr): string
+    {
+        if ($idr <= 0) {
+            return '';
+        }
+
+        return '≈ '.self::formatIdrShort($idr);
+    }
+
+    public static function formatIdrShort(int $amount): string
     {
         if ($amount <= 0) {
             return '';
@@ -281,7 +356,44 @@ class HajiPlusPage
         return 'Rp '.number_format($whole, 0, ',', '.').','.$decimal.' Jt';
     }
 
+    public static function estimateIdrFromUsd(int $usd): ?int
+    {
+        return HajiExchangeRate::convertUsdToIdr($usd);
+    }
+
+    public static function parseUsdInput(mixed $value): int
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return 0;
+        }
+
+        if (str_starts_with($value, '$')) {
+            $value = substr($value, 1);
+        }
+
+        if (preg_match('/^\d+$/', $value)) {
+            return (int) $value;
+        }
+
+        if (preg_match('/^[\d.]+$/', $value)) {
+            return (int) str_replace('.', '', $value);
+        }
+
+        if (preg_match('/^[\d,]+$/', $value)) {
+            return (int) str_replace(',', '', $value);
+        }
+
+        return self::parseLegacyPriceInput($value);
+    }
+
+    /** @deprecated Legacy IDR parser */
     public static function parsePriceInput(mixed $value): int
+    {
+        return self::parseLegacyPriceInput($value);
+    }
+
+    private static function parseLegacyPriceInput(mixed $value): int
     {
         $value = trim((string) $value);
         if ($value === '') {
@@ -310,17 +422,14 @@ class HajiPlusPage
     public static function normalizeRooms(array $rooms): array
     {
         return array_map(function (array $room): array {
-            $price = (int) ($room['price'] ?? 0);
-            $label = trim((string) ($room['price_label'] ?? ''));
+            $priceUsd = self::normalizeRoomUsd($room);
+            $idrEstimate = self::estimateIdrFromUsd($priceUsd);
 
-            if ($price <= 0) {
-                $price = self::parsePriceInput($label);
-            }
-
-            $room['price'] = $price;
-            $room['price_label'] = $price > 0
-                ? self::formatRoomPrice($price)
-                : $label;
+            $room['price'] = $priceUsd;
+            $room['price_currency'] = 'USD';
+            $room['price_label'] = $priceUsd > 0 ? self::formatUsdPrice($priceUsd) : trim((string) ($room['price_label'] ?? ''));
+            $room['price_idr_estimate'] = $idrEstimate;
+            $room['price_idr_label'] = $idrEstimate !== null ? self::formatIdrEstimate($idrEstimate) : null;
             $room['price_note'] = trim((string) ($room['price_note'] ?? '/jamaah')) ?: '/jamaah';
 
             return $room;
@@ -330,9 +439,73 @@ class HajiPlusPage
     /**
      * @param  array<string, mixed>  $room
      */
-    public static function roomPrice(array $room): int
+    public static function normalizeRoomUsd(array $room): int
+    {
+        $price = (int) ($room['price'] ?? 0);
+        $label = trim((string) ($room['price_label'] ?? ''));
+
+        if ($price > 0 && $price < 1_000_000) {
+            return $price;
+        }
+
+        if ($label !== '' && str_starts_with($label, '$')) {
+            return self::parseUsdInput($label);
+        }
+
+        if ($price >= 1_000_000) {
+            $rate = HajiExchangeRate::storedRate();
+            if ($rate !== null && $rate > 0 && HajiExchangeRate::currency() === 'USD') {
+                return max(1, (int) round($price / $rate));
+            }
+
+            return max(1, (int) round($price / 16_500));
+        }
+
+        if ($price <= 0 && $label !== '') {
+            if (str_contains($label, 'Rp') || str_contains($label, 'Jt')) {
+                $idr = self::parseLegacyPriceInput($label);
+                $rate = HajiExchangeRate::storedRate();
+
+                if ($idr > 0 && $rate !== null && $rate > 0 && HajiExchangeRate::currency() === 'USD') {
+                    return max(1, (int) round($idr / $rate));
+                }
+            }
+
+            return self::parseUsdInput($label);
+        }
+
+        return $price;
+    }
+
+    /**
+     * Harga acuan operasional jamaah (IDR) dari kamar snapshot / USD + kurs.
+     *
+     * @param  array<string, mixed>  $room
+     */
+    public static function roomOperationalPriceIdr(array $room): int
+    {
+        $stored = (int) ($room['price_idr_estimate'] ?? 0);
+        if ($stored > 0) {
+            return $stored;
+        }
+
+        $usd = (int) ($room['price'] ?? 0);
+
+        return self::estimateIdrFromUsd($usd) ?? 0;
+    }
+
+    /**
+     * @param  array<string, mixed>  $room
+     */
+    public static function roomPriceUsd(array $room): int
     {
         return (int) ($room['price'] ?? 0);
+    }
+
+    /** @deprecated Use roomPriceUsd() */
+    public static function roomPrice(array $room): int
+    {
+        return self::roomPriceUsd($room);
     }
 
     /**

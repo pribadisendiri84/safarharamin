@@ -38,10 +38,12 @@ class HajiOperationalSnapshotTest extends TestCase
             'cta' => $page['cta'],
         ], [
             'rooms' => array_map(fn (array $room, int $index) => array_merge($room, [
-                'price' => $index === 0 ? 280_000_000 : ($room['price'] ?? 0),
+                'price' => $index === 0 ? 18_000 : ($room['price'] ?? 0),
             ]), $page['rooms'], array_keys($page['rooms'])),
         ]);
         HajiPlusPage::save($payload);
+
+        \App\Support\HajiExchangeRate::saveManual(16_500, 'USD', true, \App\Support\HajiExchangeRate::MODE_MANUAL);
 
         $defaults = HajiPlusPage::departureDefaults();
 
@@ -67,8 +69,9 @@ class HajiOperationalSnapshotTest extends TestCase
         $this->assertSame('haji', $departure->program_kind);
         $this->assertSame(Departure::SOURCE_HAJI_PAGE, $departure->source);
         $this->assertNull($departure->package_id);
-        $this->assertSame(280_000_000, (int) ($departure->program_snapshot['rooms'][0]['price'] ?? 0));
-        $this->assertSame('Rp 280 Jt', $departure->program_snapshot['rooms'][0]['price_label'] ?? null);
+        $this->assertSame(18_000, (int) ($departure->program_snapshot['rooms'][0]['price'] ?? 0));
+        $this->assertSame('$18.000', $departure->program_snapshot['rooms'][0]['price_label'] ?? null);
+        $this->assertSame(297_000_000, (int) ($departure->program_snapshot['rooms'][0]['price_idr_estimate'] ?? 0));
     }
 
     public function test_haji_inquiry_import_matches_haji_departure_without_package(): void

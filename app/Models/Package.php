@@ -285,7 +285,12 @@ class Package extends Model
 
     public function pdfItineraries(): HasMany
     {
-        return $this->hasMany(PackageItinerary::class)->ordered();
+        return $this->hasMany(PackageItinerary::class)->official()->ordered();
+    }
+
+    public function sampleItineraries(): HasMany
+    {
+        return $this->hasMany(PackageItinerary::class)->sample();
     }
 
     public function scopePublished(Builder $query): Builder

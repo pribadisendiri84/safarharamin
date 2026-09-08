@@ -6,8 +6,11 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Support\HajiExchangeRate;
 use App\Support\SiteProfile;
+use App\Support\UmrohSampleItineraries;
 use App\Support\WaMessages;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class SiteBrandingTest extends TestCase
@@ -122,5 +125,25 @@ class SiteBrandingTest extends TestCase
             ->assertRedirect(route('admin.settings.edit'));
 
         $this->assertSame(SiteProfile::CARD_STYLE_CATALOG, Setting::getValue('package_card_style'));
+    }
+
+    public function test_admin_can_upload_umroh_master_sample_itineraries_from_settings(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->put(route('admin.settings.update'), array_merge($this->settingsPayload(), [
+                'umroh_sample_itinerary_labels' => ['Contoh musim 1446H'],
+                'umroh_sample_itinerary_pdfs' => [
+                    UploadedFile::fake()->create('sample-1446.pdf', 120, 'application/pdf'),
+                ],
+            ]))
+            ->assertRedirect(route('admin.settings.edit'));
+
+        $samples = UmrohSampleItineraries::all();
+        $this->assertCount(1, $samples);
+        $this->assertSame('Contoh musim 1446H', $samples[0]['label']);
+        $this->assertStringStartsWith('/storage/package-itineraries/', $samples[0]['file_path']);
     }
 }

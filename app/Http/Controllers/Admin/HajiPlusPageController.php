@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Airline;
 use App\Models\Departure;
 use App\Models\Hotel;
+use App\Services\HajiPageItineraryStore;
 use App\Services\PackageImageStore;
 use App\Support\HajiPlusPage;
 use Illuminate\Http\Request;
@@ -37,7 +38,7 @@ class HajiPlusPageController extends Controller
         ]);
     }
 
-    public function update(Request $request, PackageImageStore $images)
+    public function update(Request $request, PackageImageStore $images, HajiPageItineraryStore $itineraryStore)
     {
         $data = $request->validate([
             'hero.badge' => ['required', 'string', 'max:40'],
@@ -84,6 +85,15 @@ class HajiPlusPageController extends Controller
             'cta.note' => ['required', 'string', 'max:80'],
             'itinerary_visible_departures' => ['nullable', 'array'],
             'itinerary_visible_departures.*' => ['integer', 'exists:departures,id'],
+            'delete_sample_itineraries' => ['nullable', 'array', 'max:2'],
+            'delete_sample_itineraries.*' => ['string', 'max:500'],
+            'sample_itinerary_existing' => ['nullable', 'array', 'max:2'],
+            'sample_itinerary_existing.*.label' => ['nullable', 'string', 'max:120'],
+            'sample_itinerary_existing.*.file_path' => ['nullable', 'string', 'max:500'],
+            'sample_itinerary_labels' => ['nullable', 'array', 'max:2'],
+            'sample_itinerary_labels.*' => ['nullable', 'string', 'max:120'],
+            'sample_itinerary_pdfs' => ['nullable', 'array', 'max:2'],
+            'sample_itinerary_pdfs.*' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
         ]);
 
         $current = HajiPlusPage::content();
@@ -142,11 +152,75 @@ class HajiPlusPageController extends Controller
             'airline' => $airline,
             'flow' => $data['flow'],
             'cta' => $data['cta'],
+            'sample_itineraries' => $this->syncSampleItineraries($request, $itineraryStore, $current),
         ]);
 
         $this->syncItineraryVisibility($request);
 
         return redirect()->route('admin.haji-plus.edit')->with('ok', 'Halaman Haji Plus tersimpan.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $current
+     * @return list<array{label: string, file_path: string}>
+     */
+    private function syncSampleItineraries(Request $request, HajiPageItineraryStore $store, array $current): array
+    {
+        $items = [];
+
+        foreach ($request->input('sample_itinerary_existing', []) as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $path = trim((string) ($row['file_path'] ?? ''));
+            $label = trim((string) ($row['label'] ?? ''));
+
+            if ($path === '' || $label === '') {
+                continue;
+            }
+
+            if (in_array($path, $request->input('delete_sample_itineraries', []), true)) {
+                $store->delete($path);
+                continue;
+            }
+
+            $items[] = [
+                'label' => $label,
+                'file_path' => $path,
+            ];
+        }
+
+        $labels = $request->input('sample_itinerary_labels', []);
+        $files = $request->file('sample_itinerary_pdfs', []);
+
+        foreach ($labels as $index => $labelRaw) {
+            if (count($items) >= 2) {
+                break;
+            }
+
+            $label = trim((string) $labelRaw);
+            $file = is_array($files) ? ($files[$index] ?? null) : null;
+
+            if ($label === '' && ! $file) {
+                continue;
+            }
+
+            if ($label === '') {
+                continue;
+            }
+
+            if (! $file || ! $file->isValid()) {
+                continue;
+            }
+
+            $items[] = [
+                'label' => $label,
+                'file_path' => $store->store($file, $label),
+            ];
+        }
+
+        return HajiPlusPage::normalizeSampleItineraries($items);
     }
 
     private function syncItineraryVisibility(Request $request): void

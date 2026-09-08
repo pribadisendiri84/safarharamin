@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Inquiry;
 use App\Models\Package;
 use App\Models\PackageKind;
+use App\Support\UmrohSampleItineraries;
 use App\Support\WaMessages;
 use Illuminate\Http\Request;
 
@@ -96,6 +97,10 @@ class PackageController extends Controller
             'pdfItineraries' => fn ($query) => $query->ordered(),
         ]);
 
+        $umrohSampleItineraries = in_array($package->type, Package::UMROH_TYPES, true)
+            ? UmrohSampleItineraries::all()
+            : [];
+
         $related = Package::query()
             ->with('packageKind')
             ->published()
@@ -108,6 +113,7 @@ class PackageController extends Controller
         return view('packages.show', [
             'package' => $package,
             'related' => $related,
+            'umrohSampleItineraries' => $umrohSampleItineraries,
         ]);
     }
 

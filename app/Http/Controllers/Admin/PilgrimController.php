@@ -230,6 +230,7 @@ class PilgrimController extends Controller
                 'hotel_transit' => $departure->hotel_transit,
                 'hotel_maktab' => $departure->hotel_maktab,
                 'room_prices' => self::departureRoomPrices($departure),
+                'room_prices_usd' => self::departureRoomPricesUsd($departure),
                 'edit_url' => route('admin.operations.departures.edit', $departure),
             ],
         ])->all();
@@ -248,10 +249,33 @@ class PilgrimController extends Controller
             }
 
             $key = (string) ($room['key'] ?? '');
-            $price = (int) ($room['price'] ?? HajiPlusPage::parsePriceInput($room['price_label'] ?? ''));
+            $idr = HajiPlusPage::roomOperationalPriceIdr($room);
 
-            if ($key !== '' && $price > 0) {
-                $prices[$key] = $price;
+            if ($key !== '' && $idr > 0) {
+                $prices[$key] = $idr;
+            }
+        }
+
+        return $prices;
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private static function departureRoomPricesUsd(Departure $departure): array
+    {
+        $prices = [];
+
+        foreach ($departure->program_snapshot['rooms'] ?? [] as $room) {
+            if (! is_array($room)) {
+                continue;
+            }
+
+            $key = (string) ($room['key'] ?? '');
+            $usd = HajiPlusPage::roomPriceUsd($room);
+
+            if ($key !== '' && $usd > 0) {
+                $prices[$key] = $usd;
             }
         }
 

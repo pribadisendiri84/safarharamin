@@ -49,13 +49,14 @@
             <textarea name="hero[subtitle]" rows="2" required>{{ old('hero.subtitle', $page['hero']['subtitle']) }}</textarea>
           </label>
           <div class="row2">
-            <label>Harga mulai (Rp) <small class="haji-label-hint">kosongkan = pakai kamar pertama</small>
+            <label>Harga mulai (USD) <small class="haji-label-hint">kosongkan = pakai kamar pertama</small>
               <input
-                type="text"
-                class="js-rupiah"
+                type="number"
                 name="hero[starting_price]"
                 value="{{ old('hero.starting_price', (int) ($page['hero']['starting_price'] ?? 0) ?: '') }}"
-                placeholder="275.000.000"
+                min="1"
+                step="1"
+                placeholder="16750"
               >
             </label>
           </div>
@@ -286,6 +287,44 @@
           @else
             <p class="sub haji-itinerary-admin-empty">Belum ada keberangkatan haji. Klik <strong>Tambah keberangkatan &amp; itinerary</strong> untuk mulai.</p>
           @endif
+
+          @php
+            $sampleItineraries = $page['sample_itineraries'] ?? [];
+            $sampleCount = count($sampleItineraries);
+          @endphp
+
+          <div class="haji-subblock haji-sample-itinerary-admin">
+            <h3 class="haji-subblock-title">Itinerary tentatif (contoh)</h3>
+            <p class="sub">Maksimal 2 PDF contoh — tampil di halaman Haji sebelum itinerary resmi per keberangkatan tersedia.</p>
+
+            @foreach($sampleItineraries as $sample)
+              <div class="itinerary-existing-item">
+                <label class="check">
+                  <input type="checkbox" name="delete_sample_itineraries[]" value="{{ $sample['file_path'] }}" @checked(in_array($sample['file_path'], old('delete_sample_itineraries', []), true))>
+                  Hapus
+                </label>
+                <label>Judul contoh
+                  <input type="text" name="sample_itinerary_existing[{{ $loop->index }}][label]" value="{{ old('sample_itinerary_existing.'.$loop->index.'.label', $sample['label']) }}">
+                </label>
+                <input type="hidden" name="sample_itinerary_existing[{{ $loop->index }}][file_path]" value="{{ $sample['file_path'] }}">
+                <a class="btn gray compact" href="{{ $sample['file_path'] }}" target="_blank" rel="noopener">Lihat PDF</a>
+              </div>
+            @endforeach
+
+            @if($sampleCount < 2)
+              @php $newSampleRows = min(2 - $sampleCount, 2); @endphp
+              @for($index = 0; $index < $newSampleRows; $index++)
+                <div class="itinerary-new-row haji-itinerary-row">
+                  <label>Judul contoh
+                    <input type="text" name="sample_itinerary_labels[]" value="{{ old('sample_itinerary_labels.'.$index) }}" placeholder="Contoh musim 1446H">
+                  </label>
+                  <label>File PDF
+                    <input type="file" name="sample_itinerary_pdfs[]" accept="application/pdf,.pdf">
+                  </label>
+                </div>
+              @endfor
+            @endif
+          </div>
         </div>
       </section>
 
@@ -432,6 +471,49 @@
 
   list.querySelectorAll('[data-hotel-card]').forEach(bindCard);
   reindexCards();
+})();
+
+(function () {
+  function showRoomPhotoPreview(input) {
+    var file = input.files && input.files[0];
+    var wrap = input.closest('[data-room-photo]');
+    if (!wrap) return;
+
+    var img = wrap.querySelector('[data-room-photo-img]');
+    var empty = wrap.querySelector('[data-room-photo-empty]');
+
+    if (!file || !file.type.startsWith('image/')) {
+      if (img && img.dataset.previewUrl) {
+        URL.revokeObjectURL(img.dataset.previewUrl);
+        delete img.dataset.previewUrl;
+      }
+      return;
+    }
+
+    if (!img) {
+      img = document.createElement('img');
+      img.className = 'haji-room-photo-preview';
+      img.dataset.roomPhotoImg = '';
+      img.alt = 'Pratinjau foto kamar';
+      wrap.insertBefore(img, wrap.firstChild);
+    }
+
+    if (img.dataset.previewUrl) {
+      URL.revokeObjectURL(img.dataset.previewUrl);
+    }
+
+    var url = URL.createObjectURL(file);
+    img.dataset.previewUrl = url;
+    img.src = url;
+    img.hidden = false;
+    if (empty) empty.hidden = true;
+  }
+
+  document.querySelectorAll('[data-room-photo-input]').forEach(function (input) {
+    input.addEventListener('change', function () {
+      showRoomPhotoPreview(input);
+    });
+  });
 })();
 </script>
 @endpush

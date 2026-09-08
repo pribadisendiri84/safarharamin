@@ -77,7 +77,7 @@
     <label>Harga paket (Rp)
       <input type="text" class="js-rupiah" name="package_price" id="pilgrim-package-price" value="{{ old('package_price', $pilgrim->package_price) }}" placeholder="0">
     </label>
-    <p class="sub" id="pilgrim-price-hint" hidden>Otomatis dari harga kamar keberangkatan. Ubah manual jika perlu.</p>
+    <p class="sub" id="pilgrim-price-hint" hidden>Acuan Rp dari harga USD keberangkatan × kurs snapshot. Ubah manual jika perlu.</p>
   </div>
 
   <fieldset class="haji-fields" @unless($isHaji) hidden @endunless>
@@ -162,7 +162,13 @@
     if (price > 0) {
       priceInput.value = String(price);
       priceInput.dispatchEvent(new Event('input'));
-      if (priceHint) priceHint.hidden = false;
+      if (priceHint) {
+        var usd = departure.room_prices_usd && departure.room_prices_usd[roomSelect.value];
+        priceHint.hidden = false;
+        priceHint.textContent = usd
+          ? 'Acuan Rp dari $' + Number(usd).toLocaleString('id-ID') + ' × kurs snapshot. Ubah manual jika perlu.'
+          : 'Acuan Rp dari harga USD keberangkatan × kurs snapshot. Ubah manual jika perlu.';
+      }
       return;
     }
 

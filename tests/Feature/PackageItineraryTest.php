@@ -158,4 +158,69 @@ class PackageItineraryTest extends TestCase
             '01 Desember 2026',
         ]);
     }
+
+    public function test_umroh_master_sample_itineraries_show_on_package_detail(): void
+    {
+        \App\Support\UmrohSampleItineraries::save([
+            ['label' => 'Contoh musim 1446H', 'file_path' => '/storage/package-itineraries/master-sample.pdf'],
+        ]);
+
+        $package = Package::query()->create([
+            'title' => 'Umroh Master Sample',
+            'slug' => 'umroh-master-sample',
+            'type' => 'umroh',
+            'package_kind_id' => $this->packageKindId(),
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-10-12',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'hotel_stars' => 4,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'status' => 'published',
+        ]);
+
+        $this->get(route('packages.show', $package))
+            ->assertOk()
+            ->assertSee('Itinerary tentatif')
+            ->assertSee('Contoh musim 1446H')
+            ->assertSee('/storage/package-itineraries/master-sample.pdf', false);
+    }
+
+    public function test_haji_package_does_not_show_umroh_master_sample_itineraries(): void
+    {
+        \App\Support\UmrohSampleItineraries::save([
+            ['label' => 'Contoh musim 1446H', 'file_path' => '/storage/package-itineraries/master-sample.pdf'],
+        ]);
+
+        $package = Package::query()->create([
+            'title' => 'Haji Plus Sample',
+            'slug' => 'haji-plus-sample',
+            'type' => 'haji_plus',
+            'package_kind_id' => $this->packageKindId(),
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-10-12',
+            'duration_days' => 40,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'hotel_stars' => 5,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'status' => 'published',
+        ]);
+
+        $this->get(route('packages.show', $package))
+            ->assertOk()
+            ->assertDontSee('Contoh musim 1446H')
+            ->assertDontSee('/storage/package-itineraries/master-sample.pdf', false);
+    }
 }

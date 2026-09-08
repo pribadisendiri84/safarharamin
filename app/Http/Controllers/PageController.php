@@ -14,6 +14,7 @@ class PageController extends Controller
         return view('pages.haji-khusus', [
             'page' => HajiPlusPage::content(),
             'itineraries' => HajiPlusPage::itineraries(),
+            'sampleItineraries' => HajiPlusPage::sampleItineraries(),
             'hajiExchangeRate' => HajiExchangeRate::display(),
         ]);
     }
