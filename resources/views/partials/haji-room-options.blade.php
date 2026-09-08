@@ -27,11 +27,11 @@
         </ul>
       @endif
       @if(!empty($room['display_price']))
-        <strong class="haji-room-price" @if(!empty($room['formatted_price'])) title="{{ $room['formatted_price'] }}" @elseif(!empty($room['price_usd'])) title="Referensi flyer {{ $room['price_usd'] }} / pax" @endif>
+        <strong class="haji-room-price" @if(!empty($room['formatted_price'])) title="{{ $room['formatted_price'] }}" @elseif(!empty($room['price_usd'])) title="Referensi flyer {{ $room['price_usd'] }} / jamaah" @endif>
           {{ $room['display_price'] }}<small>{{ $room['display_price_note'] ?? '/jamaah' }}</small>
         </strong>
         @if(!empty($room['formatted_price_short']) && !empty($room['price_usd']))
-          <span class="haji-room-ref">Referensi flyer {{ $room['price_usd'] }} / pax</span>
+          <span class="haji-room-ref">Referensi flyer {{ $room['price_usd'] }} / jamaah</span>
         @endif
       @else
         <span class="haji-room-price-muted">Hubungi kami</span>

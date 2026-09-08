@@ -87,7 +87,6 @@ class HajiWhatsAppRedirectTest extends TestCase
         $this->get('/haji-khusus')
             ->assertOk()
             ->assertSee('/go/haji-wa?intent=consult', false)
-            ->assertSee('/go/haji-wa?intent=room&amp;room=Quad', false)
             ->assertSee(HajiPlusProgram::registerUrl(), false)
             ->assertSee('Daftar');
     }

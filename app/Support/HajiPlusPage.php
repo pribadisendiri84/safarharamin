@@ -99,7 +99,7 @@ class HajiPlusPage
                     'label' => $room['label'],
                     'occupancy' => str_replace('org/kamar', 'orang', $room['occupancy_label']),
                     'price_label' => $room['formatted_price_short'] ?: $room['price_usd'],
-                    'price_note' => '/pax',
+                    'price_note' => '/jamaah',
                     'image' => HajiPlusProgram::roomImage($room['key']),
                     'is_featured' => $room['key'] === HajiPlusProgram::featuredRoomKey() ? '1' : '0',
                 ];
@@ -160,7 +160,7 @@ class HajiPlusPage
             return [
                 'prefix' => 'Mulai',
                 'amount' => (string) $hero['starting_price'],
-                'unit' => '/pax',
+                'unit' => '/jamaah',
             ];
         }
 
@@ -169,7 +169,7 @@ class HajiPlusPage
         return [
             'prefix' => 'Mulai',
             'amount' => (string) ($first['price_label'] ?? '$16.750'),
-            'unit' => (string) ($first['price_note'] ?? '/pax'),
+            'unit' => (string) ($first['price_note'] ?? '/jamaah'),
         ];
     }
 

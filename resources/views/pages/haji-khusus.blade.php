@@ -84,9 +84,6 @@
               <strong>{{ $room['price_label'] }}</strong>
               <span>{{ $room['price_note'] }}</span>
             </p>
-            <a class="btn full haji-btn-consult" href="{{ HajiPlusProgram::roomConsultationUrl($room['label']) }}" target="_blank" rel="noopener">
-              Pilih kamar
-            </a>
           </div>
         </article>
       @endforeach

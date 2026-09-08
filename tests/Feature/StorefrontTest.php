@@ -911,7 +911,7 @@ class StorefrontTest extends TestCase
             ->assertSee('Haji Khusus Arminareka')
             ->assertSee('Tipe kamar &amp; harga', false)
             ->assertSee('Paling favorit')
-            ->assertSee('Pilih kamar')
+            ->assertDontSee('Pilih kamar')
             ->assertSee('Proses pendaftaran mudah')
             ->assertSee('Konsultasi')
             ->assertDontSee('Konsultasi sekarang')

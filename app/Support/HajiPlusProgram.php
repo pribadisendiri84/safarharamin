@@ -116,7 +116,7 @@ class HajiPlusProgram
                 $displayPriceNote = '/jamaah';
             } else {
                 $displayPrice = $flyerRow['price_usd'];
-                $displayPriceNote = '/pax';
+                $displayPriceNote = '/jamaah';
             }
 
             $rows[] = [
@@ -153,7 +153,7 @@ class HajiPlusProgram
                 'capacity' => $row['occupancy_label'],
                 'hotel_note' => $row['hotel_note'],
                 'transit_note' => $row['transit_note'],
-                'price_note' => 'Referensi flyer '.$row['price_usd'].' / pax',
+                'price_note' => 'Referensi flyer '.$row['price_usd'].' / jamaah',
             ];
         }, self::flyerRooms());
     }
@@ -385,14 +385,14 @@ class HajiPlusProgram
             return [
                 'prefix' => 'Mulai',
                 'amount' => $cheapest['formatted_price_short'],
-                'unit' => '/pax',
+                'unit' => '/jamaah',
             ];
         }
 
         return [
             'prefix' => 'Mulai',
             'amount' => $cheapest['price_usd'] ?? '$16.750',
-            'unit' => '/pax',
+            'unit' => '/jamaah',
         ];
     }
 
