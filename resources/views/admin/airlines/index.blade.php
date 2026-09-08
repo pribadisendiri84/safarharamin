@@ -22,7 +22,7 @@
     </div>
     <label>Logo maskapai
       <input type="file" name="logo" accept="image/png,image/jpeg,image/webp">
-      <span class="sub">Opsional. PNG transparan atau WebP disarankan, maksimal 2 MB.</span>
+      <span class="sub">Opsional. Landscape 3:1 (contoh 480×160 px), PNG transparan atau WebP. Logo memenuhi frame agar terbaca di kartu katalog.</span>
     </label>
     <label class="check"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', true))> Tampil di pilihan</label>
     <button class="btn" type="submit">Tambah maskapai</button>

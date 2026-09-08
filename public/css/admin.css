@@ -534,9 +534,10 @@ tr.is-deleted { background: #fdf6f6; }
 }
 .master-logo-preview {
   flex-shrink: 0;
-  width: 72px;
+  width: 88px;
   height: 40px;
   object-fit: contain;
+  object-position: center;
   padding: 4px 6px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -544,7 +545,7 @@ tr.is-deleted { background: #fdf6f6; }
 }
 .master-logo-empty {
   flex-shrink: 0;
-  width: 72px;
+  width: 88px;
   height: 40px;
   display: grid;
   place-items: center;
