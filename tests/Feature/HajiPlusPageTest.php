@@ -26,6 +26,7 @@ class HajiPlusPageTest extends TestCase
             ->assertSee('Kartu kamar')
             ->assertSee('Hotel & maskapai')
             ->assertSee('Itinerary')
+            ->assertSee('Detail program')
             ->assertSee('Quad');
     }
 
@@ -55,6 +56,29 @@ class HajiPlusPageTest extends TestCase
             ->assertSee('Madinah Pullman')
             ->assertSee('Siap berangkat bersama kami?')
             ->assertDontSee('4 paket');
+    }
+
+    public function test_admin_can_update_detail_program_section(): void
+    {
+        $user = User::factory()->create();
+        $page = HajiPlusPage::content();
+
+        $payload = $this->payloadFrom($page, [
+            'detail_program.deposit_summary' => 'Setoran awal porsi USD 4.500 + DP USD 600',
+            'detail_program.deposit_idr_note' => '~Rp 6 juta',
+            'detail_program.faq.0.question' => 'Berapa setoran awal?',
+            'detail_program.faq.0.answer' => 'USD 4.500 + DP USD 600 (~Rp 6 juta).',
+        ]);
+
+        $this->actingAs($user)
+            ->put(route('admin.haji-plus.update'), $payload)
+            ->assertRedirect(route('admin.haji-plus.edit'));
+
+        $this->get('/haji-khusus')
+            ->assertOk()
+            ->assertSee('Setoran awal: Setoran awal porsi USD 4.500 + DP USD 600 (~Rp 6 juta)')
+            ->assertSee('Berapa setoran awal?')
+            ->assertSee('USD 4.500 + DP USD 600 (~Rp 6 juta).');
     }
 
     public function test_admin_can_upload_hero_background_without_auto_selecting_it(): void
@@ -266,6 +290,7 @@ class HajiPlusPageTest extends TestCase
             ],
             'flow' => $page['flow'],
             'cta' => $page['cta'],
+            'detail_program' => $page['detail_program'] ?? HajiPlusPage::defaultDetailProgram(),
         ];
 
         foreach ($overrides as $path => $value) {

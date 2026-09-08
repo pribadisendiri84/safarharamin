@@ -759,6 +759,8 @@ tr.sortable-ghost { opacity: .45; }
 .haji-itinerary-admin-empty { margin: 0; padding: 12px 0; }
 .haji-itinerary-visible-check { margin: 0; white-space: nowrap; font-size: 13px; }
 .haji-sample-itinerary-admin { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.haji-faq-admin-list { display: grid; gap: 14px; margin-top: 10px; }
+.haji-faq-admin-row { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
 .umroh-sample-itinerary-admin { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
 .admin-brand-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .admin-brand-row .admin-file-pick { flex: 1; min-width: 200px; }

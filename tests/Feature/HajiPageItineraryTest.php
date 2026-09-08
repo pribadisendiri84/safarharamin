@@ -232,6 +232,7 @@ class HajiPageItineraryTest extends TestCase
             ],
             'flow' => $page['flow'],
             'cta' => $page['cta'],
+            'detail_program' => $page['detail_program'] ?? HajiPlusPage::defaultDetailProgram(),
         ];
 
         foreach ($overrides as $path => $value) {

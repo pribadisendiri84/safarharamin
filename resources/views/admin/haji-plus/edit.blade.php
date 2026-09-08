@@ -6,7 +6,7 @@
   <div class="page-head">
     <div>
       <h1>Halaman Haji Plus</h1>
-      <p class="sub">Atur konten <a href="{{ route('haji') }}" target="_blank" rel="noopener">/haji-khusus</a> — hero, kamar, hotel, maskapai, dan CTA.</p>
+      <p class="sub">Atur konten <a href="{{ route('haji') }}" target="_blank" rel="noopener">/haji-khusus</a> — hero, kamar, detail program, hotel, maskapai, dan CTA.</p>
     </div>
     <div class="head-actions">
       <a class="btn ghost" href="{{ route('haji') }}" target="_blank" rel="noopener">Pratinjau</a>
@@ -23,6 +23,7 @@
       <button type="button" data-editor-tab="benefits">Manfaat</button>
       <button type="button" data-editor-tab="travel">Hotel &amp; maskapai</button>
       <button type="button" data-editor-tab="itinerary">Itinerary</button>
+      <button type="button" data-editor-tab="detail">Detail program</button>
       <button type="button" data-editor-tab="flow">Alur daftar</button>
       <button type="button" data-editor-tab="cta">CTA</button>
     </nav>
@@ -324,6 +325,59 @@
                 </div>
               @endfor
             @endif
+          </div>
+        </div>
+      </section>
+
+      @php $detail = $page['detail_program'] ?? \App\Support\HajiPlusPage::defaultDetailProgram(); @endphp
+      <section class="haji-section" data-editor-section="detail" hidden>
+        <div class="haji-panel">
+          <header class="haji-panel-head">
+            <h2 class="haji-panel-title">Detail program</h2>
+            <p class="haji-panel-desc">Informasi lengkap di bagian bawah halaman — setoran awal, fasilitas, dokumen, persyaratan, dan FAQ.</p>
+          </header>
+          <div class="row2">
+            <label>Badge seksi
+              <input name="detail_program[badge]" value="{{ old('detail_program.badge', $detail['badge']) }}" required>
+            </label>
+            <label>Judul seksi
+              <input name="detail_program[title]" value="{{ old('detail_program.title', $detail['title']) }}" required>
+            </label>
+          </div>
+          <label>Ringkasan setoran awal
+            <input name="detail_program[deposit_summary]" value="{{ old('detail_program.deposit_summary', $detail['deposit_summary']) }}" required placeholder="Mulai dengan setoran awal porsi USD 4.000 + DP Haji Khusus USD 500">
+          </label>
+          <label>Catatan estimasi Rp <small class="haji-label-hint">tampil dalam kurung setelah ringkasan</small>
+            <input name="detail_program[deposit_idr_note]" value="{{ old('detail_program.deposit_idr_note', $detail['deposit_idr_note']) }}" required placeholder="~Rp 5 juta">
+          </label>
+          <div class="row2">
+            <label>Fasilitas <small class="haji-label-hint">satu item per baris</small>
+              <textarea name="detail_program[facilities_text]" rows="8" required>{{ old('detail_program.facilities_text', $detail['facilities_text']) }}</textarea>
+            </label>
+            <label>Dokumen <small class="haji-label-hint">satu item per baris</small>
+              <textarea name="detail_program[documents_text]" rows="8" required>{{ old('detail_program.documents_text', $detail['documents_text']) }}</textarea>
+            </label>
+          </div>
+          <label>Persyaratan <small class="haji-label-hint">satu item per baris</small>
+            <textarea name="detail_program[requirements_text]" rows="5" required>{{ old('detail_program.requirements_text', $detail['requirements_text']) }}</textarea>
+          </label>
+          <label>Penutup legal
+            <input name="detail_program[closing_line]" value="{{ old('detail_program.closing_line', $detail['closing_line']) }}" required>
+          </label>
+          <div class="haji-subblock">
+            <h3 class="haji-subblock-title">FAQ</h3>
+            <div class="haji-faq-admin-list">
+              @foreach($detail['faq'] as $index => $item)
+                <div class="haji-faq-admin-row">
+                  <label>Pertanyaan {{ $index + 1 }}
+                    <input name="detail_program[faq][{{ $index }}][question]" value="{{ old('detail_program.faq.'.$index.'.question', $item['question']) }}" required>
+                  </label>
+                  <label>Jawaban
+                    <textarea name="detail_program[faq][{{ $index }}][answer]" rows="2" required>{{ old('detail_program.faq.'.$index.'.answer', $item['answer']) }}</textarea>
+                  </label>
+                </div>
+              @endforeach
+            </div>
           </div>
         </div>
       </section>

@@ -11,9 +11,10 @@
 
   $hero = $page['hero'];
   $rooms = $page['rooms'];
+  $detail = $page['detail_program'];
   $heroImage = $hero['image'] ?? HajiPlusPage::defaults()['hero']['image'];
   $starting = HajiPlusPage::startingPrice($hero, $rooms);
-  $deposit = HajiPlusProgram::initialDeposit();
+  $deposit = HajiPlusPage::initialDeposit($page);
 @endphp
 
 <div class="haji-landing">
@@ -200,8 +201,8 @@
 
   <section class="wrap haji-section haji-detail-section" id="detail-program">
     <div class="haji-section-head">
-      <span class="haji-section-badge">Detail program</span>
-      <h2>Informasi lengkap Haji Plus</h2>
+      <span class="haji-section-badge">{{ $detail['badge'] }}</span>
+      <h2>{{ $detail['title'] }}</h2>
       <p>Setoran awal: {{ $deposit['summary'] }} ({{ $deposit['dp_idr_note'] }})</p>
     </div>
 
@@ -209,7 +210,7 @@
       <div class="haji-detail-block">
         <h3>Fasilitas</h3>
         <ul class="checks haji-checks">
-          @foreach(HajiPlusPage::facilities() as $item)
+          @foreach(HajiPlusPage::lines($detail['facilities_text']) as $item)
             <li>{{ $item }}</li>
           @endforeach
         </ul>
@@ -217,7 +218,7 @@
       <div class="haji-detail-block">
         <h3>Dokumen</h3>
         <ul class="checks haji-checks">
-          @foreach(HajiPlusProgram::documents() as $item)
+          @foreach(HajiPlusPage::lines($detail['documents_text']) as $item)
             <li>{{ $item }}</li>
           @endforeach
         </ul>
@@ -225,7 +226,7 @@
       <div class="haji-detail-block">
         <h3>Persyaratan</h3>
         <ul class="checks haji-checks">
-          @foreach(HajiPlusProgram::requirements() as $item)
+          @foreach(HajiPlusPage::lines($detail['requirements_text']) as $item)
             <li>{{ $item }}</li>
           @endforeach
         </ul>
@@ -251,7 +252,7 @@
     @endif
 
     <div class="haji-faq">
-      @foreach(HajiPlusProgram::faq() as $item)
+      @foreach($detail['faq'] as $item)
         <details class="haji-faq-item">
           <summary>{{ $item['question'] }}</summary>
           <p>{{ $item['answer'] }}</p>
@@ -260,7 +261,7 @@
     </div>
 
     <p class="haji-legal-note">
-      {{ CompanyProfile::LEGAL_NAME }} · PIHK resmi · {{ HajiPlusProgram::CLOSING_LINE }}
+      {{ CompanyProfile::LEGAL_NAME }} · PIHK resmi · {{ $detail['closing_line'] }}
     </p>
   </section>
 

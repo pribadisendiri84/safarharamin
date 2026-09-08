@@ -51,7 +51,62 @@ class HajiPlusPage
             'flow' => self::mergeList($defaults['flow'], $stored['flow'] ?? [], ['title', 'description', 'icon']),
             'cta' => array_replace($defaults['cta'], $stored['cta'] ?? []),
             'sample_itineraries' => self::normalizeSampleItineraries($stored['sample_itineraries'] ?? []),
+            'detail_program' => self::normalizeDetailProgram(array_replace(
+                $defaults['detail_program'],
+                is_array($stored['detail_program'] ?? null) ? $stored['detail_program'] : [],
+            )),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $detail
+     * @return array<string, mixed>
+     */
+    public static function normalizeDetailProgram(array $detail): array
+    {
+        $deposit = HajiPlusProgram::initialDeposit();
+        $faq = self::mergeList(
+            HajiPlusProgram::faq(),
+            is_array($detail['faq'] ?? null) ? $detail['faq'] : [],
+            ['question', 'answer'],
+        );
+
+        return [
+            'badge' => trim((string) ($detail['badge'] ?? 'Detail program')) ?: 'Detail program',
+            'title' => trim((string) ($detail['title'] ?? 'Informasi lengkap Haji Plus')) ?: 'Informasi lengkap Haji Plus',
+            'deposit_summary' => trim((string) ($detail['deposit_summary'] ?? $deposit['summary'])) ?: $deposit['summary'],
+            'deposit_idr_note' => trim((string) ($detail['deposit_idr_note'] ?? $deposit['dp_idr_note'])) ?: $deposit['dp_idr_note'],
+            'facilities_text' => trim((string) ($detail['facilities_text'] ?? self::textFromLines(HajiPlusProgram::facilities()))),
+            'documents_text' => trim((string) ($detail['documents_text'] ?? self::textFromLines(HajiPlusProgram::documents()))),
+            'requirements_text' => trim((string) ($detail['requirements_text'] ?? self::textFromLines(HajiPlusProgram::requirements()))),
+            'closing_line' => trim((string) ($detail['closing_line'] ?? HajiPlusProgram::CLOSING_LINE)) ?: HajiPlusProgram::CLOSING_LINE,
+            'faq' => $faq,
+        ];
+    }
+
+    /**
+     * @return array{summary: string, dp_idr_note: string}
+     */
+    public static function initialDeposit(?array $page = null): array
+    {
+        $page ??= self::content();
+        $detail = $page['detail_program'] ?? self::normalizeDetailProgram([]);
+
+        return [
+            'summary' => $detail['deposit_summary'],
+            'dp_idr_note' => $detail['deposit_idr_note'],
+        ];
+    }
+
+    /**
+     * @param  list<string>  $lines
+     */
+    public static function textFromLines(array $lines): string
+    {
+        return implode("\n", array_values(array_filter(array_map(
+            fn ($line) => trim((string) $line),
+            $lines,
+        ))));
     }
 
     /**
@@ -190,7 +245,10 @@ class HajiPlusPage
      */
     public static function facilities(): array
     {
-        return HajiPlusProgram::facilities();
+        $page = self::content();
+        $lines = self::lines($page['detail_program']['facilities_text'] ?? '');
+
+        return $lines !== [] ? $lines : HajiPlusProgram::facilities();
     }
 
     /**
@@ -273,7 +331,28 @@ class HajiPlusPage
                 'description' => 'Konsultasikan tipe kamar dan jadwal keberangkatan dengan tim kami.',
                 'note' => 'Tim kami siap membantu 24/7',
             ],
+            'detail_program' => self::defaultDetailProgram(),
             'sample_itineraries' => [],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function defaultDetailProgram(): array
+    {
+        $deposit = HajiPlusProgram::initialDeposit();
+
+        return [
+            'badge' => 'Detail program',
+            'title' => 'Informasi lengkap Haji Plus',
+            'deposit_summary' => $deposit['summary'],
+            'deposit_idr_note' => $deposit['dp_idr_note'],
+            'facilities_text' => self::textFromLines(HajiPlusProgram::facilities()),
+            'documents_text' => self::textFromLines(HajiPlusProgram::documents()),
+            'requirements_text' => self::textFromLines(HajiPlusProgram::requirements()),
+            'closing_line' => HajiPlusProgram::CLOSING_LINE,
+            'faq' => HajiPlusProgram::faq(),
         ];
     }
 

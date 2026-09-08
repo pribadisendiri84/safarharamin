@@ -94,6 +94,17 @@ class HajiPlusPageController extends Controller
             'sample_itinerary_labels.*' => ['nullable', 'string', 'max:120'],
             'sample_itinerary_pdfs' => ['nullable', 'array', 'max:2'],
             'sample_itinerary_pdfs.*' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
+            'detail_program.badge' => ['required', 'string', 'max:40'],
+            'detail_program.title' => ['required', 'string', 'max:120'],
+            'detail_program.deposit_summary' => ['required', 'string', 'max:300'],
+            'detail_program.deposit_idr_note' => ['required', 'string', 'max:80'],
+            'detail_program.facilities_text' => ['required', 'string', 'max:2000'],
+            'detail_program.documents_text' => ['required', 'string', 'max:2000'],
+            'detail_program.requirements_text' => ['required', 'string', 'max:2000'],
+            'detail_program.closing_line' => ['required', 'string', 'max:120'],
+            'detail_program.faq' => ['required', 'array', 'size:5'],
+            'detail_program.faq.*.question' => ['required', 'string', 'max:200'],
+            'detail_program.faq.*.answer' => ['required', 'string', 'max:1000'],
         ]);
 
         $current = HajiPlusPage::content();
@@ -152,6 +163,7 @@ class HajiPlusPageController extends Controller
             'airline' => $airline,
             'flow' => $data['flow'],
             'cta' => $data['cta'],
+            'detail_program' => HajiPlusPage::normalizeDetailProgram($data['detail_program']),
             'sample_itineraries' => $this->syncSampleItineraries($request, $itineraryStore, $current),
         ]);
 
