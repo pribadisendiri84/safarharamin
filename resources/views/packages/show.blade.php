@@ -102,7 +102,26 @@
           <h2>Deskripsi</h2>
           <p>{{ $package->description }}</p>
         @endif
-        @if($package->itinerary)
+        @if($package->pdfItineraries->isNotEmpty())
+          <h2>Itinerary</h2>
+          <p class="itinerary-pdf-note">Pilih tanggal keberangkatan untuk melihat PDF itinerary.</p>
+          <ul class="itinerary-pdf-list">
+            @foreach($package->pdfItineraries as $item)
+              <li>
+                <button type="button"
+                  class="itinerary-pdf-trigger"
+                  data-pdf="{{ $item->file_path }}"
+                  data-label="{{ $item->displayLabel() }}"
+                  data-download="{{ $item->downloadFilename() }}">
+                  <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+                  <span>{{ $item->displayLabel() }}</span>
+                  <i class="bi bi-eye itinerary-pdf-open" aria-hidden="true"></i>
+                </button>
+              </li>
+            @endforeach
+          </ul>
+          @include('partials.itinerary-pdf-viewer')
+        @elseif($package->itinerary)
           <h2>Itinerary</h2>
           <p style="white-space:pre-line">{{ $package->itinerary }}</p>
         @endif

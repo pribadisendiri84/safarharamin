@@ -88,6 +88,5 @@
         <span>{{ $roomOptions }}</span>
       </p>
     @endif
-    <p class="card-foot">Lihat detail <i class="bi bi-chevron-right"></i></p>
   </div>
 </a>

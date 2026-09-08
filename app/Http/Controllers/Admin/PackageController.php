@@ -6,7 +6,9 @@ use App\Http\Controllers\Admin\Concerns\FiltersTrashed;
 use App\Http\Controllers\Controller;
 use App\Models\Inquiry;
 use App\Models\Package;
+use App\Models\PackageItinerary;
 use App\Services\PackageImageStore;
+use App\Services\PackageItineraryStore;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -57,7 +59,7 @@ class PackageController extends Controller
         return view('admin.packages.form', ['package' => new Package]);
     }
 
-    public function store(Request $request, PackageImageStore $images)
+    public function store(Request $request, PackageImageStore $images, PackageItineraryStore $itineraries)
     {
         $data = $this->validated($request);
         $data['slug'] = Package::uniqueSlug($data['title']);
@@ -67,17 +69,20 @@ class PackageController extends Controller
         $data['facilities'] = $this->lines($request->input('facilities_text'));
         $data['exclusions'] = $this->lines($request->input('exclusions_text'));
 
-        Package::query()->create($data);
+        $package = Package::query()->create($data);
+        $this->syncItineraries($request, $package, $itineraries);
 
         return redirect()->route('admin.packages.index')->with('ok', 'Paket ditambahkan.');
     }
 
     public function edit(Package $package)
     {
+        $package->load('pdfItineraries');
+
         return view('admin.packages.form', ['package' => $package]);
     }
 
-    public function update(Request $request, Package $package, PackageImageStore $images)
+    public function update(Request $request, Package $package, PackageImageStore $images, PackageItineraryStore $itineraries)
     {
         $data = $this->validated($request, $package);
         $data['images'] = $this->collectImages($request, $images, $data['title'], $package->images ?? []);
@@ -87,6 +92,7 @@ class PackageController extends Controller
         $data['exclusions'] = $this->lines($request->input('exclusions_text'));
 
         $package->update($data);
+        $this->syncItineraries($request, $package, $itineraries);
 
         return redirect()->route('admin.packages.index')->with('ok', 'Paket diperbarui.');
     }
@@ -310,7 +316,6 @@ class PackageController extends Controller
             'airline' => ['nullable', 'string', 'max:80'],
             'seats_total' => ['required', 'integer', 'min:1'],
             'seats_left' => ['required', 'integer', 'min:0'],
-            'itinerary' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
             'status' => ['required', Rule::in(array_keys(Package::STATUSES))],
             'photos' => ['nullable', 'array'],
@@ -318,6 +323,12 @@ class PackageController extends Controller
             'cover_photo' => ['nullable', 'image', 'max:5120'],
             'facilities_text' => ['nullable', 'string'],
             'exclusions_text' => ['nullable', 'string'],
+            'itinerary_departure_dates' => ['nullable', 'array'],
+            'itinerary_departure_dates.*' => ['nullable', 'date'],
+            'itinerary_pdfs' => ['nullable', 'array'],
+            'itinerary_pdfs.*' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
+            'delete_itineraries' => ['nullable', 'array'],
+            'delete_itineraries.*' => ['integer', 'exists:package_itineraries,id'],
         ]);
 
         unset($data['facilities_text'], $data['exclusions_text'], $data['photos'], $data['cover_photo']);
@@ -455,5 +466,50 @@ class PackageController extends Controller
             ->filter()
             ->values()
             ->all();
+    }
+
+    private function syncItineraries(Request $request, Package $package, PackageItineraryStore $store): void
+    {
+        $deleteIds = array_map('intval', $request->input('delete_itineraries', []));
+        if ($deleteIds !== []) {
+            PackageItinerary::query()
+                ->where('package_id', $package->id)
+                ->whereIn('id', $deleteIds)
+                ->get()
+                ->each(function (PackageItinerary $item) use ($store) {
+                    $store->delete($item->file_path);
+                    $item->delete();
+                });
+        }
+
+        foreach ($request->input('itinerary_departure_dates', []) as $index => $dateRaw) {
+            $date = trim((string) $dateRaw);
+            $files = $request->file('itinerary_pdfs', []);
+            $file = is_array($files) ? ($files[$index] ?? null) : null;
+
+            if ($date === '' && ! $file) {
+                continue;
+            }
+
+            if ($date === '') {
+                throw ValidationException::withMessages([
+                    "itinerary_departure_dates.{$index}" => 'Isi tanggal keberangkatan untuk itinerary PDF.',
+                ]);
+            }
+
+            if (! $file || ! $file->isValid()) {
+                throw ValidationException::withMessages([
+                    "itinerary_pdfs.{$index}" => 'Unggah file PDF itinerary.',
+                ]);
+            }
+
+            PackageItinerary::query()->create([
+                'package_id' => $package->id,
+                'departure_date' => $date,
+                'file_path' => $store->store($file, $package->title.' '.$date),
+            ]);
+        }
+
+        PackageItinerary::syncSortOrderForPackage($package->id);
     }
 }

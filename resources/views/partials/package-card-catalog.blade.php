@@ -13,7 +13,7 @@
 <a class="card catalog-card {{ $package->isFullbook() ? 'is-fullbook' : 'is-available' }}{{ $package->is_hot && ! $package->isFullbook() ? ' is-hot' : '' }}" href="{{ route('packages.show', $package) }}">
   <div class="catalog-card-image">
     <img
-      class="catalog-cover"
+      class="catalog-cover{{ $package->hasDedicatedCover() ? '' : ' is-flyer-source' }}"
       src="{{ $package->coverImage() }}"
       alt="{{ $catalogTitle }}"
       loading="lazy"
@@ -118,7 +118,5 @@
         @endforeach
       </div>
     @endif
-
-    <span class="catalog-card-cta">Lihat Detail Paket</span>
   </div>
 </a>

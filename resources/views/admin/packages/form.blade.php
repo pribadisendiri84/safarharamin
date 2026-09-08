@@ -173,7 +173,42 @@
   <label>Fasilitas / include (opsional, satu baris satu item)<textarea name="facilities_text" rows="4">{{ old('facilities_text', implode("\n", $package->facilities ?? [])) }}</textarea></label>
   <label>Tidak termasuk (satu baris satu item)<textarea name="exclusions_text" rows="4">{{ old('exclusions_text', implode("\n", $package->exclusions ?? [])) }}</textarea></label>
   <label>Deskripsi (opsional)<textarea name="description" rows="3">{{ old('description', $package->description) }}</textarea></label>
-  <label>Itinerary (opsional)<textarea name="itinerary" rows="4">{{ old('itinerary', $package->itinerary) }}</textarea></label>
+
+  <fieldset class="itinerary-pdf-fieldset">
+    <legend>Itinerary PDF</legend>
+    <p class="sub">Unggah PDF per tanggal keberangkatan. Judul di website mengikuti tanggal. Klik link untuk membuka PDF.</p>
+
+    @if($package->pdfItineraries?->isNotEmpty())
+      <div class="itinerary-existing-list">
+        @foreach($package->pdfItineraries as $item)
+          <div class="itinerary-existing-item">
+            <label class="check">
+              <input type="checkbox" name="delete_itineraries[]" value="{{ $item->id }}" @checked(in_array($item->id, old('delete_itineraries', []), true))>
+              Hapus
+            </label>
+            <span class="itinerary-existing-label">{{ $item->displayLabel() }}</span>
+            <a class="btn gray compact" href="{{ $item->file_path }}" target="_blank" rel="noopener">Lihat PDF</a>
+          </div>
+        @endforeach
+      </div>
+    @endif
+
+    <div class="itinerary-new-rows" id="itinerary-new-rows">
+      @php $newDates = old('itinerary_departure_dates', ['']); @endphp
+      @foreach($newDates as $index => $dateValue)
+        <div class="itinerary-new-row">
+          <label>Tanggal keberangkatan
+            <input type="date" name="itinerary_departure_dates[]" value="{{ $dateValue }}">
+          </label>
+          <label>File PDF
+            <input type="file" name="itinerary_pdfs[]" accept="application/pdf,.pdf">
+          </label>
+        </div>
+      @endforeach
+    </div>
+    <button class="btn gray compact" type="button" id="add-itinerary-row">+ Tambah itinerary</button>
+  </fieldset>
+
   <div class="check-row">
     <label class="check"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $package->is_featured))> Tampil di beranda</label>
     <label class="check"><input type="checkbox" name="is_hot" value="1" @checked(old('is_hot', $package->is_hot))> Kuota terbatas</label>
@@ -216,6 +251,26 @@
 
   displaySelect.addEventListener('change', syncDateDisplay);
   syncDateDisplay();
+})();
+
+(function () {
+  var rowsWrap = document.getElementById('itinerary-new-rows');
+  var addBtn = document.getElementById('add-itinerary-row');
+  if (!rowsWrap || !addBtn) return;
+
+  addBtn.addEventListener('click', function () {
+    var index = rowsWrap.querySelectorAll('.itinerary-new-row').length;
+    var row = document.createElement('div');
+    row.className = 'itinerary-new-row';
+    row.innerHTML =
+      '<label>Tanggal keberangkatan' +
+      '<input type="date" name="itinerary_departure_dates[]">' +
+      '</label>' +
+      '<label>File PDF' +
+      '<input type="file" name="itinerary_pdfs[]" accept="application/pdf,.pdf">' +
+      '</label>';
+    rowsWrap.appendChild(row);
+  });
 })();
 </script>
 @endpush

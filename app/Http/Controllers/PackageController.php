@@ -91,7 +91,10 @@ class PackageController extends Controller
     {
         abort_unless($package->isVisibleOnCatalog(), 404);
 
-        $package->loadMissing('packageKind');
+        $package->loadMissing([
+            'packageKind',
+            'pdfItineraries' => fn ($query) => $query->ordered(),
+        ]);
 
         $related = Package::query()
             ->with('packageKind')

@@ -206,6 +206,21 @@ tr.is-deleted { background: #fdf6f6; }
 .flyer-strip { display: flex; flex-wrap: wrap; gap: 12px; margin: 6px 0 12px; }
 .flyer-block { min-width: 0; }
 .flyer-label { margin: 0 0 6px; font-size: 12px; font-weight: 700; color: #3d4a63; }
+.itinerary-pdf-fieldset { margin-top: 8px; }
+.itinerary-existing-list { display: grid; gap: 8px; margin-bottom: 12px; }
+.itinerary-existing-item {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fafbfd;
+}
+.itinerary-existing-label { font-weight: 700; color: #3d4a63; }
+.itinerary-new-rows { display: grid; gap: 10px; margin-bottom: 10px; }
+.itinerary-new-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  padding: 10px 12px; border: 1px dashed var(--line); border-radius: 10px; background: #fff;
+}
+@media (max-width: 720px) {
+  .itinerary-new-row { grid-template-columns: 1fr; }
+}
 .empty-state { text-align: center !important; color: var(--muted); padding: 36px 16px !important; }
 
 /* actions / pills */
