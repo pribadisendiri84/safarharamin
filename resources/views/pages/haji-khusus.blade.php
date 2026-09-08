@@ -21,7 +21,13 @@
   <section class="haji-hero" style="--haji-hero-image: url('{{ e($heroImage) }}');">
     <div class="wrap haji-hero-grid">
       <div class="haji-hero-copy">
-        <span class="haji-hero-badge">{{ $hero['badge'] }}@if(!empty($hero['season'])) · {{ $hero['season'] }}@endif</span>
+        @if(!empty($hero['badge']) || !empty($hero['season']))
+          <span class="haji-hero-badge">
+            @if(!empty($hero['badge'])){{ $hero['badge'] }}@endif
+            @if(!empty($hero['badge']) && !empty($hero['season'])) · @endif
+            @if(!empty($hero['season'])){{ $hero['season'] }}@endif
+          </span>
+        @endif
         <h1>{{ $hero['title'] }}</h1>
         <p class="haji-hero-lead">{{ $hero['subtitle'] }}</p>
 
@@ -102,7 +108,7 @@
     <div class="wrap haji-benefits-grid">
       @foreach($page['benefits'] as $benefit)
         <article class="haji-benefit-item">
-          <span class="haji-benefit-icon" aria-hidden="true"><i class="bi {{ $benefit['icon'] }}"></i></span>
+          <span class="haji-benefit-icon" aria-hidden="true">@include('partials.haji-icon', ['icon' => $benefit['icon'], 'class' => 'haji-benefit-icon-graphic'])</span>
           <b>{{ $benefit['title'] }}</b>
           <p>{{ $benefit['description'] }}</p>
         </article>
@@ -120,7 +126,9 @@
         <article class="haji-hotel-card">
           <div class="haji-hotel-image">
             <img src="{{ $hotel['image'] }}" alt="{{ $hotel['title'] }}" loading="lazy">
-            <span class="haji-hotel-badge">{{ $hotel['badge'] }}</span>
+            @if(!empty($hotel['badge']))
+              <span class="haji-hotel-badge">{{ $hotel['badge'] }}</span>
+            @endif
           </div>
           <div class="haji-hotel-body">
             <span class="haji-hotel-city">{{ $hotel['city'] }}</span>
@@ -182,7 +190,13 @@
     <div class="haji-flow">
       @foreach($page['flow'] as $index => $step)
         <article class="haji-flow-step">
-          <span class="haji-flow-num">{{ $index + 1 }}</span>
+          <span class="haji-flow-num">
+            @if(!empty($step['icon']))
+              @include('partials.haji-icon', ['icon' => $step['icon'], 'class' => 'haji-flow-icon'])
+            @else
+              {{ $index + 1 }}
+            @endif
+          </span>
           <b>{{ $step['title'] }}</b>
           <p>{{ $step['description'] }}</p>
         </article>
@@ -201,9 +215,11 @@
 
   <section class="wrap haji-section haji-detail-section" id="detail-program">
     <div class="haji-section-head">
-      <span class="haji-section-badge">{{ $detail['badge'] }}</span>
+      @if(!empty($detail['badge']))
+        <span class="haji-section-badge">{{ $detail['badge'] }}</span>
+      @endif
       <h2>{{ $detail['title'] }}</h2>
-      <p>Setoran awal: {{ $deposit['summary'] }} ({{ $deposit['dp_idr_note'] }})</p>
+      <p>Setoran awal: {{ $deposit['summary'] }}@if(!empty($deposit['dp_idr_note'])) ({{ $deposit['dp_idr_note'] }})@endif</p>
     </div>
 
     <div class="haji-detail-grid">

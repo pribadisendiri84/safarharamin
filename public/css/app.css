@@ -1444,6 +1444,14 @@ img { max-width: 100%; display: block; }
   display: grid; place-items: center; background: #fff; color: var(--brand);
   border: 1px solid var(--line); font-size: 18px;
 }
+.haji-benefit-icon-graphic,
+.haji-flow-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+.haji-flow-num .haji-flow-icon { width: 20px; height: 20px; }
+.haji-flow-num i { font-size: 18px; line-height: 1; }
 .haji-benefit-item b { display: block; margin-bottom: 4px; font-size: 13px; }
 .haji-benefit-item p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
 

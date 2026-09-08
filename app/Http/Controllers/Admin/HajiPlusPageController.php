@@ -41,7 +41,7 @@ class HajiPlusPageController extends Controller
     public function update(Request $request, PackageImageStore $images, HajiPageItineraryStore $itineraryStore)
     {
         $data = $request->validate([
-            'hero.badge' => ['required', 'string', 'max:40'],
+            'hero.badge' => ['nullable', 'string', 'max:40'],
             'hero.season' => ['required', 'string', 'max:40'],
             'hero.title' => ['required', 'string', 'max:120'],
             'hero.subtitle' => ['required', 'string', 'max:400'],
@@ -61,7 +61,9 @@ class HajiPlusPageController extends Controller
             'benefits' => ['required', 'array', 'size:5'],
             'benefits.*.title' => ['required', 'string', 'max:60'],
             'benefits.*.description' => ['required', 'string', 'max:160'],
-            'benefits.*.icon' => ['required', 'string', 'max:40'],
+            'benefits.*.icon' => ['nullable', 'string', 'max:80'],
+            'benefits.*.icon_file' => ['nullable', 'image', 'max:2048'],
+            'benefits.*.clear_icon_upload' => ['nullable', 'boolean'],
             'partner_airlines' => ['nullable', 'array', 'max:8'],
             'partner_airlines.*' => ['required', 'string', 'max:80'],
             'hotels' => ['required', 'array', 'min:1', 'max:6'],
@@ -72,14 +74,16 @@ class HajiPlusPageController extends Controller
             ])],
             'hotels.*.distance' => ['required', 'string', 'max:80'],
             'hotels.*.features_text' => ['required', 'string', 'max:400'],
-            'hotels.*.badge' => ['required', 'string', 'max:40'],
+            'hotels.*.badge' => ['nullable', 'string', 'max:40'],
             'airline.description' => ['required', 'string', 'max:400'],
             'airline.points_text' => ['required', 'string', 'max:400'],
             'airline.show_names' => ['nullable', 'boolean'],
             'flow' => ['required', 'array', 'size:4'],
             'flow.*.title' => ['required', 'string', 'max:60'],
             'flow.*.description' => ['required', 'string', 'max:160'],
-            'flow.*.icon' => ['required', 'string', 'max:40'],
+            'flow.*.icon' => ['nullable', 'string', 'max:80'],
+            'flow.*.icon_file' => ['nullable', 'image', 'max:2048'],
+            'flow.*.clear_icon_upload' => ['nullable', 'boolean'],
             'cta.title' => ['required', 'string', 'max:120'],
             'cta.description' => ['required', 'string', 'max:300'],
             'cta.note' => ['required', 'string', 'max:80'],
@@ -94,10 +98,10 @@ class HajiPlusPageController extends Controller
             'sample_itinerary_labels.*' => ['nullable', 'string', 'max:120'],
             'sample_itinerary_pdfs' => ['nullable', 'array', 'max:2'],
             'sample_itinerary_pdfs.*' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
-            'detail_program.badge' => ['required', 'string', 'max:40'],
+            'detail_program.badge' => ['nullable', 'string', 'max:40'],
             'detail_program.title' => ['required', 'string', 'max:120'],
             'detail_program.deposit_summary' => ['required', 'string', 'max:300'],
-            'detail_program.deposit_idr_note' => ['required', 'string', 'max:80'],
+            'detail_program.deposit_idr_note' => ['nullable', 'string', 'max:80'],
             'detail_program.facilities_text' => ['required', 'string', 'max:2000'],
             'detail_program.documents_text' => ['required', 'string', 'max:2000'],
             'detail_program.requirements_text' => ['required', 'string', 'max:2000'],
@@ -147,6 +151,40 @@ class HajiPlusPageController extends Controller
             $data['partner_airlines'] ?? [],
         )));
 
+        $benefits = [];
+        foreach ($data['benefits'] as $index => $benefit) {
+            $benefits[] = [
+                'title' => trim($benefit['title']),
+                'description' => trim($benefit['description']),
+                'icon' => $this->syncIconField(
+                    $request,
+                    $images,
+                    'benefits',
+                    $index,
+                    (string) ($current['benefits'][$index]['icon'] ?? ''),
+                    (string) ($benefit['icon'] ?? ''),
+                    (string) ($current['benefits'][$index]['icon'] ?? 'bi-building'),
+                ),
+            ];
+        }
+
+        $flow = [];
+        foreach ($data['flow'] as $index => $step) {
+            $flow[] = [
+                'title' => trim($step['title']),
+                'description' => trim($step['description']),
+                'icon' => $this->syncIconField(
+                    $request,
+                    $images,
+                    'flow',
+                    $index,
+                    (string) ($current['flow'][$index]['icon'] ?? ''),
+                    (string) ($step['icon'] ?? ''),
+                    (string) ($current['flow'][$index]['icon'] ?? 'bi-chat-dots'),
+                ),
+            ];
+        }
+
         $airline = [
             'description' => trim($data['airline']['description']),
             'points_text' => trim($data['airline']['points_text']),
@@ -157,11 +195,11 @@ class HajiPlusPageController extends Controller
         HajiPlusPage::save([
             'hero' => $hero,
             'rooms' => $rooms,
-            'benefits' => $data['benefits'],
+            'benefits' => $benefits,
             'partner_airlines' => $partnerAirlines,
             'hotels' => $hotels,
             'airline' => $airline,
-            'flow' => $data['flow'],
+            'flow' => $flow,
             'cta' => $data['cta'],
             'detail_program' => HajiPlusPage::normalizeDetailProgram($data['detail_program']),
             'sample_itineraries' => $this->syncSampleItineraries($request, $itineraryStore, $current),
@@ -331,6 +369,54 @@ class HajiPlusPageController extends Controller
         $this->deleteStoredImage($previous);
 
         return $path;
+    }
+
+    private function syncIconField(
+        Request $request,
+        PackageImageStore $images,
+        string $group,
+        int $index,
+        string $currentIcon,
+        string $classInput,
+        string $fallbackClass,
+    ): string {
+        $fileKey = "{$group}.{$index}.icon_file";
+        $clearKey = "{$group}.{$index}.clear_icon_upload";
+
+        if ($request->hasFile($fileKey)) {
+            if (HajiPlusPage::iconIsUploaded($currentIcon)) {
+                $this->deleteStoredImage($currentIcon);
+            }
+
+            return $images->store($request->file($fileKey), "haji-{$group}-icon-{$index}", 'haji-plus');
+        }
+
+        if ($request->boolean($clearKey)) {
+            if (HajiPlusPage::iconIsUploaded($currentIcon)) {
+                $this->deleteStoredImage($currentIcon);
+            }
+
+            $class = HajiPlusPage::iconBootstrapClass(trim($classInput));
+
+            return $class !== '' ? $class : $fallbackClass;
+        }
+
+        $class = HajiPlusPage::iconBootstrapClass(trim($classInput));
+        if ($class !== '') {
+            if (HajiPlusPage::iconIsUploaded($currentIcon)) {
+                $this->deleteStoredImage($currentIcon);
+            }
+
+            return $class;
+        }
+
+        if (HajiPlusPage::iconIsUploaded($currentIcon)) {
+            return $currentIcon;
+        }
+
+        $currentClass = HajiPlusPage::iconBootstrapClass($currentIcon);
+
+        return $currentClass !== '' ? $currentClass : $fallbackClass;
     }
 
     private function deleteStoredImage(string $path): void

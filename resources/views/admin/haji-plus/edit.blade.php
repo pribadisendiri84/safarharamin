@@ -36,8 +36,8 @@
             <p class="admin-panel-desc haji-panel-desc">Judul, harga mulai, dan foto bagian atas halaman.</p>
           </header>
           <div class="row2">
-            <label>Badge
-              <input name="hero[badge]" value="{{ old('hero.badge', $page['hero']['badge']) }}" required>
+            <label>Badge <small class="haji-label-hint">opsional</small>
+              <input name="hero[badge]" value="{{ old('hero.badge', $page['hero']['badge']) }}" placeholder="Haji Khusus">
             </label>
             <label>Musim
               <input name="hero[season]" value="{{ old('hero.season', $page['hero']['season']) }}" required>
@@ -125,14 +125,15 @@
         <div class="haji-panel">
           <header class="haji-panel-head">
             <h2 class="haji-panel-title">Manfaat program</h2>
-            <p class="haji-panel-desc">Ikon Bootstrap, contoh: <code>bi-building</code>, <code>bi-airplane</code>.</p>
+            <p class="haji-panel-desc">Pakai kelas Bootstrap Icons (<code>bi-building</code>) atau unggah gambar PNG/JPG/WebP/SVG.</p>
           </header>
           <div class="haji-benefit-list">
             @foreach($page['benefits'] as $index => $benefit)
               <div class="haji-benefit-row">
-                <label>Ikon
-                  <input name="benefits[{{ $index }}][icon]" value="{{ old('benefits.'.$index.'.icon', $benefit['icon']) }}" required placeholder="bi-building">
-                </label>
+                @include('admin.haji-plus.partials.icon-field', [
+                  'namePrefix' => 'benefits['.$index.']',
+                  'icon' => $benefit['icon'] ?? '',
+                ])
                 <label>Judul
                   <input name="benefits[{{ $index }}][title]" value="{{ old('benefits.'.$index.'.title', $benefit['title']) }}" required>
                 </label>
@@ -337,8 +338,8 @@
             <p class="haji-panel-desc">Informasi lengkap di bagian bawah halaman — setoran awal, fasilitas, dokumen, persyaratan, dan FAQ.</p>
           </header>
           <div class="row2">
-            <label>Badge seksi
-              <input name="detail_program[badge]" value="{{ old('detail_program.badge', $detail['badge']) }}" required>
+            <label>Badge seksi <small class="haji-label-hint">opsional</small>
+              <input name="detail_program[badge]" value="{{ old('detail_program.badge', $detail['badge']) }}" placeholder="Detail program">
             </label>
             <label>Judul seksi
               <input name="detail_program[title]" value="{{ old('detail_program.title', $detail['title']) }}" required>
@@ -347,8 +348,8 @@
           <label>Ringkasan setoran awal
             <input name="detail_program[deposit_summary]" value="{{ old('detail_program.deposit_summary', $detail['deposit_summary']) }}" required placeholder="Mulai dengan setoran awal porsi USD 4.000 + DP Haji Khusus USD 500">
           </label>
-          <label>Catatan estimasi Rp <small class="haji-label-hint">tampil dalam kurung setelah ringkasan</small>
-            <input name="detail_program[deposit_idr_note]" value="{{ old('detail_program.deposit_idr_note', $detail['deposit_idr_note']) }}" required placeholder="~Rp 5 juta">
+          <label>Catatan estimasi Rp <small class="haji-label-hint">opsional — tampil dalam kurung setelah ringkasan</small>
+            <input name="detail_program[deposit_idr_note]" value="{{ old('detail_program.deposit_idr_note', $detail['deposit_idr_note']) }}" placeholder="~Rp 5 juta">
           </label>
           <div class="row2">
             <label>Fasilitas <small class="haji-label-hint">satu item per baris</small>
@@ -386,18 +387,19 @@
         <div class="haji-panel">
           <header class="haji-panel-head">
             <h2 class="haji-panel-title">Langkah pendaftaran</h2>
-            <p class="haji-panel-desc">Empat langkah alur dari konsultasi hingga berangkat.</p>
+            <p class="haji-panel-desc">Empat langkah alur dari konsultasi hingga berangkat. Ikon bisa Bootstrap atau upload gambar.</p>
           </header>
           <div class="haji-flow-grid">
             @foreach($page['flow'] as $index => $step)
               <div class="haji-flow-card">
                 <span class="haji-flow-step">Langkah {{ $index + 1 }}</span>
+                @include('admin.haji-plus.partials.icon-field', [
+                  'namePrefix' => 'flow['.$index.']',
+                  'icon' => $step['icon'] ?? '',
+                ])
                 <div class="row2">
                   <label>Judul
                     <input name="flow[{{ $index }}][title]" value="{{ old('flow.'.$index.'.title', $step['title']) }}" required>
-                  </label>
-                  <label>Ikon
-                    <input name="flow[{{ $index }}][icon]" value="{{ old('flow.'.$index.'.icon', $step['icon']) }}" required placeholder="bi-chat-dots">
                   </label>
                 </div>
                 <label>Deskripsi
@@ -567,6 +569,56 @@
     input.addEventListener('change', function () {
       showRoomPhotoPreview(input);
     });
+  });
+})();
+
+(function () {
+  function renderIconPreview(field, type, value) {
+    var preview = field.querySelector('[data-haji-icon-preview]');
+    if (!preview) return;
+
+    preview.innerHTML = '';
+    if (type === 'image') {
+      var img = document.createElement('img');
+      img.className = 'haji-icon-preview';
+      img.src = value;
+      img.alt = '';
+      preview.appendChild(img);
+      return;
+    }
+
+    var span = document.createElement('span');
+    span.className = 'haji-icon-preview haji-icon-preview--bi';
+    span.setAttribute('aria-hidden', 'true');
+    var icon = document.createElement('i');
+    icon.className = 'bi ' + (value || 'bi-circle');
+    span.appendChild(icon);
+    preview.appendChild(span);
+  }
+
+  document.querySelectorAll('.haji-icon-field').forEach(function (field) {
+    var classInput = field.querySelector('[data-haji-icon-class]');
+    var fileInput = field.querySelector('[data-haji-icon-file]');
+
+    if (classInput) {
+      classInput.addEventListener('input', function () {
+        if (fileInput && fileInput.files && fileInput.files.length) return;
+        renderIconPreview(field, 'bi', classInput.value.trim() || 'bi-circle');
+      });
+    }
+
+    if (fileInput) {
+      fileInput.addEventListener('change', function () {
+        var file = fileInput.files && fileInput.files[0];
+        if (!file || !file.type.startsWith('image/')) return;
+        if (fileInput.dataset.previewUrl) {
+          URL.revokeObjectURL(fileInput.dataset.previewUrl);
+        }
+        var url = URL.createObjectURL(file);
+        fileInput.dataset.previewUrl = url;
+        renderIconPreview(field, 'image', url);
+      });
+    }
   });
 })();
 </script>

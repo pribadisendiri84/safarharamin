@@ -761,6 +761,15 @@ tr.sortable-ghost { opacity: .45; }
 .haji-sample-itinerary-admin { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
 .haji-faq-admin-list { display: grid; gap: 14px; margin-top: 10px; }
 .haji-faq-admin-row { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
+.haji-icon-field { display: grid; gap: 8px; }
+.haji-icon-upload-row { display: flex; align-items: center; gap: 10px; }
+.haji-icon-preview-wrap { width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--line); display: grid; place-items: center; background: #fff; overflow: hidden; flex-shrink: 0; }
+.haji-icon-preview { width: 28px; height: 28px; object-fit: contain; }
+.haji-icon-preview--bi { color: var(--brand); font-size: 18px; line-height: 1; }
+.haji-icon-upload-btn { margin: 0; }
+.haji-icon-clear-check { margin: 0; font-size: 13px; }
+.haji-benefit-row .haji-icon-field { grid-column: 1 / -1; }
+.haji-flow-card .haji-icon-field { margin-bottom: 4px; }
 .umroh-sample-itinerary-admin { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
 .admin-brand-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .admin-brand-row .admin-file-pick { flex: 1; min-width: 200px; }

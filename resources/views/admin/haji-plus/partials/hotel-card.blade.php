@@ -43,8 +43,8 @@
     <label>Jarak / lokasi
       <input name="hotels[{{ $index }}][distance]" value="{{ old('hotels.'.$index.'.distance', $hotel['distance']) }}" required>
     </label>
-    <label>Badge
-      <input name="hotels[{{ $index }}][badge]" value="{{ old('hotels.'.$index.'.badge', $hotel['badge']) }}" required>
+    <label>Badge <small class="haji-label-hint">opsional</small>
+      <input name="hotels[{{ $index }}][badge]" value="{{ old('hotels.'.$index.'.badge', $hotel['badge']) }}" placeholder="Hotel pilihan">
     </label>
   </div>
   <label>Fasilitas <small class="haji-label-hint">satu baris = satu item</small>

@@ -81,6 +81,67 @@ class HajiPlusPageTest extends TestCase
             ->assertSee('USD 4.500 + DP USD 600 (~Rp 6 juta).');
     }
 
+    public function test_admin_can_clear_deposit_idr_note_and_badges(): void
+    {
+        $user = User::factory()->create();
+        $page = HajiPlusPage::content();
+
+        $payload = $this->payloadFrom($page, [
+            'hero.badge' => '',
+            'detail_program.badge' => '',
+            'detail_program.deposit_idr_note' => '',
+            'hotels.0.badge' => '',
+        ]);
+
+        $this->actingAs($user)
+            ->put(route('admin.haji-plus.update'), $payload)
+            ->assertRedirect(route('admin.haji-plus.edit'));
+
+        $saved = HajiPlusPage::content();
+        $this->assertSame('', $saved['hero']['badge']);
+        $this->assertSame('', $saved['detail_program']['badge']);
+        $this->assertSame('', $saved['detail_program']['deposit_idr_note']);
+        $this->assertSame('', $saved['hotels'][0]['badge']);
+
+        $this->get('/haji-khusus')
+            ->assertOk()
+            ->assertSee('Setoran awal: Mulai dengan setoran awal porsi USD 4.000 + DP Haji Khusus USD 500')
+            ->assertDontSee('Setoran awal: Mulai dengan setoran awal porsi USD 4.000 + DP Haji Khusus USD 500 (~Rp');
+    }
+
+    public function test_admin_can_upload_custom_benefit_icon(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $page = HajiPlusPage::content();
+        $payload = $this->payloadFrom($page, []);
+
+        $this->actingAs($user)
+            ->put(route('admin.haji-plus.update'), [
+                ...$payload,
+                'benefits' => array_map(function (array $benefit, int $index) use ($payload) {
+                    if ($index !== 0) {
+                        return $benefit;
+                    }
+
+                    return [
+                        ...$benefit,
+                        'icon' => '',
+                        'icon_file' => UploadedFile::fake()->image('benefit-icon.png', 64, 64),
+                    ];
+                }, $payload['benefits'], array_keys($payload['benefits'])),
+            ])
+            ->assertRedirect(route('admin.haji-plus.edit'));
+
+        $icon = HajiPlusPage::content()['benefits'][0]['icon'] ?? '';
+        $this->assertTrue(HajiPlusPage::iconIsUploaded($icon));
+
+        $this->get('/haji-khusus')
+            ->assertOk()
+            ->assertSee($icon, false)
+            ->assertSee('haji-benefit-icon-graphic', false);
+    }
+
     public function test_admin_can_upload_hero_background_without_auto_selecting_it(): void
     {
         Storage::fake('public');

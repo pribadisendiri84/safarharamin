@@ -72,10 +72,10 @@ class HajiPlusPage
         );
 
         return [
-            'badge' => trim((string) ($detail['badge'] ?? 'Detail program')) ?: 'Detail program',
+            'badge' => trim((string) ($detail['badge'] ?? '')),
             'title' => trim((string) ($detail['title'] ?? 'Informasi lengkap Haji Plus')) ?: 'Informasi lengkap Haji Plus',
             'deposit_summary' => trim((string) ($detail['deposit_summary'] ?? $deposit['summary'])) ?: $deposit['summary'],
-            'deposit_idr_note' => trim((string) ($detail['deposit_idr_note'] ?? $deposit['dp_idr_note'])) ?: $deposit['dp_idr_note'],
+            'deposit_idr_note' => trim((string) ($detail['deposit_idr_note'] ?? '')),
             'facilities_text' => trim((string) ($detail['facilities_text'] ?? self::textFromLines(HajiPlusProgram::facilities()))),
             'documents_text' => trim((string) ($detail['documents_text'] ?? self::textFromLines(HajiPlusProgram::documents()))),
             'requirements_text' => trim((string) ($detail['requirements_text'] ?? self::textFromLines(HajiPlusProgram::requirements()))),
@@ -107,6 +107,24 @@ class HajiPlusPage
             fn ($line) => trim((string) $line),
             $lines,
         ))));
+    }
+
+    public static function iconIsUploaded(?string $icon): bool
+    {
+        $icon = trim((string) $icon);
+
+        return $icon !== '' && str_starts_with($icon, '/storage/');
+    }
+
+    public static function iconBootstrapClass(?string $icon): string
+    {
+        $icon = trim((string) $icon);
+
+        if ($icon === '' || self::iconIsUploaded($icon)) {
+            return '';
+        }
+
+        return str_starts_with($icon, 'bi-') ? $icon : 'bi-'.$icon;
     }
 
     /**
@@ -741,6 +759,12 @@ class HajiPlusPage
                     continue;
                 }
 
+                if ($key === 'badge') {
+                    $merged[$key] = trim((string) $row[$key]);
+
+                    continue;
+                }
+
                 if ($row[$key] !== null && $row[$key] !== '') {
                     $merged[$key] = $row[$key];
                 }
@@ -803,6 +827,7 @@ class HajiPlusPage
     {
         $defaults = self::defaults()['hero'];
         $hero = array_replace($defaults, $hero);
+        $hero['badge'] = trim((string) ($hero['badge'] ?? ''));
         $hero['starting_price'] = self::parsePriceInput($hero['starting_price'] ?? '');
         $defaultImage = (string) $defaults['image'];
 
