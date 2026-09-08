@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Admin\Concerns\FiltersTrashed;
 use App\Http\Controllers\Controller;
 use App\Models\GalleryItem;
+use App\Services\GalleryVideoStore;
 use App\Services\PackageImageStore;
 use App\Support\YoutubeUrl;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class GalleryController extends Controller
@@ -39,11 +41,11 @@ class GalleryController extends Controller
         return view('admin.gallery.form', ['item' => new GalleryItem]);
     }
 
-    public function store(Request $request, PackageImageStore $images)
+    public function store(Request $request, PackageImageStore $images, GalleryVideoStore $videos)
     {
-        GalleryItem::query()->create($this->validated($request, $images));
+        GalleryItem::query()->create($this->validated($request, $images, $videos));
 
-        return redirect()->route('admin.gallery.index')->with('ok', 'Foto galeri ditambahkan.');
+        return redirect()->route('admin.gallery.index')->with('ok', 'Item galeri ditambahkan.');
     }
 
     public function edit(GalleryItem $gallery)
@@ -51,25 +53,29 @@ class GalleryController extends Controller
         return view('admin.gallery.form', ['item' => $gallery]);
     }
 
-    public function update(Request $request, GalleryItem $gallery, PackageImageStore $images)
+    public function update(Request $request, GalleryItem $gallery, PackageImageStore $images, GalleryVideoStore $videos)
     {
-        $gallery->update($this->validated($request, $images, $gallery));
+        $gallery->update($this->validated($request, $images, $videos, $gallery));
 
-        return redirect()->route('admin.gallery.index')->with('ok', 'Foto galeri diperbarui.');
+        return redirect()->route('admin.gallery.index')->with('ok', 'Item galeri diperbarui.');
     }
 
-    public function destroy(GalleryItem $gallery)
+    public function destroy(GalleryItem $gallery, GalleryVideoStore $videos)
     {
+        if ($gallery->isUploadedVideo()) {
+            $videos->delete($gallery->video_path);
+        }
+
         $gallery->delete();
 
-        return redirect()->route('admin.gallery.index')->with('ok', 'Foto galeri dihapus.');
+        return redirect()->route('admin.gallery.index')->with('ok', 'Item galeri dihapus.');
     }
 
     public function restore(GalleryItem $gallery)
     {
         $gallery->restore();
 
-        return redirect()->route('admin.gallery.index', ['trashed' => 1])->with('ok', 'Foto galeri dipulihkan.');
+        return redirect()->route('admin.gallery.index', ['trashed' => 1])->with('ok', 'Item galeri dipulihkan.');
     }
 
     public function toggleHome(Request $request, GalleryItem $gallery)
@@ -90,13 +96,13 @@ class GalleryController extends Controller
                 'show_on_home' => true,
                 'home_sort' => $slot,
             ]);
-            $message = 'Foto ditampilkan di beranda (posisi '.$slot.').';
+            $message = 'Item ditampilkan di beranda (posisi '.$slot.').';
         } else {
             $gallery->update([
                 'show_on_home' => false,
                 'home_sort' => null,
             ]);
-            $message = 'Foto dihapus dari beranda.';
+            $message = 'Item dihapus dari beranda.';
         }
 
         return $this->galleryHomeResponse($gallery->fresh(), $message);
@@ -164,10 +170,14 @@ class GalleryController extends Controller
     }
 
     /**
-     * @return array{title: string, caption: ?string, category: string, group_name: ?string, sort_order: int, show_on_home: bool, image: string, video_url: ?string}
+     * @return array{title: string, caption: ?string, category: string, group_name: ?string, sort_order: int, show_on_home: bool, home_sort: ?int, image: string, video_url: ?string, video_path: ?string}
      */
-    private function validated(Request $request, PackageImageStore $images, ?GalleryItem $existingItem = null): array
-    {
+    private function validated(
+        Request $request,
+        PackageImageStore $images,
+        GalleryVideoStore $videos,
+        ?GalleryItem $existingItem = null,
+    ): array {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:160'],
             'caption' => ['nullable', 'string', 'max:255'],
@@ -175,17 +185,80 @@ class GalleryController extends Controller
             'group_name' => ['nullable', 'string', 'max:120'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'show_on_home' => ['nullable', 'boolean'],
+            'media_type' => ['required', Rule::in(['photo', 'youtube', 'file'])],
             'image_url' => ['nullable', 'url', 'max:500'],
             'video_url' => ['nullable', 'string', 'max:500'],
             'photo' => ['nullable', 'image', 'max:5120'],
+            'video_file' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm', 'max:'.GalleryVideoStore::MAX_MEGABYTES * 1024],
+            'delete_video_file' => ['nullable', 'boolean'],
+        ], [
+            'video_file.max' => 'Video maksimal '.GalleryVideoStore::MAX_MEGABYTES.' MB per upload. Kompres dulu jika lebih besar.',
+            'video_file.mimetypes' => 'Format video harus MP4 atau WebM.',
         ]);
 
+        $mediaType = $data['media_type'];
         $showOnHome = $request->boolean('show_on_home');
         $videoUrl = filled($data['video_url'] ?? null) ? trim($data['video_url']) : null;
-        if ($videoUrl !== null && YoutubeUrl::extractId($videoUrl) === null) {
-            throw ValidationException::withMessages([
-                'video_url' => 'URL YouTube tidak valid.',
-            ]);
+        $videoPath = $existingItem?->video_path;
+        $previousVideoPath = $existingItem?->video_path;
+
+        if ($request->hasFile('video_file') && $request->file('video_file')->isValid()) {
+            if ($mediaType !== 'file') {
+                throw ValidationException::withMessages([
+                    'video_file' => 'Unggah video hanya untuk tipe Upload video.',
+                ]);
+            }
+
+            if ($previousVideoPath) {
+                $videos->delete($previousVideoPath);
+            }
+
+            $videoPath = $videos->store($request->file('video_file'), $data['title']);
+            $videoUrl = null;
+        } elseif ($mediaType === 'file') {
+            if ($request->boolean('delete_video_file') && $previousVideoPath) {
+                $videos->delete($previousVideoPath);
+                $videoPath = null;
+            }
+
+            if (! $videoPath) {
+                throw ValidationException::withMessages([
+                    'video_file' => 'Unggah file video MP4/WebM (maks. '.GalleryVideoStore::MAX_MEGABYTES.' MB).',
+                ]);
+            }
+
+            $videoUrl = null;
+        } elseif ($mediaType === 'youtube') {
+            if ($videoUrl === null) {
+                throw ValidationException::withMessages([
+                    'video_url' => 'Isi link video YouTube.',
+                ]);
+            }
+
+            if (YoutubeUrl::extractId($videoUrl) === null) {
+                throw ValidationException::withMessages([
+                    'video_url' => 'URL YouTube tidak valid.',
+                ]);
+            }
+
+            if ($previousVideoPath) {
+                $videos->delete($previousVideoPath);
+            }
+
+            $videoPath = null;
+        } else {
+            if ($videoUrl !== null || $request->hasFile('video_file')) {
+                throw ValidationException::withMessages([
+                    'media_type' => 'Hapus link/upload video jika tipe media adalah Foto.',
+                ]);
+            }
+
+            if ($previousVideoPath) {
+                $videos->delete($previousVideoPath);
+            }
+
+            $videoUrl = null;
+            $videoPath = null;
         }
 
         $image = $existingItem?->image;
@@ -193,13 +266,25 @@ class GalleryController extends Controller
             $image = $images->store($request->file('photo'), $data['title'], 'gallery');
         } elseif (filled($data['image_url'] ?? null)) {
             $image = $data['image_url'];
-        } elseif ($videoUrl !== null) {
+        } elseif ($mediaType === 'youtube' && $videoUrl !== null && ! $image) {
             $image = YoutubeUrl::thumbnailUrl($videoUrl);
+        }
+
+        if ($mediaType === 'file' && ! $image) {
+            throw ValidationException::withMessages([
+                'photo' => 'Unggah thumbnail/poster untuk video (wajib).',
+            ]);
+        }
+
+        if ($mediaType === 'photo' && ! $image) {
+            throw ValidationException::withMessages([
+                'photo' => 'Unggah foto atau isi URL gambar.',
+            ]);
         }
 
         if (! $image) {
             throw ValidationException::withMessages([
-                'photo' => 'Unggah foto, isi URL gambar, atau link video YouTube.',
+                'photo' => 'Unggah foto/thumbnail atau isi URL gambar.',
             ]);
         }
 
@@ -213,6 +298,7 @@ class GalleryController extends Controller
             'home_sort' => $this->resolveHomeSort($showOnHome, $existingItem),
             'image' => $image,
             'video_url' => $videoUrl,
+            'video_path' => $videoPath,
         ];
     }
 

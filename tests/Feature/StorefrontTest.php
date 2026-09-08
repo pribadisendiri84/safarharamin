@@ -9,6 +9,7 @@ use App\Models\Package;
 use App\Models\Setting;
 use App\Models\Testimonial;
 use App\Models\User;
+use App\Services\GalleryVideoStore;
 use App\Support\HajiExchangeRate;
 use App\Support\SiteProfile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -427,6 +428,7 @@ class StorefrontTest extends TestCase
                 'group_name' => 'Manasik',
                 'sort_order' => 1,
                 'show_on_home' => '1',
+                'media_type' => 'photo',
                 'image_url' => 'https://images.unsplash.com/photo-1564769625905-50e93615e769?w=800',
             ])
             ->assertRedirect(route('admin.gallery.index'));
@@ -452,6 +454,7 @@ class StorefrontTest extends TestCase
                 'category' => 'haji',
                 'group_name' => 'Manasik',
                 'sort_order' => 2,
+                'media_type' => 'photo',
                 'image_url' => $item->image,
             ])
             ->assertRedirect(route('admin.gallery.index'));
@@ -1020,20 +1023,102 @@ class StorefrontTest extends TestCase
                 'category' => 'haji',
                 'group_name' => 'Manasik',
                 'sort_order' => 1,
+                'media_type' => 'youtube',
                 'video_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             ])
             ->assertRedirect(route('admin.gallery.index'));
 
         $item = GalleryItem::query()->where('title', 'Manasik Live')->first();
         $this->assertNotNull($item);
-        $this->assertTrue($item->isVideo());
+        $this->assertTrue($item->isYoutubeVideo());
         $this->assertStringContainsString('img.youtube.com/vi/dQw4w9WgXcQ', $item->displayImage());
 
-        $this->get('/galeri?kategori=haji')
+        $html = $this->get('/galeri?kategori=haji')
             ->assertOk()
             ->assertSee('gallery-video-trigger', false)
-            ->assertSee('gallery-inline-video', false)
-            ->assertSee('Manasik Live');
+            ->assertSee('data-video-type="youtube"', false)
+            ->assertSee('data-youtube-id="dQw4w9WgXcQ"', false)
+            ->assertSee('Manasik Live')
+            ->getContent();
+
+        $this->assertStringNotContainsString('gallery-inline-video', $html);
+        $this->assertDoesNotMatchRegularExpression('/<iframe[^>]+src=/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<video[^>]+src=/', $html);
+    }
+
+    public function test_admin_can_upload_mp4_video_to_gallery(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post('/admin/gallery', [
+                'title' => 'Cuplikan Manasik',
+                'caption' => 'Reels pendek',
+                'category' => 'umroh',
+                'group_name' => 'Manasik',
+                'sort_order' => 1,
+                'media_type' => 'file',
+                'photo' => UploadedFile::fake()->image('poster.jpg', 800, 450),
+                'video_file' => UploadedFile::fake()->create('manasik.mp4', 512, 'video/mp4'),
+            ])
+            ->assertRedirect(route('admin.gallery.index'));
+
+        $item = GalleryItem::query()->where('title', 'Cuplikan Manasik')->first();
+        $this->assertNotNull($item);
+        $this->assertTrue($item->isUploadedVideo());
+        $this->assertNotNull($item->video_path);
+        $this->assertStringStartsWith('/storage/gallery-videos/', $item->video_path);
+
+        $relative = ltrim(substr($item->video_path, strlen('/storage/')), '/');
+        Storage::disk('public')->assertExists($relative);
+
+        $this->get('/galeri?kategori=umroh')
+            ->assertOk()
+            ->assertSee('data-video-type="file"', false)
+            ->assertSee($item->video_path, false)
+            ->assertSee('Cuplikan Manasik');
+    }
+
+    public function test_gallery_rejects_video_upload_over_fifty_megabytes(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->from('/admin/gallery/create')
+            ->post('/admin/gallery', [
+                'title' => 'Video Besar',
+                'category' => 'umroh',
+                'sort_order' => 1,
+                'media_type' => 'file',
+                'photo' => UploadedFile::fake()->image('poster.jpg', 800, 450),
+                'video_file' => UploadedFile::fake()->create('big.mp4', (GalleryVideoStore::MAX_MEGABYTES * 1024) + 1, 'video/mp4'),
+            ])
+            ->assertRedirect('/admin/gallery/create')
+            ->assertSessionHasErrors('video_file');
+
+        $this->assertSame(0, GalleryItem::query()->where('title', 'Video Besar')->count());
+    }
+
+    public function test_gallery_mp4_upload_requires_poster_thumbnail(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->from('/admin/gallery/create')
+            ->post('/admin/gallery', [
+                'title' => 'Tanpa Poster',
+                'category' => 'umroh',
+                'sort_order' => 1,
+                'media_type' => 'file',
+                'video_file' => UploadedFile::fake()->create('clip.mp4', 256, 'video/mp4'),
+            ])
+            ->assertRedirect('/admin/gallery/create')
+            ->assertSessionHasErrors('photo');
+
+        $this->assertSame(0, GalleryItem::query()->where('title', 'Tanpa Poster')->count());
     }
 
     public function test_haji_page_shows_manual_exchange_rate(): void

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
-#[Fillable(['title', 'image', 'video_url', 'caption', 'category', 'group_name', 'sort_order', 'show_on_home', 'home_sort'])]
+#[Fillable(['title', 'image', 'video_url', 'video_path', 'caption', 'category', 'group_name', 'sort_order', 'show_on_home', 'home_sort'])]
 class GalleryItem extends Model
 {
     use RecordsActivity, SoftDeletes;
@@ -51,23 +51,65 @@ class GalleryItem extends Model
             : 'Lainnya';
     }
 
-    public function isVideo(): bool
+    public function isYoutubeVideo(): bool
     {
         return filled($this->video_url) && YoutubeUrl::extractId($this->video_url) !== null;
     }
 
-    public function displayImage(): string
+    public function isUploadedVideo(): bool
     {
-        if ($this->isVideo()) {
-            return YoutubeUrl::thumbnailUrl($this->video_url) ?? (string) $this->image;
+        $path = trim((string) ($this->video_path ?? ''));
+
+        return $path !== '' && str_starts_with($path, '/storage/');
+    }
+
+    public function isVideo(): bool
+    {
+        return $this->isYoutubeVideo() || $this->isUploadedVideo();
+    }
+
+    public function videoType(): ?string
+    {
+        if ($this->isUploadedVideo()) {
+            return 'file';
         }
 
-        return (string) $this->image;
+        if ($this->isYoutubeVideo()) {
+            return 'youtube';
+        }
+
+        return null;
+    }
+
+    public function displayImage(): string
+    {
+        if (filled($this->image)) {
+            return (string) $this->image;
+        }
+
+        if ($this->isYoutubeVideo()) {
+            return YoutubeUrl::thumbnailUrl($this->video_url) ?? '';
+        }
+
+        return '';
+    }
+
+    public function videoPlayUrl(): ?string
+    {
+        if ($this->isUploadedVideo()) {
+            return (string) $this->video_path;
+        }
+
+        if ($this->isYoutubeVideo()) {
+            return $this->embedUrl();
+        }
+
+        return null;
     }
 
     public function embedUrl(): ?string
     {
-        return $this->isVideo() ? YoutubeUrl::embedUrl($this->video_url) : null;
+        return $this->isYoutubeVideo() ? YoutubeUrl::embedUrl($this->video_url) : null;
     }
 
     public function scopeCategory(Builder $query, string $category): Builder

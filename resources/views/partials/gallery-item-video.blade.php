@@ -2,7 +2,13 @@
   <div class="gallery-media">
     <button type="button"
       class="gallery-shot gallery-video-trigger"
-      data-video="{{ $item->embedUrl() }}"
+      data-video-type="{{ $item->videoType() }}"
+      @if($item->isYoutubeVideo())
+      data-youtube-id="{{ \App\Support\YoutubeUrl::extractId($item->video_url) }}"
+      @else
+      data-video-src="{{ $item->videoPlayUrl() }}"
+      @endif
+      data-poster="{{ $item->displayImage() }}"
       data-alt="{{ $item->title }}"
       aria-label="Putar video {{ $item->title }}">
       <img src="{{ $item->displayImage() }}" alt="{{ $item->title }}" loading="lazy">
@@ -14,9 +20,5 @@
         </span>
       </span>
     </button>
-    <div class="gallery-inline-video" hidden>
-      <iframe title="Video: {{ $item->title }}" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-      <button type="button" class="gallery-video-close" aria-label="Tutup video">×</button>
-    </div>
   </div>
 </figure>

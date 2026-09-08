@@ -8,7 +8,7 @@
     <p class="sub">Centang <strong>Beranda</strong> (maks. {{ \App\Models\GalleryItem::homeLimit() }}). Drag untuk ubah urutan.</p>
   </div>
   <div class="actions head-actions">
-    <a class="btn" href="{{ route('admin.gallery.create') }}">@include('admin.partials.icon', ['name' => 'plus']) Tambah foto</a>
+    <a class="btn" href="{{ route('admin.gallery.create') }}">@include('admin.partials.icon', ['name' => 'plus']) Tambah item</a>
   </div>
 </div>
 
@@ -102,7 +102,7 @@
                 'edit' => route('admin.gallery.edit', $item),
                 'destroy' => route('admin.gallery.destroy', $item),
                 'restore' => route('admin.gallery.restore', $item),
-                'confirm' => 'Hapus foto ini?',
+                'confirm' => 'Hapus item galeri ini?',
               ])
             </td>
           </tr>
