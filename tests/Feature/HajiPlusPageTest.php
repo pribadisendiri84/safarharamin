@@ -157,10 +157,38 @@ class HajiPlusPageTest extends TestCase
         $this->get('/haji-khusus')
             ->assertOk()
             ->assertSee('Madinah Pullman')
-            ->assertSee('Garuda Indonesia / Saudia')
+            ->assertSee('Garuda Indonesia · Saudia')
             ->assertSee('/storage/hotels/pullman.png', false)
             ->assertSee('/storage/airlines/garuda.png', false)
             ->assertSee('Saudia');
+    }
+
+    public function test_admin_can_hide_airline_names_and_show_logos_only(): void
+    {
+        $user = User::factory()->create();
+        Airline::query()->where('name', 'Garuda Indonesia')->update(['logo' => '/storage/airlines/garuda.png']);
+        Airline::query()->where('name', 'Saudia')->update(['logo' => '/storage/airlines/saudia.png']);
+        Airline::query()->where('name', 'Emirates')->update(['logo' => '/storage/airlines/emirates.png']);
+
+        $page = HajiPlusPage::content();
+        $payload = $this->payloadFrom($page, [
+            'partner_airlines' => ['Garuda Indonesia', 'Saudia', 'Emirates'],
+            'airline.show_names' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->put(route('admin.haji-plus.update'), $payload)
+            ->assertRedirect(route('admin.haji-plus.edit'));
+
+        $this->assertSame('0', HajiPlusPage::content()['airline']['show_names']);
+
+        $this->get('/haji-khusus')
+            ->assertOk()
+            ->assertDontSee('Garuda Indonesia · Saudia · Emirates')
+            ->assertSee('/storage/airlines/garuda.png', false)
+            ->assertSee('/storage/airlines/saudia.png', false)
+            ->assertSee('/storage/airlines/emirates.png', false)
+            ->assertSee('haji-airline-logos--primary', false);
     }
 
     /**
@@ -199,6 +227,7 @@ class HajiPlusPageTest extends TestCase
             'airline' => [
                 'description' => $page['airline']['description'],
                 'points_text' => $page['airline']['points_text'],
+                'show_names' => ($page['airline']['show_names'] ?? '1') === '1' ? '1' : null,
             ],
             'flow' => $page['flow'],
             'cta' => $page['cta'],

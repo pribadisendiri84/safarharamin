@@ -74,6 +74,7 @@ class HajiPlusPageController extends Controller
             'hotels.*.badge' => ['required', 'string', 'max:40'],
             'airline.description' => ['required', 'string', 'max:400'],
             'airline.points_text' => ['required', 'string', 'max:400'],
+            'airline.show_names' => ['nullable', 'boolean'],
             'flow' => ['required', 'array', 'size:4'],
             'flow.*.title' => ['required', 'string', 'max:60'],
             'flow.*.description' => ['required', 'string', 'max:160'],
@@ -128,6 +129,7 @@ class HajiPlusPageController extends Controller
         $airline = [
             'description' => trim($data['airline']['description']),
             'points_text' => trim($data['airline']['points_text']),
+            'show_names' => $request->boolean('airline.show_names') ? '1' : '0',
             'image' => $current['airline']['image'] ?? HajiPlusPage::defaults()['airline']['image'],
         ];
 

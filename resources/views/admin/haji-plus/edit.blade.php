@@ -178,8 +178,22 @@
                 @endforeach
               </div>
             @endif
+            <label class="check">
+              <input
+                type="checkbox"
+                name="airline[show_names]"
+                value="1"
+                @checked(old('airline.show_names', $page['airline']['show_names'] ?? '1') === '1')
+              >
+              Tampilkan nama maskapai di halaman
+            </label>
+            <p class="haji-inline-note haji-inline-note-muted">Jika tidak dicentang, halaman publik hanya menampilkan logo maskapai (judul teks disembunyikan).</p>
             @if(!empty($page['partner_airlines']))
-              <p class="haji-inline-note">Judul penerbangan: <strong>{{ implode(' / ', $page['partner_airlines']) }}</strong></p>
+              @if(($page['airline']['show_names'] ?? '1') === '1')
+                <p class="haji-inline-note">Judul penerbangan: <strong>{{ $page['airline']['title'] }}</strong></p>
+              @else
+                <p class="haji-inline-note">Tampilan halaman: <strong>logo maskapai saja</strong></p>
+              @endif
             @endif
           </div>
 

@@ -713,6 +713,7 @@ tr.sortable-ghost { opacity: .45; }
 .haji-subblock-title { margin: 0; font-size: 13px; font-weight: 800; color: var(--ink); }
 .admin-inline-note,
 .haji-inline-note { margin: 0; font-size: 12px; color: var(--muted); }
+.haji-inline-note-muted { margin-top: 6px; }
 .admin-media-preview,
 .haji-media-preview { width: 100%; max-width: 280px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); }
 .haji-hero-images { margin-top: 4px; }

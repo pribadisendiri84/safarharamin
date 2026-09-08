@@ -32,6 +32,7 @@ class HajiPlusPage
         $hotels = self::resolveHotels(self::mergeHotels($defaults['hotels'], $stored['hotels'] ?? []));
         $partnerAirlines = self::mergePartnerAirlines($defaults['partner_airlines'], $stored['partner_airlines'] ?? []);
         $airline = array_replace($defaults['airline'], $stored['airline'] ?? []);
+        $airline['show_names'] = ($airline['show_names'] ?? '1') === '1' ? '1' : '0';
         $airline['title'] = self::airlineTitle($partnerAirlines);
 
         return [
@@ -88,7 +89,7 @@ class HajiPlusPage
         return [
             'program_name' => $programName,
             'program_kind' => 'haji',
-            'airline' => implode(' / ', $page['partner_airlines'] ?? []),
+            'airline' => self::airlineTitle($page['partner_airlines'] ?? []),
             'hotel_madinah' => (string) ($madinah['title'] ?? $madinah['master_name'] ?? ''),
             'hotel_makkah' => (string) ($makkah['title'] ?? $makkah['master_name'] ?? ''),
             'departure_date' => null,
@@ -205,6 +206,7 @@ class HajiPlusPage
             'partner_airlines' => ['Garuda Indonesia', 'Saudia'],
             'airline' => [
                 'title' => self::airlineTitle(['Garuda Indonesia', 'Saudia']),
+                'show_names' => '1',
                 'description' => 'Penerbangan langsung dengan layanan maskapai terpercaya untuk perjalanan ibadah yang nyaman.',
                 'image' => 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=900&q=80',
                 'points_text' => "Jadwal penerbangan fleksibel\nLayanan bagasi sesuai program\nKabin nyaman untuk perjalanan jauh",
@@ -314,10 +316,18 @@ class HajiPlusPage
         $names = array_values(array_filter(array_map('trim', $partnerAirlines)));
 
         if ($names !== []) {
-            return implode(' / ', $names);
+            return implode(' · ', $names);
         }
 
         return HajiPlusProgram::airlineLabel();
+    }
+
+    /**
+     * @param  array<string, mixed>  $airline
+     */
+    public static function airlineShowNames(array $airline): bool
+    {
+        return ($airline['show_names'] ?? '1') === '1';
     }
 
     /**

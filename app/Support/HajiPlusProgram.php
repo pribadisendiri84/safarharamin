@@ -420,7 +420,7 @@ class HajiPlusProgram
 
     public static function airlineLabel(): string
     {
-        return 'Garuda Indonesia / Saudia';
+        return 'Garuda Indonesia · Saudia';
     }
 
     /**
@@ -436,7 +436,7 @@ class HajiPlusProgram
             ],
             [
                 'title' => 'Maskapai terbaik',
-                'description' => 'Garuda Indonesia / Saudia.',
+                'description' => 'Garuda Indonesia · Saudia.',
                 'icon' => 'bi-airplane',
             ],
             [

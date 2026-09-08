@@ -133,18 +133,24 @@
   <section class="wrap haji-section haji-airline-section" id="penerbangan">
     <div class="haji-airline-grid">
       <div class="haji-airline-visual">
-        <img src="{{ $page['airline']['image'] }}" alt="{{ $page['airline']['title'] }}" loading="lazy">
+        <img
+          src="{{ $page['airline']['image'] }}"
+          alt="{{ HajiPlusPage::airlineShowNames($page['airline']) ? $page['airline']['title'] : 'Maskapai penerbangan' }}"
+          loading="lazy"
+        >
       </div>
       <div class="haji-airline-copy">
         <span class="haji-section-badge">Penerbangan</span>
-        <h2>{{ $page['airline']['title'] }}</h2>
+        @if(HajiPlusPage::airlineShowNames($page['airline']))
+          <h2>{{ $page['airline']['title'] }}</h2>
+        @endif
         @php $airlinePartners = HajiPlusPage::partnerAirlines($page); @endphp
         @if($airlinePartners !== [])
-          <div class="haji-airline-logos">
+          <div class="haji-airline-logos{{ HajiPlusPage::airlineShowNames($page['airline']) ? '' : ' haji-airline-logos--primary' }}">
             @foreach($airlinePartners as $airline)
               @if($airline['logo'])
                 <img src="{{ $airline['logo'] }}" alt="{{ $airline['name'] }}" loading="lazy">
-              @else
+              @elseif(HajiPlusPage::airlineShowNames($page['airline']))
                 <span>{{ $airline['name'] }}</span>
               @endif
             @endforeach

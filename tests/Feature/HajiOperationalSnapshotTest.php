@@ -78,7 +78,7 @@ class HajiOperationalSnapshotTest extends TestCase
             'source' => Departure::SOURCE_HAJI_PAGE,
             'program_name' => 'Haji Khusus Arminareka — 1447H/2026M',
             'program_kind' => 'haji',
-            'airline' => 'Garuda Indonesia / Saudia',
+            'airline' => 'Garuda Indonesia · Saudia',
             'program_snapshot' => HajiPlusPage::operationalSnapshot(),
         ]);
 
