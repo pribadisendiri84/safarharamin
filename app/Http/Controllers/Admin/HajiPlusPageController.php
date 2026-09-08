@@ -17,6 +17,7 @@ class HajiPlusPageController extends Controller
     {
         return view('admin.haji-plus.edit', [
             'page' => HajiPlusPage::content(),
+            'defaultHeroImage' => HajiPlusPage::defaultHeroImage(),
             'airlines' => Airline::query()->orderBy('sort_order')->orderBy('name')->get(['name', 'logo']),
             'hotelLocations' => [
                 Hotel::LOCATION_MADINAH => Hotel::LOCATIONS[Hotel::LOCATION_MADINAH],
@@ -38,7 +39,10 @@ class HajiPlusPageController extends Controller
             'hero.subtitle' => ['required', 'string', 'max:400'],
             'hero.starting_price' => ['nullable', 'string', 'max:40'],
             'hero.show_quota' => ['nullable', 'boolean'],
+            'hero.image' => ['nullable', 'string', 'max:500'],
             'hero.image_file' => ['nullable', 'image', 'max:4096'],
+            'delete_hero_images' => ['nullable', 'array'],
+            'delete_hero_images.*' => ['string', 'max:500'],
             'rooms' => ['required', 'array', 'size:4'],
             'rooms.*.label' => ['required', 'string', 'max:40'],
             'rooms.*.occupancy' => ['required', 'string', 'max:40'],
@@ -77,7 +81,7 @@ class HajiPlusPageController extends Controller
         $hero = $data['hero'];
         $hero['show_quota'] = $request->boolean('hero.show_quota') ? '1' : '0';
         $hero['starting_price'] = trim((string) ($hero['starting_price'] ?? ''));
-        $hero['image'] = $this->storeImage($request, $images, 'hero.image_file', 'haji-hero', $current['hero']['image'] ?? '');
+        $hero = $this->syncHeroImages($request, $images, $current['hero'], $hero);
         unset($hero['image_file']);
 
         $rooms = [];
@@ -130,6 +134,67 @@ class HajiPlusPageController extends Controller
         ]);
 
         return redirect()->route('admin.haji-plus.edit')->with('ok', 'Halaman Haji Plus tersimpan.');
+    }
+
+    /**
+     * @param  array<string, mixed>  $currentHero
+     * @param  array<string, mixed>  $heroInput
+     * @return array<string, mixed>
+     */
+    private function syncHeroImages(
+        Request $request,
+        PackageImageStore $images,
+        array $currentHero,
+        array $heroInput,
+    ): array {
+        $defaultImage = HajiPlusPage::defaultHeroImage();
+        $library = array_values(array_unique(array_filter(
+            is_array($currentHero['images'] ?? null) ? $currentHero['images'] : [],
+            fn ($path) => is_string($path) && str_starts_with($path, '/storage/haji-plus/'),
+        )));
+
+        $legacyActive = trim((string) ($currentHero['image'] ?? ''));
+        if ($library === [] && str_starts_with($legacyActive, '/storage/haji-plus/')) {
+            $library = [$legacyActive];
+        }
+
+        foreach ($request->input('delete_hero_images', []) as $path) {
+            if (! is_string($path) || ! str_starts_with($path, '/storage/haji-plus/')) {
+                continue;
+            }
+
+            $library = array_values(array_filter($library, fn (string $item) => $item !== $path));
+            $this->deleteStoredImage($path);
+        }
+
+        if ($request->hasFile('hero.image_file')) {
+            $library[] = $images->store($request->file('hero.image_file'), 'haji-hero', 'haji-plus');
+            $library = array_values(array_unique($library));
+        }
+
+        $selected = trim((string) ($heroInput['image'] ?? ''));
+        if ($selected === $defaultImage) {
+            $active = $defaultImage;
+        } elseif (in_array($selected, $library, true)) {
+            $active = $selected;
+        } else {
+            $previousActive = trim((string) ($currentHero['image'] ?? $defaultImage));
+            if ($previousActive === $defaultImage || in_array($previousActive, $library, true)) {
+                $active = $previousActive;
+            } else {
+                $active = $library[0] ?? $defaultImage;
+            }
+        }
+
+        if ($active !== $defaultImage && ! in_array($active, $library, true)) {
+            $active = $library[0] ?? $defaultImage;
+        }
+
+        return HajiPlusPage::normalizeHero([
+            ...$heroInput,
+            'image' => $active,
+            'images' => $library,
+        ]);
     }
 
     private function storeImage(

@@ -715,6 +715,44 @@ tr.sortable-ghost { opacity: .45; }
 .haji-inline-note { margin: 0; font-size: 12px; color: var(--muted); }
 .admin-media-preview,
 .haji-media-preview { width: 100%; max-width: 280px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); }
+.haji-hero-images { margin-top: 4px; }
+.haji-hero-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.haji-hero-image-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+.haji-hero-image-card.is-active {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px rgba(1, 49, 128, .12);
+}
+.haji-hero-image-pick {
+  display: grid;
+  gap: 8px;
+  cursor: pointer;
+}
+.haji-hero-image-pick input { justify-self: start; }
+.haji-hero-image-pick img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+.haji-hero-image-pick span {
+  font-size: 12px;
+  color: var(--muted);
+  word-break: break-all;
+}
+.haji-hero-image-delete { margin: 0; font-size: 13px; }
 .admin-brand-row { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
 .admin-brand-row .admin-file-pick { flex: 1; min-width: 200px; }
 .admin-logo-preview {

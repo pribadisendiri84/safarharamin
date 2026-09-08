@@ -11,12 +11,13 @@
 
   $hero = $page['hero'];
   $rooms = $page['rooms'];
+  $heroImage = $hero['image'] ?? HajiPlusPage::defaults()['hero']['image'];
   $starting = HajiPlusPage::startingPrice($hero, $rooms);
   $deposit = HajiPlusProgram::initialDeposit();
 @endphp
 
 <div class="haji-landing">
-  <section class="haji-hero">
+  <section class="haji-hero" style="--haji-hero-image: url('{{ e($heroImage) }}');">
     <div class="wrap haji-hero-grid">
       <div class="haji-hero-copy">
         <span class="haji-hero-badge">{{ $hero['badge'] }}@if(!empty($hero['season'])) · {{ $hero['season'] }}@endif</span>

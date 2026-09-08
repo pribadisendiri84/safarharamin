@@ -35,7 +35,7 @@ class HajiPlusPage
         $airline['title'] = self::airlineTitle($partnerAirlines);
 
         return [
-            'hero' => array_replace($defaults['hero'], $stored['hero'] ?? []),
+            'hero' => self::normalizeHero(array_replace($defaults['hero'], $stored['hero'] ?? [])),
             'rooms' => self::mergeList($defaults['rooms'], $stored['rooms'] ?? [], ['key', 'label', 'occupancy', 'price_label', 'price_note', 'image', 'is_featured']),
             'benefits' => self::mergeList($defaults['benefits'], $stored['benefits'] ?? [], ['title', 'description', 'icon']),
             'hotels' => $hotels,
@@ -169,6 +169,7 @@ class HajiPlusPage
                 'starting_price' => '',
                 'show_quota' => '0',
                 'image' => 'https://images.unsplash.com/photo-1564769625905-50e93615e769?w=1600&q=80',
+                'images' => [],
             ],
             'rooms' => array_map(function (array $room) {
                 return [
@@ -428,5 +429,40 @@ class HajiPlusPage
         }
 
         return $rows;
+    }
+
+    public static function defaultHeroImage(): string
+    {
+        return (string) (self::defaults()['hero']['image'] ?? '');
+    }
+
+    /**
+     * @param  array<string, mixed>  $hero
+     * @return array<string, mixed>
+     */
+    public static function normalizeHero(array $hero): array
+    {
+        $defaults = self::defaults()['hero'];
+        $hero = array_replace($defaults, $hero);
+        $defaultImage = (string) $defaults['image'];
+
+        $images = array_values(array_unique(array_filter(
+            is_array($hero['images'] ?? null) ? $hero['images'] : [],
+            fn ($path) => is_string($path) && str_starts_with($path, '/storage/haji-plus/'),
+        )));
+
+        $active = trim((string) ($hero['image'] ?? ''));
+        if ($images === [] && str_starts_with($active, '/storage/haji-plus/')) {
+            $images = [$active];
+        }
+
+        if ($active === '' || ($active !== $defaultImage && ! in_array($active, $images, true))) {
+            $active = $images[0] ?? $defaultImage;
+        }
+
+        $hero['images'] = $images;
+        $hero['image'] = $active;
+
+        return $hero;
     }
 }

@@ -51,18 +51,50 @@
             <label>Harga mulai <small class="haji-label-hint">kosongkan = pakai kamar pertama</small>
               <input name="hero[starting_price]" value="{{ old('hero.starting_price', $page['hero']['starting_price']) }}" placeholder="Rp 275 Jt">
             </label>
+          </div>
+
+          @php
+            $heroImages = $page['hero']['images'] ?? [];
+            $activeHeroImage = old('hero.image', $page['hero']['image'] ?? $defaultHeroImage);
+          @endphp
+          <fieldset class="haji-hero-images itinerary-pdf-fieldset">
+            <legend>Foto latar</legend>
+            <p class="sub">Unggah foto baru ke daftar di bawah. Pilih latar aktif dengan radio — upload tidak langsung mengganti.</p>
+
+            <div class="haji-hero-image-grid">
+              <div class="haji-hero-image-card{{ $activeHeroImage === $defaultHeroImage ? ' is-active' : '' }}">
+                <label class="haji-hero-image-pick">
+                  <input type="radio" name="hero[image]" value="{{ $defaultHeroImage }}" @checked($activeHeroImage === $defaultHeroImage)>
+                  <img src="{{ $defaultHeroImage }}" alt="Default">
+                  <span>Default</span>
+                </label>
+              </div>
+
+              @foreach($heroImages as $path)
+                <div class="haji-hero-image-card{{ $activeHeroImage === $path ? ' is-active' : '' }}">
+                  <label class="haji-hero-image-pick">
+                    <input type="radio" name="hero[image]" value="{{ $path }}" @checked($activeHeroImage === $path)>
+                    <img src="{{ $path }}" alt="Foto latar">
+                    <span>{{ basename($path) }}</span>
+                  </label>
+                  <label class="check haji-hero-image-delete">
+                    <input type="checkbox" name="delete_hero_images[]" value="{{ $path }}" @checked(in_array($path, old('delete_hero_images', []), true))>
+                    Hapus
+                  </label>
+                </div>
+              @endforeach
+            </div>
+
             <label class="haji-file-pick">
-              <span>Foto latar</span>
+              <span>Tambah foto latar</span>
               <input type="file" name="hero[image_file]" accept="image/*">
             </label>
-          </div>
+          </fieldset>
+
           <label class="check">
             <input type="checkbox" name="hero[show_quota]" value="1" @checked(old('hero.show_quota', $page['hero']['show_quota']) === '1')>
             Tampilkan badge “Kuota terbatas”
           </label>
-          @if(!empty($page['hero']['image']))
-            <img class="haji-media-preview" src="{{ $page['hero']['image'] }}" alt="Hero">
-          @endif
         </div>
       </section>
 

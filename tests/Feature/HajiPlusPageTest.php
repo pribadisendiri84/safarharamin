@@ -7,6 +7,8 @@ use App\Models\Hotel;
 use App\Models\User;
 use App\Support\HajiPlusPage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class HajiPlusPageTest extends TestCase
@@ -52,6 +54,80 @@ class HajiPlusPageTest extends TestCase
             ->assertSee('Madinah Pullman')
             ->assertSee('Siap berangkat bersama kami?')
             ->assertDontSee('4 paket');
+    }
+
+    public function test_admin_can_upload_hero_background_without_auto_selecting_it(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $page = HajiPlusPage::content();
+        $payload = $this->payloadFrom($page, []);
+        $defaultImage = HajiPlusPage::defaultHeroImage();
+
+        $this->actingAs($user)
+            ->put(route('admin.haji-plus.update'), [
+                ...$payload,
+                'hero' => [
+                    ...$payload['hero'],
+                    'image' => $defaultImage,
+                    'image_file' => UploadedFile::fake()->image('haji-hero.jpg', 1600, 900),
+                ],
+            ])
+            ->assertRedirect(route('admin.haji-plus.edit'));
+
+        $hero = HajiPlusPage::content()['hero'];
+        $this->assertCount(1, $hero['images']);
+        $this->assertSame($defaultImage, $hero['image']);
+
+        $uploaded = $hero['images'][0];
+
+        $this->actingAs($user)
+            ->put(route('admin.haji-plus.update'), [
+                ...$payload,
+                'hero' => [
+                    ...$payload['hero'],
+                    'image' => $uploaded,
+                ],
+            ])
+            ->assertRedirect(route('admin.haji-plus.edit'));
+
+        $this->get('/haji-khusus')
+            ->assertOk()
+            ->assertSee("--haji-hero-image: url('{$uploaded}')", false);
+    }
+
+    public function test_admin_can_delete_unused_hero_background_image(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $page = HajiPlusPage::content();
+        $payload = $this->payloadFrom($page, []);
+
+        $this->actingAs($user)
+            ->put(route('admin.haji-plus.update'), [
+                ...$payload,
+                'hero' => [
+                    ...$payload['hero'],
+                    'image_file' => UploadedFile::fake()->image('haji-hero.jpg', 1600, 900),
+                ],
+            ]);
+
+        $uploaded = HajiPlusPage::content()['hero']['images'][0];
+
+        $this->actingAs($user)
+            ->put(route('admin.haji-plus.update'), [
+                ...$payload,
+                'hero' => [
+                    ...$payload['hero'],
+                    'image' => HajiPlusPage::defaultHeroImage(),
+                ],
+                'delete_hero_images' => [$uploaded],
+            ])
+            ->assertRedirect(route('admin.haji-plus.edit'));
+
+        $hero = HajiPlusPage::content()['hero'];
+        $this->assertSame([], $hero['images']);
+        $this->assertSame(HajiPlusPage::defaultHeroImage(), $hero['image']);
     }
 
     public function test_admin_can_pick_master_airlines_and_hotels_for_haji_page(): void
@@ -101,6 +177,7 @@ class HajiPlusPageTest extends TestCase
                 'subtitle' => $page['hero']['subtitle'],
                 'starting_price' => $page['hero']['starting_price'],
                 'show_quota' => $page['hero']['show_quota'] === '1' ? '1' : null,
+                'image' => $page['hero']['image'],
             ],
             'rooms' => array_map(fn (array $room) => [
                 'label' => $room['label'],
