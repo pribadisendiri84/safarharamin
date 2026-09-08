@@ -49,8 +49,14 @@
             <textarea name="hero[subtitle]" rows="2" required>{{ old('hero.subtitle', $page['hero']['subtitle']) }}</textarea>
           </label>
           <div class="row2">
-            <label>Harga mulai <small class="haji-label-hint">kosongkan = pakai kamar pertama</small>
-              <input name="hero[starting_price]" value="{{ old('hero.starting_price', $page['hero']['starting_price']) }}" placeholder="Rp 275 Jt">
+            <label>Harga mulai (Rp) <small class="haji-label-hint">kosongkan = pakai kamar pertama</small>
+              <input
+                type="text"
+                class="js-rupiah"
+                name="hero[starting_price]"
+                value="{{ old('hero.starting_price', (int) ($page['hero']['starting_price'] ?? 0) ?: '') }}"
+                placeholder="275.000.000"
+              >
             </label>
           </div>
 

@@ -74,7 +74,10 @@
         @endforeach
       </select>
     </label>
-    <label>Harga paket (Rp)<input type="text" class="js-rupiah" name="package_price" value="{{ old('package_price', $pilgrim->package_price) }}" placeholder="0"></label>
+    <label>Harga paket (Rp)
+      <input type="text" class="js-rupiah" name="package_price" id="pilgrim-package-price" value="{{ old('package_price', $pilgrim->package_price) }}" placeholder="0">
+    </label>
+    <p class="sub" id="pilgrim-price-hint" hidden>Otomatis dari harga kamar keberangkatan. Ubah manual jika perlu.</p>
   </div>
 
   <fieldset class="haji-fields" @unless($isHaji) hidden @endunless>
@@ -103,6 +106,8 @@
 (function () {
   var departureSelect = document.getElementById('pilgrim-departure');
   var roomSelect = document.getElementById('pilgrim-room-type');
+  var priceInput = document.getElementById('pilgrim-package-price');
+  var priceHint = document.getElementById('pilgrim-price-hint');
   var hajiFields = document.querySelector('.haji-fields');
   var infoPanel = document.getElementById('departure-info-panel');
   var editLink = document.getElementById('departure-edit-link');
@@ -148,6 +153,22 @@
     if (hajiFields) hajiFields.hidden = !hajiIds.includes(id);
   }
 
+  function syncPackagePrice() {
+    if (!priceInput || priceInput.dataset.manual === '1') return;
+
+    var departure = departures[departureSelect.value];
+    var price = departure && departure.room_prices ? departure.room_prices[roomSelect.value] : 0;
+
+    if (price > 0) {
+      priceInput.value = String(price);
+      priceInput.dispatchEvent(new Event('input'));
+      if (priceHint) priceHint.hidden = false;
+      return;
+    }
+
+    if (priceHint) priceHint.hidden = true;
+  }
+
   function syncRoomTypes() {
     if (!roomSelect) return;
     var id = parseInt(departureSelect.value || '0', 10);
@@ -174,9 +195,29 @@
     syncDepartureInfo();
     syncHajiFields();
     syncRoomTypes();
+    syncPackagePrice();
   }
 
-  departureSelect.addEventListener('change', syncDepartureFields);
+  if (priceInput) {
+    if (priceInput.value && priceInput.value !== '0') {
+      priceInput.dataset.manual = '1';
+    }
+
+    priceInput.addEventListener('input', function () {
+      priceInput.dataset.manual = '1';
+      if (priceHint) priceHint.hidden = true;
+    });
+  }
+
+  departureSelect.addEventListener('change', function () {
+    if (priceInput) priceInput.dataset.manual = '';
+    syncDepartureFields();
+  });
+
+  if (roomSelect) {
+    roomSelect.addEventListener('change', syncPackagePrice);
+  }
+
   syncDepartureFields();
 })();
 </script>

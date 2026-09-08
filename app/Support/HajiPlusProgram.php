@@ -424,6 +424,21 @@ class HajiPlusProgram
     }
 
     /**
+     * Referensi harga IDR per tipe kamar (nominal penuh, bukan teks tampilan).
+     *
+     * @return array{quad: int, triple: int, double: int, double_plus: int}
+     */
+    public static function defaultRoomPricesIdr(int $quad = 275_000_000): array
+    {
+        return [
+            'quad' => $quad,
+            'triple' => $quad + 1_100_000,
+            'double' => $quad + 3_400_000,
+            'double_plus' => $quad + 5_500_000,
+        ];
+    }
+
+    /**
      * @return list<array{title: string, description: string, icon: string}>
      */
     public static function benefits(): array

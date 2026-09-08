@@ -9,6 +9,7 @@ use App\Models\Departure;
 use App\Models\Pic;
 use App\Models\Pilgrim;
 use App\Models\PilgrimTransaction;
+use App\Support\HajiPlusPage;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -99,7 +100,7 @@ class PilgrimController extends Controller
             'departures' => $departures = Departure::query()
                 ->orderBy('program_kind')
                 ->orderBy('program_name')
-                ->get(['id', 'program_name', 'program_kind', 'departure_date', 'airline', 'flight_number', 'hotel_makkah', 'hotel_madinah', 'hotel_transit', 'hotel_maktab']),
+                ->get(['id', 'program_name', 'program_kind', 'departure_date', 'airline', 'flight_number', 'hotel_makkah', 'hotel_madinah', 'hotel_transit', 'hotel_maktab', 'program_snapshot']),
             'departureInfos' => $this->departureInfos($departures),
             'pics' => Pic::options(),
         ]);
@@ -132,7 +133,7 @@ class PilgrimController extends Controller
         $departures = Departure::query()
             ->orderBy('program_kind')
             ->orderBy('program_name')
-            ->get(['id', 'program_name', 'program_kind', 'departure_date', 'airline', 'flight_number', 'hotel_makkah', 'hotel_madinah', 'hotel_transit', 'hotel_maktab']);
+            ->get(['id', 'program_name', 'program_kind', 'departure_date', 'airline', 'flight_number', 'hotel_makkah', 'hotel_madinah', 'hotel_transit', 'hotel_maktab', 'program_snapshot']);
 
         return view('admin.operations.pilgrims.form', [
             'pilgrim' => $pilgrim,
@@ -228,8 +229,32 @@ class PilgrimController extends Controller
                 'hotel_madinah' => $departure->hotel_madinah,
                 'hotel_transit' => $departure->hotel_transit,
                 'hotel_maktab' => $departure->hotel_maktab,
+                'room_prices' => self::departureRoomPrices($departure),
                 'edit_url' => route('admin.operations.departures.edit', $departure),
             ],
         ])->all();
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private static function departureRoomPrices(Departure $departure): array
+    {
+        $prices = [];
+
+        foreach ($departure->program_snapshot['rooms'] ?? [] as $room) {
+            if (! is_array($room)) {
+                continue;
+            }
+
+            $key = (string) ($room['key'] ?? '');
+            $price = (int) ($room['price'] ?? HajiPlusPage::parsePriceInput($room['price_label'] ?? ''));
+
+            if ($key !== '' && $price > 0) {
+                $prices[$key] = $price;
+            }
+        }
+
+        return $prices;
     }
 }

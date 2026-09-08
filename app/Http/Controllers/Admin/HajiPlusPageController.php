@@ -44,7 +44,7 @@ class HajiPlusPageController extends Controller
             'hero.season' => ['required', 'string', 'max:40'],
             'hero.title' => ['required', 'string', 'max:120'],
             'hero.subtitle' => ['required', 'string', 'max:400'],
-            'hero.starting_price' => ['nullable', 'string', 'max:40'],
+            'hero.starting_price' => ['nullable', 'integer', 'min:0'],
             'hero.show_quota' => ['nullable', 'boolean'],
             'hero.image' => ['nullable', 'string', 'max:500'],
             'hero.image_file' => ['nullable', 'image', 'max:4096'],
@@ -53,7 +53,7 @@ class HajiPlusPageController extends Controller
             'rooms' => ['required', 'array', 'size:4'],
             'rooms.*.label' => ['required', 'string', 'max:40'],
             'rooms.*.occupancy' => ['required', 'string', 'max:40'],
-            'rooms.*.price_label' => ['required', 'string', 'max:40'],
+            'rooms.*.price' => ['required', 'integer', 'min:1'],
             'rooms.*.price_note' => ['required', 'string', 'max:20'],
             'rooms.*.image_file' => ['nullable', 'image', 'max:4096'],
             'rooms.*.is_featured' => ['nullable', 'boolean'],
@@ -90,7 +90,7 @@ class HajiPlusPageController extends Controller
 
         $hero = $data['hero'];
         $hero['show_quota'] = $request->boolean('hero.show_quota') ? '1' : '0';
-        $hero['starting_price'] = trim((string) ($hero['starting_price'] ?? ''));
+        $hero['starting_price'] = max(0, (int) ($hero['starting_price'] ?? 0));
         $hero = $this->syncHeroImages($request, $images, $current['hero'], $hero);
         unset($hero['image_file']);
 
@@ -100,8 +100,8 @@ class HajiPlusPageController extends Controller
                 'key' => $current['rooms'][$index]['key'] ?? 'room-'.$index,
                 'label' => trim($room['label']),
                 'occupancy' => trim($room['occupancy']),
-                'price_label' => trim($room['price_label']),
-                'price_note' => trim($room['price_note']),
+                'price' => max(0, (int) ($room['price'] ?? 0)),
+                'price_note' => trim($room['price_note']) ?: '/jamaah',
                 'is_featured' => $request->boolean('rooms.'.$index.'.is_featured') ? '1' : '0',
                 'image' => $this->storeImage($request, $images, 'rooms.'.$index.'.image_file', 'haji-room-'.$index, $current['rooms'][$index]['image'] ?? ''),
             ];

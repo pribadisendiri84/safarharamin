@@ -35,9 +35,15 @@ class HajiPlusPage
         $airline['show_names'] = ($airline['show_names'] ?? '1') === '1' ? '1' : '0';
         $airline['title'] = self::airlineTitle($partnerAirlines);
 
+        $rooms = self::normalizeRooms(self::mergeList(
+            $defaults['rooms'],
+            $stored['rooms'] ?? [],
+            ['key', 'label', 'occupancy', 'price', 'price_label', 'price_note', 'image', 'is_featured'],
+        ));
+
         return [
-            'hero' => self::normalizeHero(array_replace($defaults['hero'], $stored['hero'] ?? [])),
-            'rooms' => self::mergeList($defaults['rooms'], $stored['rooms'] ?? [], ['key', 'label', 'occupancy', 'price_label', 'price_note', 'image', 'is_featured']),
+            'hero' => self::normalizeHero(array_replace($defaults['hero'], $stored['hero'] ?? []), $rooms),
+            'rooms' => $rooms,
             'benefits' => self::mergeList($defaults['benefits'], $stored['benefits'] ?? [], ['title', 'description', 'icon']),
             'hotels' => $hotels,
             'partner_airlines' => $partnerAirlines,
@@ -174,16 +180,19 @@ class HajiPlusPage
                 'images' => [],
             ],
             'rooms' => array_map(function (array $room) {
+                $prices = HajiPlusProgram::defaultRoomPricesIdr();
+                $price = $prices[$room['key']] ?? 0;
+
                 return [
                     'key' => $room['key'],
                     'label' => $room['label'],
                     'occupancy' => str_replace('org/kamar', 'orang', $room['occupancy_label']),
-                    'price_label' => $room['formatted_price_short'] ?: $room['price_usd'],
+                    'price' => $price,
                     'price_note' => '/jamaah',
                     'image' => HajiPlusProgram::roomImage($room['key']),
                     'is_featured' => $room['key'] === HajiPlusProgram::featuredRoomKey() ? '1' : '0',
                 ];
-            }, $rooms),
+            }, HajiPlusProgram::flyerRooms()),
             'benefits' => array_map(fn (array $item) => [
                 'title' => $item['title'],
                 'description' => $item['description'],
@@ -230,21 +239,100 @@ class HajiPlusPage
      */
     public static function startingPrice(array $hero, array $rooms): array
     {
-        if (filled($hero['starting_price'] ?? null)) {
+        $override = (int) ($hero['starting_price'] ?? 0);
+        if ($override > 0) {
             return [
                 'prefix' => 'Mulai',
-                'amount' => (string) $hero['starting_price'],
+                'amount' => self::formatRoomPrice($override),
                 'unit' => '/jamaah',
             ];
         }
 
         $first = $rooms[0] ?? null;
+        $firstPrice = (int) ($first['price'] ?? 0);
 
         return [
             'prefix' => 'Mulai',
-            'amount' => (string) ($first['price_label'] ?? '$16.750'),
+            'amount' => $firstPrice > 0
+                ? self::formatRoomPrice($firstPrice)
+                : (string) ($first['price_label'] ?? '$16.750'),
             'unit' => (string) ($first['price_note'] ?? '/jamaah'),
         ];
+    }
+
+    public static function formatRoomPrice(int $amount): string
+    {
+        if ($amount <= 0) {
+            return '';
+        }
+
+        $whole = intdiv($amount, 1_000_000);
+        $remainder = $amount % 1_000_000;
+
+        if ($remainder === 0) {
+            return 'Rp '.number_format($whole, 0, ',', '.').' Jt';
+        }
+
+        $decimal = intdiv($remainder, 100_000);
+        if ($decimal === 0) {
+            return 'Rp '.number_format($whole, 0, ',', '.').' Jt';
+        }
+
+        return 'Rp '.number_format($whole, 0, ',', '.').','.$decimal.' Jt';
+    }
+
+    public static function parsePriceInput(mixed $value): int
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return 0;
+        }
+
+        if (preg_match('/^\d+$/', $value)) {
+            return (int) $value;
+        }
+
+        if (preg_match('/([\d.,]+)\s*Jt/i', $value, $matches)) {
+            $number = str_replace('.', '', str_replace(',', '.', $matches[1]));
+
+            return (int) round((float) $number * 1_000_000);
+        }
+
+        $digits = preg_replace('/\D/', '', $value) ?: '';
+
+        return $digits !== '' ? (int) $digits : 0;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rooms
+     * @return list<array<string, mixed>>
+     */
+    public static function normalizeRooms(array $rooms): array
+    {
+        return array_map(function (array $room): array {
+            $price = (int) ($room['price'] ?? 0);
+            $label = trim((string) ($room['price_label'] ?? ''));
+
+            if ($price <= 0) {
+                $price = self::parsePriceInput($label);
+            }
+
+            $room['price'] = $price;
+            $room['price_label'] = $price > 0
+                ? self::formatRoomPrice($price)
+                : $label;
+            $room['price_note'] = trim((string) ($room['price_note'] ?? '/jamaah')) ?: '/jamaah';
+
+            return $room;
+        }, $rooms);
+    }
+
+    /**
+     * @param  array<string, mixed>  $room
+     */
+    public static function roomPrice(array $room): int
+    {
+        return (int) ($room['price'] ?? 0);
     }
 
     /**
@@ -436,6 +524,11 @@ class HajiPlusPage
                     $merged[$key] = $row[$key];
                 }
             }
+
+            if ($row !== [] && ! array_key_exists('price', $row)) {
+                $merged['price'] = 0;
+            }
+
             $rows[] = $merged;
         }
 
@@ -451,10 +544,14 @@ class HajiPlusPage
      * @param  array<string, mixed>  $hero
      * @return array<string, mixed>
      */
-    public static function normalizeHero(array $hero): array
+    /**
+     * @param  list<array<string, mixed>>  $rooms
+     */
+    public static function normalizeHero(array $hero, array $rooms = []): array
     {
         $defaults = self::defaults()['hero'];
         $hero = array_replace($defaults, $hero);
+        $hero['starting_price'] = self::parsePriceInput($hero['starting_price'] ?? '');
         $defaultImage = (string) $defaults['image'];
 
         $images = array_values(array_unique(array_filter(

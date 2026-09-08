@@ -36,7 +36,7 @@ class HajiPlusPageTest extends TestCase
 
         $payload = $this->payloadFrom($page, [
             'rooms.0.label' => 'Quad Premium',
-            'rooms.0.price_label' => 'Rp 275 Jt',
+            'rooms.0.price' => 280_000_000,
             'hotels.0.master_name' => 'Madinah Pullman',
             'hotels.0.master_location' => Hotel::LOCATION_MADINAH,
             'hotels.0.distance' => '±150 m dari Masjid Nabawi',
@@ -51,7 +51,7 @@ class HajiPlusPageTest extends TestCase
         $this->get('/haji-khusus')
             ->assertOk()
             ->assertSee('Quad Premium')
-            ->assertSee('Rp 275 Jt')
+            ->assertSee('Rp 280 Jt')
             ->assertSee('Madinah Pullman')
             ->assertSee('Siap berangkat bersama kami?')
             ->assertDontSee('4 paket');
@@ -191,6 +191,19 @@ class HajiPlusPageTest extends TestCase
             ->assertSee('haji-airline-logos--primary', false);
     }
 
+    public function test_legacy_price_label_is_parsed_into_nominal(): void
+    {
+        HajiPlusPage::save([
+            'rooms' => [
+                ['key' => 'quad', 'label' => 'Quad', 'occupancy' => '4 orang', 'price_label' => 'Rp 280 Jt', 'price_note' => '/jamaah'],
+            ],
+        ]);
+
+        $room = HajiPlusPage::content()['rooms'][0] ?? [];
+        $this->assertSame(280_000_000, (int) ($room['price'] ?? 0));
+        $this->assertSame('Rp 280 Jt', $room['price_label'] ?? null);
+    }
+
     /**
      * @param  array<string, mixed>  $page
      * @param  array<string, mixed>  $overrides
@@ -211,7 +224,7 @@ class HajiPlusPageTest extends TestCase
             'rooms' => array_map(fn (array $room) => [
                 'label' => $room['label'],
                 'occupancy' => $room['occupancy'],
-                'price_label' => $room['price_label'],
+                'price' => $room['price'],
                 'price_note' => $room['price_note'],
                 'is_featured' => $room['is_featured'] === '1' ? '1' : null,
             ], $page['rooms']),

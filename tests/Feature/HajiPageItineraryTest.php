@@ -144,7 +144,7 @@ class HajiPageItineraryTest extends TestCase
             'rooms' => array_map(fn (array $room) => [
                 'label' => $room['label'],
                 'occupancy' => $room['occupancy'],
-                'price_label' => $room['price_label'],
+                'price' => $room['price'],
                 'price_note' => $room['price_note'],
                 'is_featured' => $room['is_featured'] === '1' ? '1' : null,
             ], $page['rooms']),

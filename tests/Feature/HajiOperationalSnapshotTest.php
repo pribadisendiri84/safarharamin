@@ -38,7 +38,7 @@ class HajiOperationalSnapshotTest extends TestCase
             'cta' => $page['cta'],
         ], [
             'rooms' => array_map(fn (array $room, int $index) => array_merge($room, [
-                'price_label' => $index === 0 ? 'Rp 280 Jt' : $room['price_label'],
+                'price' => $index === 0 ? 280_000_000 : ($room['price'] ?? 0),
             ]), $page['rooms'], array_keys($page['rooms'])),
         ]);
         HajiPlusPage::save($payload);
@@ -67,6 +67,7 @@ class HajiOperationalSnapshotTest extends TestCase
         $this->assertSame('haji', $departure->program_kind);
         $this->assertSame(Departure::SOURCE_HAJI_PAGE, $departure->source);
         $this->assertNull($departure->package_id);
+        $this->assertSame(280_000_000, (int) ($departure->program_snapshot['rooms'][0]['price'] ?? 0));
         $this->assertSame('Rp 280 Jt', $departure->program_snapshot['rooms'][0]['price_label'] ?? null);
     }
 
