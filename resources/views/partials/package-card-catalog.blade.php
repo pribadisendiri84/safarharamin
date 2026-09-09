@@ -57,9 +57,9 @@
           <span class="catalog-price-unit">/jamaah</span>
         </p>
       </div>
-    @else
-      <div class="catalog-price">
-        <p><strong>Hubungi kami</strong></p>
+    @elseif($label = $package->displayPriceLabel())
+      <div class="catalog-price-label">
+        <span class="price-label-text">{{ $label }}</span>
       </div>
     @endif
 

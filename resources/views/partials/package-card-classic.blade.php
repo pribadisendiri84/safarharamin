@@ -41,10 +41,8 @@
             <span class="price-amount">{{ number_format((int) $package->original_price, 0, ',', '.') }}</span>
           </p>
         @endif
-      @else
-        <p class="price-line">
-          <span class="price-amount">Hubungi kami</span>
-        </p>
+      @elseif($label = $package->displayPriceLabel())
+        <p class="price-label-text">{{ $label }}</p>
       @endif
     </div>
     <h3>{{ $package->title }}</h3>

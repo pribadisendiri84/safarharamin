@@ -445,6 +445,100 @@ class StorefrontTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_save_package_price_label(): void
+    {
+        $user = User::factory()->create(['email' => 'admin@safarharamin.id']);
+
+        $this->actingAs($user)
+            ->post('/admin/packages', [
+                'title' => 'Paket By Request',
+                'type' => 'umroh',
+                'departure_city' => 'jakarta',
+                'duration_days' => 9,
+                'package_kind_id' => $this->packageKindId(),
+                'seats_total' => 20,
+                'seats_left' => 20,
+                'status' => 'draft',
+                'price_label' => 'Harga Estimasi',
+            ])
+            ->assertRedirect(route('admin.packages.index'));
+
+        $this->assertDatabaseHas('packages', [
+            'title' => 'Paket By Request',
+            'price_label' => 'Harga Estimasi',
+        ]);
+    }
+
+    public function test_storefront_shows_price_label_when_no_listed_price(): void
+    {
+        Package::query()->create([
+            'title' => 'Umroh Estimasi',
+            'slug' => 'umroh-estimasi',
+            'type' => 'umroh',
+            'package_kind_id' => $this->packageKindId(),
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-11-12',
+            'duration_days' => 9,
+            'price' => 0,
+            'price_label' => 'Harga Estimasi',
+            'hotel_stars' => 4,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 12,
+            'status' => 'published',
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'cover_image' => '/images/catalog-cover-sample.jpg',
+            'home_sort' => 2,
+        ]);
+
+        Setting::setValue('package_card_style', SiteProfile::CARD_STYLE_CLASSIC);
+
+        $this->get('/paket?kelompok=umroh')
+            ->assertOk()
+            ->assertSee('price-label-text', false)
+            ->assertSee('Harga Estimasi');
+
+        Setting::setValue('package_card_style', SiteProfile::CARD_STYLE_CATALOG);
+
+        $this->get('/paket?kelompok=umroh')
+            ->assertOk()
+            ->assertSee('catalog-price-label', false)
+            ->assertSee('Harga Estimasi');
+
+        $this->get('/paket/umroh-estimasi')
+            ->assertOk()
+            ->assertSee('price-label-text--detail', false)
+            ->assertSee('Harga Estimasi')
+            ->assertDontSee('Hubungi kami');
+    }
+
+    public function test_storefront_hides_price_label_when_no_listed_price_and_label_empty(): void
+    {
+        Package::query()->create([
+            'title' => 'Umroh Tanpa Label',
+            'slug' => 'umroh-tanpa-label',
+            'type' => 'umroh',
+            'package_kind_id' => $this->packageKindId(),
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-12-12',
+            'duration_days' => 9,
+            'price' => 0,
+            'hotel_stars' => 4,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 12,
+            'status' => 'published',
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'cover_image' => '/images/catalog-cover-sample.jpg',
+            'home_sort' => 3,
+        ]);
+
+        $this->get('/paket/umroh-tanpa-label')
+            ->assertOk()
+            ->assertDontSee('price-label-text', false)
+            ->assertDontSee('Hubungi kami');
+    }
+
     public function test_admin_cannot_publish_package_without_flyer(): void
     {
         $user = User::factory()->create(['email' => 'admin@safarharamin.id']);

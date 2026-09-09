@@ -105,8 +105,12 @@
   <p class="sub">Harga per jamaah, boleh dikosongkan semua. Isi saja tipe kamar yang harganya sudah ada. Double Plus khusus paket haji.</p>
   <div class="row2">
     <label>Harga coret<input type="text" class="js-rupiah" name="original_price" value="{{ old('original_price', $package->original_price) }}"></label>
-    <label>Catatan harga<input name="price_note" value="{{ old('price_note', $package->price_note) }}" maxlength="180" placeholder="Harga dapat berubah sesuai kebijakan"></label>
+    <label>Teks harga (tanpa angka)
+      <input name="price_label" value="{{ old('price_label', $package->price_label) }}" maxlength="40" placeholder="Harga Estimasi, By Request, Segera diumumkan">
+    </label>
   </div>
+  <p class="sub">Teks harga tampil di kartu dan halaman detail jika semua harga kamar dikosongkan. Catatan harga muncul di bawah harga sebagai disclaimer.</p>
+  <label>Catatan harga<input name="price_note" value="{{ old('price_note', $package->price_note) }}" maxlength="180" placeholder="Harga dapat berubah sesuai kebijakan"></label>
   <div class="row2">
     <label>Durasi (hari)<input type="number" name="duration_days" value="{{ old('duration_days', $package->duration_days ?? 9) }}" min="7" required></label>
     <label>Maskapai

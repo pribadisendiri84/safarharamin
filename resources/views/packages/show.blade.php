@@ -54,13 +54,17 @@
       </div>
       <h1>{{ $package->title }}</h1>
       <p class="loc">{{ implode(' · ', $catalogMeta) }}</p>
-      <div class="price-row">
-        <strong>{{ $package->formattedStartingPrice() }}@if($package->hasListedPrice())<small class="price-unit">/jamaah</small>@endif</strong>
-        @if($package->formattedOriginalPrice())
-          <s>{{ $package->formattedOriginalPrice() }}</s>
-          <span class="badge disc">-{{ $package->discountPercent() }}%</span>
-        @endif
-      </div>
+      @if($package->hasListedPrice())
+        <div class="price-row">
+          <strong>{{ $package->formattedStartingPrice() }}<small class="price-unit">/jamaah</small></strong>
+          @if($package->formattedOriginalPrice())
+            <s>{{ $package->formattedOriginalPrice() }}</s>
+            <span class="badge disc">-{{ $package->discountPercent() }}%</span>
+          @endif
+        </div>
+      @elseif($label = $package->displayPriceLabel())
+        <p class="price-label-text price-label-text--detail">{{ $label }}</p>
+      @endif
       @if($package->price_note)
         <p class="price-note">{{ $package->price_note }}</p>
       @endif

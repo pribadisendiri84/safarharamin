@@ -31,6 +31,7 @@ use Illuminate\Support\Str;
     'price_double_plus',
     'original_price',
     'price_note',
+    'price_label',
     'hotel_makkah',
     'hotel_makkah_setaraf',
     'hotel_madinah',
@@ -601,10 +602,17 @@ class Package extends Model
         return $this->roomPriceList() !== [] || (int) $this->price > 0;
     }
 
+    public function displayPriceLabel(): ?string
+    {
+        $label = trim((string) ($this->price_label ?? ''));
+
+        return $label !== '' ? $label : null;
+    }
+
     public function formattedPrice(): string
     {
         if (! $this->hasListedPrice()) {
-            return 'Hubungi kami';
+            return $this->displayPriceLabel() ?? '';
         }
 
         return $this->formattedMoney((int) $this->price);
@@ -613,7 +621,7 @@ class Package extends Model
     public function formattedStartingPrice(): string
     {
         if (! $this->hasListedPrice()) {
-            return 'Hubungi kami';
+            return $this->displayPriceLabel() ?? '';
         }
 
         $prefix = count($this->roomPriceList()) > 1 ? 'Mulai ' : '';

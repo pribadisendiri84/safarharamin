@@ -310,6 +310,7 @@ class PackageController extends Controller
             'price_double_plus' => ['nullable', 'integer', 'min:1'],
             'original_price' => ['nullable', 'integer', 'min:1'],
             'price_note' => ['nullable', 'string', 'max:180'],
+            'price_label' => ['nullable', 'string', 'max:40'],
             'hotel_makkah' => ['nullable', 'string', 'max:120'],
             'hotel_madinah' => ['nullable', 'string', 'max:120'],
             'hotel_transit' => ['nullable', 'string', 'max:120'],
