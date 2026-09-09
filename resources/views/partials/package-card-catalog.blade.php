@@ -23,8 +23,8 @@
     @endif
     @if($package->isFullbook())
       <span class="catalog-status is-fullbook"><i class="bi bi-people-fill"></i> Kuota penuh</span>
-    @elseif($package->is_hot)
-      <span class="catalog-status is-hot"><i class="bi bi-hourglass-split"></i> Kuota terbatas</span>
+    @else
+      @include('partials.package-card-badge')
     @endif
   </div>
 
@@ -49,13 +49,17 @@
           @endforeach
         </div>
       </div>
-    @else
+    @elseif($package->hasListedPrice())
       <div class="catalog-price">
         <p>
           <span class="catalog-price-currency">Rp</span>
           <strong>{{ number_format((int) $package->price, 0, ',', '.') }}</strong>
           <span class="catalog-price-unit">/jamaah</span>
         </p>
+      </div>
+    @else
+      <div class="catalog-price">
+        <p><strong>Hubungi kami</strong></p>
       </div>
     @endif
 

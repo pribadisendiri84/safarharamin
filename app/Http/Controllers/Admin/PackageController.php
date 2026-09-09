@@ -9,6 +9,7 @@ use App\Models\Package;
 use App\Models\PackageItinerary;
 use App\Services\PackageImageStore;
 use App\Services\PackageItineraryStore;
+use App\Support\PackageCardBadge;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -329,11 +330,27 @@ class PackageController extends Controller
             'itinerary_pdfs.*' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
             'delete_itineraries' => ['nullable', 'array'],
             'delete_itineraries.*' => ['integer', 'exists:package_itineraries,id'],
+            'card_badge_preset' => ['nullable', 'string', Rule::in(array_keys(PackageCardBadge::presets()))],
+            'card_badge_icon' => ['nullable', 'string', Rule::in(array_keys(PackageCardBadge::icons()))],
+            'card_badge_text' => ['nullable', 'string', 'max:40'],
+            'card_badge_position' => ['nullable', 'string', Rule::in(array_keys(PackageCardBadge::positions()))],
         ]);
 
         unset($data['facilities_text'], $data['exclusions_text'], $data['photos'], $data['cover_photo']);
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_hot'] = $request->boolean('is_hot');
+        $data['card_badge_preset'] = $data['is_hot']
+            ? PackageCardBadge::normalizePreset($data['card_badge_preset'] ?? null)
+            : null;
+        $data['card_badge_icon'] = $data['is_hot']
+            ? PackageCardBadge::normalizeIcon($data['card_badge_icon'] ?? null)
+            : null;
+        $data['card_badge_text'] = $data['is_hot']
+            ? (trim((string) ($data['card_badge_text'] ?? '')) ?: PackageCardBadge::presetLabel($data['card_badge_preset']))
+            : null;
+        $data['card_badge_position'] = $data['is_hot']
+            ? PackageCardBadge::normalizePosition($data['card_badge_position'] ?? null)
+            : null;
         $data['show_seats'] = $request->has('show_seats')
             ? $request->boolean('show_seats')
             : ($existing?->show_seats ?? true);
@@ -351,17 +368,6 @@ class PackageController extends Controller
             $data['price_double_plus'] = null;
             $data['hotel_transit'] = null;
             $data['hotel_maktab'] = null;
-        }
-
-        $roomKeys = ['price_quad', 'price_triple', 'price_double'];
-        if (in_array($data['type'], Package::HAJI_TYPES, true)) {
-            $roomKeys[] = 'price_double_plus';
-        }
-        $hasRoomPrice = collect($roomKeys)->contains(fn (string $key) => ($data[$key] ?? null) !== null);
-        if (! $hasRoomPrice) {
-            throw ValidationException::withMessages([
-                'price_quad' => 'Isi minimal satu harga kamar (quad, triple, atau double).',
-            ]);
         }
 
         return $data;

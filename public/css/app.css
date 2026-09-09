@@ -95,6 +95,29 @@ img { max-width: 100%; display: block; }
 .card.is-fullbook .card-img img { filter: grayscale(.25) brightness(.94); transition: filter .2s; }
 .card.is-fullbook:hover .card-img img { filter: grayscale(.15) brightness(.96); }
 .card.is-hot { border-color: #ffd4d8; }
+.package-card-badge {
+  position: absolute;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: calc(100% - 20px);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #c40012;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.15;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .18);
+  pointer-events: none;
+}
+.package-card-badge .bi { font-size: 12px; }
+.package-card-badge-emoji { font-size: 12px; line-height: 1; }
+.package-card-badge.is-top-left { top: 10px; left: 10px; }
+.package-card-badge.is-top-right { top: 10px; right: 10px; }
+.package-card-badge.is-bottom-left { bottom: 10px; left: 10px; }
+.package-card-badge.is-bottom-right { bottom: 10px; right: 10px; }
 .card-img { position: relative; aspect-ratio: 5/6; background: #eef1f6; }
 .card-img img { width: 100%; height: 100%; object-fit: contain; }
 .card-body { padding: 10px 12px 11px; flex: 1; display: flex; flex-direction: column; }
@@ -280,7 +303,6 @@ img { max-width: 100%; display: block; }
   line-height: 1;
   box-shadow: 0 3px 10px rgba(0, 0, 0, .18);
 }
-.catalog-status.is-hot { background: #df2f36; }
 .catalog-status.is-fullbook { background: #6b7280; }
 .catalog-price-was {
   position: absolute;
@@ -512,9 +534,6 @@ img { max-width: 100%; display: block; }
 .card-status-banner.is-fullbook {
   background: linear-gradient(180deg, rgba(163, 51, 51, 0) 0%, rgba(163, 51, 51, .92) 35%, rgba(163, 51, 51, .96) 100%);
 }
-.card-status-banner.is-hot {
-  background: linear-gradient(180deg, rgba(196, 0, 18, 0) 0%, rgba(196, 0, 18, .92) 35%, rgba(196, 0, 18, .96) 100%);
-}
 .card-fullbook-alert {
   display: flex;
   gap: 10px;
@@ -660,7 +679,7 @@ img { max-width: 100%; display: block; }
 .badges { display: flex; flex-wrap: wrap; gap: 6px; }
 .card-img .badges { position: absolute; top: 10px; left: 10px; }
 .badge { background: #fff; color: var(--ink); border-radius: 999px; padding: 4px 8px; font-size: 11px; font-weight: 800; }
-.badge.hot { background: var(--hot); color: #fff; }
+.badge.hot { background: var(--hot); color: #fff; display: inline-flex; align-items: center; gap: 4px; }
 .badge.fullbook { background: #fdeeee; color: #a33; }
 .badge.fullbook-solid { background: var(--hot); color: #fff; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: .03em; }
 .badge.fullbook-solid .bi { font-size: 11px; }

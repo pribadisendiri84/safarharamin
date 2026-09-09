@@ -20,30 +20,30 @@
           <small>Terima kasih atas kepercayaan jamaah</small>
         </div>
       </div>
-    @elseif($package->is_hot)
-      <div class="card-status-banner is-hot">
-        <i class="bi bi-hourglass-split"></i>
-        <div>
-          <strong>Kuota terbatas!</strong>
-          <small>Ayo amankan seat sebelum kehabisan</small>
-        </div>
-      </div>
+    @else
+      @include('partials.package-card-badge')
     @endif
   </div>
   <div class="card-body">
     <div class="price-stack">
-      @if($package->hasMultipleRoomPrices())
-        <span class="price-label">Mulai</span>
-      @endif
-      <p class="price-line">
-        <span class="price-currency">Rp</span>
-        <span class="price-amount">{{ number_format((int) $package->price, 0, ',', '.') }}</span>
-        <span class="price-unit">{{ $priceUnit }}</span>
-      </p>
-      @if($package->formattedOriginalPrice())
-        <p class="price-was">
+      @if($package->hasListedPrice())
+        @if($package->hasMultipleRoomPrices())
+          <span class="price-label">Mulai</span>
+        @endif
+        <p class="price-line">
           <span class="price-currency">Rp</span>
-          <span class="price-amount">{{ number_format((int) $package->original_price, 0, ',', '.') }}</span>
+          <span class="price-amount">{{ number_format((int) $package->price, 0, ',', '.') }}</span>
+          <span class="price-unit">{{ $priceUnit }}</span>
+        </p>
+        @if($package->formattedOriginalPrice())
+          <p class="price-was">
+            <span class="price-currency">Rp</span>
+            <span class="price-amount">{{ number_format((int) $package->original_price, 0, ',', '.') }}</span>
+          </p>
+        @endif
+      @else
+        <p class="price-line">
+          <span class="price-amount">Hubungi kami</span>
         </p>
       @endif
     </div>

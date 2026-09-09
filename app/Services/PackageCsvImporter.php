@@ -254,6 +254,7 @@ class PackageCsvImporter
         }
 
         $originalPrice = $this->parseOptionalMoney($data['harga_coret'] ?? '');
+        $isHot = $this->parseBool($data['kuota_terbatas'] ?? '');
 
         Package::query()->create([
             'title' => $title,
@@ -288,7 +289,11 @@ class PackageCsvImporter
             'description' => $this->nullableString($data['deskripsi'] ?? ''),
             'images' => [],
             'is_featured' => $this->parseBool($data['unggulan'] ?? ''),
-            'is_hot' => $this->parseBool($data['kuota_terbatas'] ?? ''),
+            'is_hot' => $isHot,
+            'card_badge_preset' => $isHot ? 'kuota_terbatas' : null,
+            'card_badge_icon' => $isHot ? 'hourglass' : null,
+            'card_badge_text' => $isHot ? 'Kuota Terbatas' : null,
+            'card_badge_position' => $isHot ? 'top_left' : null,
             'status' => $status,
         ]);
 

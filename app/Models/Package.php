@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Concerns\RecordsActivity;
 use App\Support\HomeDisplay;
+use App\Support\PackageCardBadge;
 use App\Support\WaMessages;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -51,6 +52,10 @@ use Illuminate\Support\Str;
     'is_featured',
     'home_sort',
     'is_hot',
+    'card_badge_preset',
+    'card_badge_icon',
+    'card_badge_text',
+    'card_badge_position',
     'status',
 ])]
 class Package extends Model
@@ -428,6 +433,26 @@ class Package extends Model
         return $this->status === 'fullbook';
     }
 
+    public function hasCardBadge(): bool
+    {
+        return $this->is_hot && PackageCardBadge::resolveText($this) !== '';
+    }
+
+    public function cardBadgeText(): string
+    {
+        return PackageCardBadge::resolveText($this);
+    }
+
+    public function cardBadgeIcon(): string
+    {
+        return PackageCardBadge::resolveIcon($this);
+    }
+
+    public function cardBadgePositionClass(): string
+    {
+        return PackageCardBadge::positionClass($this->card_badge_position);
+    }
+
     public function isVisibleOnCatalog(): bool
     {
         return in_array($this->status, self::CATALOG_STATUSES, true);
@@ -491,11 +516,11 @@ class Package extends Model
     public function roomRangeLabel(): string
     {
         $rows = $this->roomPriceList();
-        if ($rows !== []) {
-            return collect($rows)->pluck('label')->implode(' · ');
+        if ($rows === []) {
+            return '';
         }
 
-        return $this->roomTypes()[$this->room_type] ?? self::ROOM_TYPES[$this->room_type] ?? $this->room_type;
+        return collect($rows)->pluck('label')->implode(' · ');
     }
 
     public function startingRoomLabel(): ?string
@@ -571,13 +596,26 @@ class Package extends Model
         return $flyers !== [] ? $flyers : [];
     }
 
+    public function hasListedPrice(): bool
+    {
+        return $this->roomPriceList() !== [] || (int) $this->price > 0;
+    }
+
     public function formattedPrice(): string
     {
+        if (! $this->hasListedPrice()) {
+            return 'Hubungi kami';
+        }
+
         return $this->formattedMoney((int) $this->price);
     }
 
     public function formattedStartingPrice(): string
     {
+        if (! $this->hasListedPrice()) {
+            return 'Hubungi kami';
+        }
+
         $prefix = count($this->roomPriceList()) > 1 ? 'Mulai ' : '';
 
         return $prefix.$this->formattedPrice();

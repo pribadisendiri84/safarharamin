@@ -104,6 +104,10 @@ class CatalogSeeder extends Seeder
                     'is_featured' => $featured,
                     'home_sort' => $homeSort,
                     'is_hot' => $hot,
+                    'card_badge_preset' => $hot ? 'kuota_terbatas' : null,
+                    'card_badge_icon' => $hot ? 'hourglass' : null,
+                    'card_badge_text' => $hot ? 'Kuota Terbatas' : null,
+                    'card_badge_position' => $hot ? 'top_left' : null,
                     'status' => 'published',
                 ]
             );

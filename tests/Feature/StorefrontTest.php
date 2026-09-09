@@ -357,7 +357,69 @@ class StorefrontTest extends TestCase
         ]);
     }
 
-    public function test_admin_package_requires_at_least_one_room_price(): void
+    public function test_admin_can_save_package_card_badge(): void
+    {
+        $user = User::factory()->create();
+        Storage::fake('public');
+
+        $this->actingAs($user)
+            ->post('/admin/packages', [
+                'title' => 'Umroh Badge Promo',
+                'type' => 'umroh',
+                'departure_city' => 'jakarta',
+                'duration_days' => 9,
+                'price_quad' => 29500000,
+                'package_kind_id' => $this->packageKindId(),
+                'seats_total' => 20,
+                'seats_left' => 20,
+                'status' => 'published',
+                'photos' => [UploadedFile::fake()->image('flyer.jpg', 400, 560)],
+                'is_hot' => '1',
+                'card_badge_preset' => 'promo',
+                'card_badge_icon' => 'fire',
+                'card_badge_text' => 'Promo',
+                'card_badge_position' => 'bottom_right',
+            ])
+            ->assertRedirect(route('admin.packages.index'));
+
+        $this->assertDatabaseHas('packages', [
+            'title' => 'Umroh Badge Promo',
+            'is_hot' => 1,
+            'card_badge_preset' => 'promo',
+            'card_badge_icon' => 'fire',
+            'card_badge_text' => 'Promo',
+            'card_badge_position' => 'bottom_right',
+        ]);
+
+        $this->get('/paket?tipe=umroh')
+            ->assertOk()
+            ->assertSee('package-card-badge', false)
+            ->assertSee('is-bottom-right', false)
+            ->assertSee('Promo')
+            ->assertDontSee('Kuota terbatas!');
+
+        $this->get('/paket/umroh-badge-promo')
+            ->assertOk()
+            ->assertSee('Promo');
+    }
+
+    public function test_package_card_badge_is_hidden_when_toggled_off(): void
+    {
+        Package::query()->where('slug', 'umroh-hemat-contoh')->update([
+            'is_hot' => false,
+            'card_badge_preset' => null,
+            'card_badge_icon' => null,
+            'card_badge_text' => null,
+            'card_badge_position' => null,
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSee('package-card-badge', false)
+            ->assertDontSee('Kuota terbatas!');
+    }
+
+    public function test_admin_can_save_package_without_room_prices(): void
     {
         $user = User::factory()->create(['email' => 'admin@safarharamin.id']);
 
@@ -372,7 +434,15 @@ class StorefrontTest extends TestCase
                 'seats_left' => 20,
                 'status' => 'draft',
             ])
-            ->assertSessionHasErrors('price_quad');
+            ->assertRedirect(route('admin.packages.index'));
+
+        $this->assertDatabaseHas('packages', [
+            'title' => 'Tanpa Harga Kamar',
+            'price' => 0,
+            'price_quad' => null,
+            'price_triple' => null,
+            'price_double' => null,
+        ]);
     }
 
     public function test_admin_cannot_publish_package_without_flyer(): void

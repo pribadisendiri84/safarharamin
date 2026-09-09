@@ -36,7 +36,16 @@
     <div>
       <div class="badges">
         @if($package->isFullbook())<span class="badge fullbook">Fullbook</span>@endif
-        @if($package->is_hot)<span class="badge hot">Kuota terbatas</span>@endif
+        @if($package->hasCardBadge())
+          <span class="badge hot">
+            @php
+              $detailIcon = $package->cardBadgeIcon();
+              $detailIconClass = \App\Support\PackageCardBadge::iconClass($detailIcon);
+              $detailEmoji = \App\Support\PackageCardBadge::iconEmoji($detailIcon);
+            @endphp
+            @if($detailIconClass)<i class="bi {{ $detailIconClass }}" aria-hidden="true"></i>@elseif($detailEmoji){{ $detailEmoji }} @endif{{ $package->cardBadgeText() }}
+          </span>
+        @endif
         <span class="badge gold">{{ $package->displayHotelStars() }}★</span>
         <span class="badge">{{ $package->typeLabel() }}</span>
         @if($package->packageKindLabel() !== '')
@@ -46,7 +55,7 @@
       <h1>{{ $package->title }}</h1>
       <p class="loc">{{ implode(' · ', $catalogMeta) }}</p>
       <div class="price-row">
-        <strong>{{ $package->formattedStartingPrice() }}<small class="price-unit">/jamaah</small></strong>
+        <strong>{{ $package->formattedStartingPrice() }}@if($package->hasListedPrice())<small class="price-unit">/jamaah</small>@endif</strong>
         @if($package->formattedOriginalPrice())
           <s>{{ $package->formattedOriginalPrice() }}</s>
           <span class="badge disc">-{{ $package->discountPercent() }}%</span>

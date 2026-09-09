@@ -102,7 +102,7 @@
     <label>Double — 2 org/kamar (Rp)<input type="text" class="js-rupiah" name="price_double" value="{{ old('price_double', $package->price_double) }}"></label>
   </div>
   <label id="package-double-plus-wrap" @unless($isHajiPackage) hidden @endunless>Double Plus — 2 org/kamar (Rp)<input type="text" class="js-rupiah" name="price_double_plus" value="{{ old('price_double_plus', $package->price_double_plus) }}"></label>
-  <p class="sub">Harga per jamaah. Opsional — isi saja tipe kamar yang tersedia di paket ini. Double Plus khusus paket haji.</p>
+  <p class="sub">Harga per jamaah, boleh dikosongkan semua. Isi saja tipe kamar yang harganya sudah ada. Double Plus khusus paket haji.</p>
   <div class="row2">
     <label>Harga coret<input type="text" class="js-rupiah" name="original_price" value="{{ old('original_price', $package->original_price) }}"></label>
     <label>Catatan harga<input name="price_note" value="{{ old('price_note', $package->price_note) }}" maxlength="180" placeholder="Harga dapat berubah sesuai kebijakan"></label>
@@ -211,9 +211,58 @@
 
   <div class="check-row">
     <label class="check"><input type="checkbox" name="is_featured" value="1" @checked(old('is_featured', $package->is_featured))> Tampil di beranda</label>
-    <label class="check"><input type="checkbox" name="is_hot" value="1" @checked(old('is_hot', $package->is_hot))> Kuota terbatas</label>
   </div>
   <p class="sub">Centang beranda di daftar paket (maks. {{ \App\Models\Package::homeLimit() }}). Urutan lewat drag-drop.</p>
+
+  @php
+    $badgeOn = (bool) old('is_hot', $package->is_hot);
+    $badgePreset = old('card_badge_preset', $package->card_badge_preset ?: \App\Support\PackageCardBadge::PRESET_DEFAULT);
+    $badgeIcon = old('card_badge_icon', $package->card_badge_icon ?: \App\Support\PackageCardBadge::ICON_DEFAULT);
+    $badgeText = old('card_badge_text', $package->card_badge_text ?: \App\Support\PackageCardBadge::presetLabel($badgePreset));
+    $badgePosition = old('card_badge_position', $package->card_badge_position ?: \App\Support\PackageCardBadge::POSITION_DEFAULT);
+  @endphp
+  <fieldset class="package-badge-fieldset" id="package-badge-fieldset">
+    <legend>Badge kartu</legend>
+    <label class="check">
+      <input type="checkbox" name="is_hot" value="1" id="package-badge-toggle" @checked($badgeOn)>
+      Tampilkan badge
+    </label>
+    <div class="package-badge-options" id="package-badge-options" @unless($badgeOn) hidden @endunless>
+      <p class="sub package-badge-label">Preset</p>
+      <div class="package-badge-presets">
+        @foreach(\App\Support\PackageCardBadge::presets() as $key => $label)
+          <label class="card-style-option">
+            <input type="radio" name="card_badge_preset" value="{{ $key }}" @checked($badgePreset === $key) data-badge-preset>
+            <span><b>{{ $label }}</b></span>
+          </label>
+        @endforeach
+      </div>
+
+      <p class="sub package-badge-label">Ikon</p>
+      <div class="package-badge-icons">
+        @foreach(\App\Support\PackageCardBadge::icons() as $key => $icon)
+          <label class="package-badge-icon-option" title="{{ $icon['label'] }}">
+            <input type="radio" name="card_badge_icon" value="{{ $key }}" @checked($badgeIcon === $key)>
+            <span>{{ $icon['label'] }}</span>
+          </label>
+        @endforeach
+      </div>
+
+      <label>Teks
+        <input name="card_badge_text" id="package-badge-text" value="{{ $badgeText }}" maxlength="40" placeholder="Harga Estimasi">
+      </label>
+
+      <p class="sub package-badge-label">Posisi</p>
+      <div class="package-badge-positions">
+        @foreach(\App\Support\PackageCardBadge::positions() as $key => $label)
+          <label class="package-badge-position-option">
+            <input type="radio" name="card_badge_position" value="{{ $key }}" @checked($badgePosition === $key)>
+            <span>{{ $label }}</span>
+          </label>
+        @endforeach
+      </div>
+    </div>
+  </fieldset>
   <div class="form-actions">
     <button class="btn" type="submit">Simpan</button>
   </div>
@@ -238,6 +287,35 @@
 
   typeSelect.addEventListener('change', syncPackageKind);
   syncPackageKind();
+})();
+
+(function () {
+  var toggle = document.getElementById('package-badge-toggle');
+  var options = document.getElementById('package-badge-options');
+  var textInput = document.getElementById('package-badge-text');
+  if (!toggle || !options) return;
+
+  var presetIcons = @json(\App\Support\PackageCardBadge::presetDefaultIcons());
+  var presetLabels = @json(\App\Support\PackageCardBadge::presets());
+
+  function syncBadgePanel() {
+    options.hidden = !toggle.checked;
+  }
+
+  toggle.addEventListener('change', syncBadgePanel);
+
+  options.querySelectorAll('[data-badge-preset]').forEach(function (input) {
+    input.addEventListener('change', function () {
+      if (!input.checked || input.value === 'custom') return;
+      if (textInput) textInput.value = presetLabels[input.value] || '';
+      var iconValue = presetIcons[input.value];
+      if (!iconValue) return;
+      var iconInput = options.querySelector('input[name="card_badge_icon"][value="' + iconValue + '"]');
+      if (iconInput) iconInput.checked = true;
+    });
+  });
+
+  syncBadgePanel();
 })();
 
 (function () {
