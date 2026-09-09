@@ -1,6 +1,24 @@
 @extends('layouts.app')
 
-@section('title', 'Travel Haji dan Umroh')
+@php
+  use App\Support\HomeSeo;
+  $homeSeoTitle = HomeSeo::pageTitle();
+  $homeSeoDescription = HomeSeo::metaDescription();
+@endphp
+
+@section('title', $homeSeoTitle)
+@section('meta', $homeSeoDescription)
+
+@push('head')
+@include('partials.seo-head', [
+  'seoTitle' => $homeSeoTitle,
+  'seoDescription' => $homeSeoDescription,
+  'seoCanonical' => route('home'),
+  'seoImage' => url($site->logoUrl),
+  'seoJsonLd' => HomeSeo::structuredData($site),
+])
+@endpush
+
 @section('content')
 <section class="hero">
   <div class="wrap hero-inner">

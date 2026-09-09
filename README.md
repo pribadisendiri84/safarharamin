@@ -219,7 +219,7 @@ server {
     listen [::]:80 default_server;
     server_name IP_VPS _;
     root /var/www/safarharamin/public;
-    client_max_body_size 12M;
+    client_max_body_size 64M;
     error_page 413 /errors/413.html;
     error_page 500 502 503 504 /errors/50x.html;
 
@@ -258,19 +258,19 @@ nginx -t && systemctl reload nginx
 
 Cek sock PHP: `ls /run/php/php*-fpm.sock` — samakan dengan `fastcgi_pass`. CLI `php -v` harus versi yang sama dengan FPM.
 
-**Upload foto (galeri, paket, bukti bayar):** batas default Nginx sering 1 MB → error **413 Request Entity Too Large**. Pastikan:
+**Upload (galeri foto/video, paket, bukti bayar):** batas default Nginx sering 1 MB → error **413 Request Entity Too Large**. Pastikan:
 
-1. Nginx: `client_max_body_size 12M;` di dalam block `server { … }` (sudah ada di contoh di atas), lalu `nginx -t && systemctl reload nginx`
+1. Nginx: `client_max_body_size 64M;` di dalam block `server { … }` (sudah ada di contoh di atas), lalu `nginx -t && systemctl reload nginx`
 2. PHP-FPM — edit `/etc/php/8.4/fpm/php.ini` (atau `php -i | grep php.ini`):
 
 ```ini
-upload_max_filesize = 12M
-post_max_size = 12M
+upload_max_filesize = 64M
+post_max_size = 64M
 ```
 
 Lalu `systemctl reload php8.4-fpm`.
 
-Aplikasi membatasi foto/bukti unggah maksimal 5 MB per file dan mengompres foto di browser. Limit Nginx/PHP dibuat 12 MB agar request multipart masih dapat masuk ke Laravel dan menghasilkan pesan validasi yang profesional. `error_page` di atas memakai halaman statis branded untuk kegagalan yang terjadi sebelum Laravel/PHP berjalan.
+Aplikasi membatasi foto/bukti unggah maksimal 5 MB per file, video galeri maksimal 50 MB, dan mengompres foto di browser. Limit Nginx/PHP dibuat 64 MB agar request multipart (video + poster) masih dapat masuk ke Laravel dan menghasilkan pesan validasi yang profesional. `error_page` di atas memakai halaman statis branded untuk kegagalan yang terjadi sebelum Laravel/PHP berjalan.
 
 Jika akun admin terkunci setelah tiga password salah, superadmin lain dapat membuka dari menu **Pengguna**. Untuk akun superadmin terakhir, gunakan:
 
@@ -318,7 +318,7 @@ Tidak perlu reload Nginx kecuali config Nginx berubah.
 | 500 setelah pull | `tail -50 storage/logs/laravel.log` |
 | `no such column` / SQL error | `php artisan migrate --force` lalu cek `migrate:status` |
 | Foto/bukti bayar 404 | `php artisan storage:link` + `chown -R www-data:www-data storage` |
-| **413 Request Entity Too Large** (upload galeri/paket) | Tambah `client_max_body_size 12M;` di Nginx + `upload_max_filesize` / `post_max_size` di PHP-FPM, reload keduanya |
+| **413 Request Entity Too Large** (upload galeri/paket/video) | Naikkan `client_max_body_size 64M;` di Nginx + `upload_max_filesize` / `post_max_size = 64M` di PHP-FPM, reload keduanya (video galeri maks. 50 MB) |
 | Upload gagal / permission denied | `chmod -R ug+rwx storage bootstrap/cache` |
 | Perubahan `.env` tidak kebaca | `php artisan optimize:clear` lalu `php artisan config:cache` |
 | Halaman admin CSS lama | Hard refresh browser (Ctrl+F5) — asset CSS di `public/css/` |

@@ -324,7 +324,7 @@ Jika muncul status **Lebih bayar**:
 - Proses refund manual & catat di **Lain-lain** dengan catatan jelas
 
 ### Upload bukti gagal
-Pastikan file ≤ 5 MB, format JPG/PNG/WEBP/PDF. Di server produksi, batas upload Nginx/PHP harus ≥ 12 MB (lihat `README.md` bagian deploy).
+Pastikan file ≤ 5 MB, format JPG/PNG/WEBP/PDF. Video galeri maks. 50 MB. Di server produksi, batas upload Nginx/PHP harus ≥ 64 MB (lihat `README.md` bagian deploy).
 
 ---
 
