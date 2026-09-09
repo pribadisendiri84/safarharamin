@@ -17,16 +17,9 @@
 <form class="form panel form-pad" method="post" enctype="multipart/form-data" action="{{ $package->exists ? route('admin.packages.update', $package) : route('admin.packages.store') }}">
   @csrf
   @if($package->exists) @method('PUT') @endif
-  <label>Cover katalog
-    <input type="file" id="cover-upload" name="cover_photo" accept="image/*">
-  </label>
-  <p class="sub">Landscape 2:1 — contoh 1200×600 px. Hanya dipakai di kartu katalog.</p>
-  @if(filled($package->cover_image))
-    <div class="cover-preview-block">
-      <p class="flyer-label">Cover sekarang</p>
-      <img class="thumb cover-preview" src="{{ $package->cover_image }}" alt="Cover {{ $package->title }}">
-    </div>
-  @endif
+  <label>Cover katalog</label>
+  @include('admin.partials.master-cover-field', ['cover' => $package->cover_image])
+  <p class="sub">Landscape 2:1 — contoh 1200×600 px. Hanya dipakai di kartu katalog. Kosong = flyer dipakai sebagai fallback.</p>
   <label>Unggah flyer paket
     <input type="file" id="flyer-upload" name="photos[]" accept="image/*" multiple data-upload-preview="flyer-upload">
   </label>

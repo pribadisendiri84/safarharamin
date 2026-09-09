@@ -193,8 +193,42 @@ tr.is-deleted { background: #fdf6f6; }
 .thumb { width: 54px; height: 76px; object-fit: contain; border-radius: 8px; background: #eef1f6; display: block; }
 .thumb.large { width: 120px; height: 168px; margin-bottom: 0; }
 .thumb.flyer { width: 100px; max-height: 140px; height: auto; margin-bottom: 0; }
-.thumb.cover-preview { width: 220px; max-width: 100%; aspect-ratio: 2 / 1; height: auto; object-fit: cover; border-radius: 8px; margin-bottom: 0; }
-.cover-preview-block { margin: 6px 0 14px; }
+.master-cover-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 8px;
+}
+.master-cover-preview {
+  flex-shrink: 0;
+  width: 176px;
+  height: 88px;
+  object-fit: cover;
+  object-position: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+.master-cover-empty {
+  flex-shrink: 0;
+  width: 176px;
+  height: 88px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  padding: 0 8px;
+}
+.master-cover-remove {
+  font-size: 12px;
+  margin: 0;
+}
 .flyer-zoom { border: 0; padding: 0; background: none; cursor: zoom-in; border-radius: 8px; line-height: 0; display: block; }
 .flyer-zoom:hover .thumb.flyer, .flyer-zoom:focus-visible .thumb.flyer { outline: 2px solid var(--brand); outline-offset: 2px; }
 .flyer-hint { font-weight: 500; color: var(--muted); }

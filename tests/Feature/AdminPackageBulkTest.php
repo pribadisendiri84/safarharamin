@@ -255,6 +255,68 @@ class AdminPackageBulkTest extends TestCase
             ->assertSessionHasErrors('photos');
     }
 
+    public function test_admin_can_upload_preview_and_remove_catalog_cover(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+        $package = $this->sourcePackage();
+        $coverPath = '/storage/packages/covers/paket-sumber-import-abc123.jpg';
+        Storage::disk('public')->put('packages/covers/paket-sumber-import-abc123.jpg', 'cover-old');
+        $package->update(['cover_image' => $coverPath]);
+
+        $payload = [
+            'title' => $package->title,
+            'type' => $package->type,
+            'package_kind_id' => $this->packageKindId(),
+            'departure_city' => $package->departure_city,
+            'departure_date' => '2026-10-12',
+            'duration_days' => $package->duration_days,
+            'price_quad' => $package->price_quad,
+            'price_triple' => $package->price_triple,
+            'price_double' => $package->price_double,
+            'seats_total' => $package->seats_total,
+            'seats_left' => $package->seats_left,
+            'status' => 'draft',
+        ];
+
+        $this->actingAs($admin)
+            ->put(route('admin.packages.update', $package), [
+                ...$payload,
+                'cover_photo' => UploadedFile::fake()->image('cover-baru.jpg', 1200, 600),
+            ])
+            ->assertRedirect(route('admin.packages.index'));
+
+        $package->refresh();
+        $this->assertNotNull($package->cover_image);
+        $this->assertNotSame($coverPath, $package->cover_image);
+        Storage::disk('public')->assertMissing('packages/covers/paket-sumber-import-abc123.jpg');
+
+        $this->actingAs($admin)
+            ->put(route('admin.packages.update', $package), [
+                ...$payload,
+                'remove_cover' => '1',
+            ])
+            ->assertRedirect(route('admin.packages.index'));
+
+        $package->refresh();
+        $this->assertNull($package->cover_image);
+    }
+
+    public function test_admin_package_form_shows_cover_field_with_preview(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $package = $this->sourcePackage();
+        $package->update(['cover_image' => '/images/catalog-cover-sample.jpg']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.edit', $package))
+            ->assertOk()
+            ->assertSee('master-cover-field', false)
+            ->assertSee('data-cover-preview', false)
+            ->assertSee('remove_cover', false)
+            ->assertSee('/images/catalog-cover-sample.jpg', false);
+    }
+
     public function test_admin_validates_and_saves_package_catalog_display_options(): void
     {
         $admin = User::factory()->admin()->create();

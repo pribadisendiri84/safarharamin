@@ -11,6 +11,7 @@ use App\Services\PackageImageStore;
 use App\Services\PackageItineraryStore;
 use App\Support\PackageCardBadge;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -323,6 +324,7 @@ class PackageController extends Controller
             'photos' => ['nullable', 'array'],
             'photos.*' => ['image', 'max:5120'],
             'cover_photo' => ['nullable', 'image', 'max:5120'],
+            'remove_cover' => ['nullable', 'boolean'],
             'facilities_text' => ['nullable', 'string'],
             'exclusions_text' => ['nullable', 'string'],
             'itinerary_departure_dates' => ['nullable', 'array'],
@@ -439,12 +441,28 @@ class PackageController extends Controller
         string $title,
         ?string $existing = null,
     ): ?string {
+        if ($request->boolean('remove_cover')) {
+            $this->deleteStoredImage($existing);
+            $existing = null;
+        }
+
         $file = $request->file('cover_photo');
         if ($file && $file->isValid()) {
+            $this->deleteStoredImage($existing);
+
             return $store->storeCover($file, $title);
         }
 
         return $existing;
+    }
+
+    private function deleteStoredImage(?string $path): void
+    {
+        if (! $path || ! str_starts_with($path, '/storage/')) {
+            return;
+        }
+
+        Storage::disk('public')->delete(ltrim(substr($path, strlen('/storage/')), '/'));
     }
 
     /**
