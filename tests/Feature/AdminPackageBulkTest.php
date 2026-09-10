@@ -302,6 +302,42 @@ class AdminPackageBulkTest extends TestCase
         $this->assertNull($package->cover_image);
     }
 
+    public function test_admin_can_remove_package_flyer(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+        $package = $this->sourcePackage();
+        $flyerPath = '/storage/packages/flyers/paket-sumber-import-abc123.jpg';
+        Storage::disk('public')->put('packages/flyers/paket-sumber-import-abc123.jpg', 'flyer-old');
+        $package->update(['images' => [$flyerPath], 'status' => 'draft']);
+
+        $payload = [
+            'title' => $package->title,
+            'type' => $package->type,
+            'package_kind_id' => $this->packageKindId(),
+            'departure_city' => $package->departure_city,
+            'departure_date' => '2026-10-12',
+            'duration_days' => $package->duration_days,
+            'price_quad' => $package->price_quad,
+            'price_triple' => $package->price_triple,
+            'price_double' => $package->price_double,
+            'seats_total' => $package->seats_total,
+            'seats_left' => $package->seats_left,
+            'status' => 'draft',
+        ];
+
+        $this->actingAs($admin)
+            ->put(route('admin.packages.update', $package), [
+                ...$payload,
+                'remove_flyer' => '1',
+            ])
+            ->assertRedirect(route('admin.packages.index'));
+
+        $package->refresh();
+        $this->assertSame([], $package->images);
+        Storage::disk('public')->assertMissing('packages/flyers/paket-sumber-import-abc123.jpg');
+    }
+
     public function test_admin_package_form_shows_cover_field_with_preview(): void
     {
         $admin = User::factory()->admin()->create();
@@ -311,9 +347,12 @@ class AdminPackageBulkTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.packages.edit', $package))
             ->assertOk()
-            ->assertSee('master-cover-field', false)
-            ->assertSee('data-cover-preview', false)
+            ->assertSee('package-media-fieldset', false)
+            ->assertSee('Media Paket', false)
+            ->assertSee('Cover Katalog', false)
+            ->assertSee('Flyer Paket', false)
             ->assertSee('remove_cover', false)
+            ->assertSee('remove_flyer', false)
             ->assertSee('/images/catalog-cover-sample.jpg', false);
     }
 

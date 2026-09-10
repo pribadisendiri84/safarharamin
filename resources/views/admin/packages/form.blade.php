@@ -8,7 +8,7 @@
 <div class="page-head">
   <div>
     <h1>{{ !empty($isDuplicate) ? 'Duplikat paket' : ($package->exists ? 'Edit paket' : 'Tambah paket') }}</h1>
-    <p class="sub">{{ !empty($isDuplicate) ? 'Data disalin dari paket lain. Ubah lalu Simpan — belum masuk katalog sebelum disimpan.' : 'Unggah cover katalog (landscape) dan flyer paket (portrait) secara terpisah.' }}</p>
+    <p class="sub">{{ !empty($isDuplicate) ? 'Data disalin dari paket lain. Ubah lalu Simpan — belum masuk katalog sebelum disimpan.' : 'Atur cover katalog dan flyer paket di bagian Media Paket.' }}</p>
   </div>
   <div class="actions head-actions">
     <a class="btn ghost" href="{{ route('admin.packages.index') }}">Kembali</a>
@@ -17,33 +17,10 @@
 <form class="form panel form-pad" method="post" enctype="multipart/form-data" action="{{ $package->exists ? route('admin.packages.update', $package) : route('admin.packages.store') }}">
   @csrf
   @if($package->exists) @method('PUT') @endif
-  <label>Cover katalog</label>
-  @include('admin.partials.master-cover-field', ['cover' => $package->cover_image])
-  <p class="sub">Landscape 2:1 — contoh 1200×600 px. Hanya dipakai di kartu katalog. Kosong = flyer dipakai sebagai fallback.</p>
-  <label>Unggah flyer paket
-    <input type="file" id="flyer-upload" name="photos[]" accept="image/*" multiple data-upload-preview="flyer-upload">
-  </label>
-  <p class="sub">Portrait — contoh A4/3:4. Flyer tampil di halaman detail paket (bisa lebih dari satu). Otomatis dikecilkan sebelum unggah (maks. 1200×1700 px).</p>
-  <div class="flyer-strip">
-    @if(($package->images ?? []) !== [])
-      <div class="flyer-block">
-        <p class="flyer-label">Flyer sekarang <span class="flyer-hint">· klik untuk zoom</span></p>
-        <div class="flyer-previews">
-          @foreach($package->images as $src)
-            <button type="button" class="flyer-zoom" data-src="{{ $src }}">
-              <img class="thumb flyer" src="{{ $src }}" alt="Flyer {{ $package->title }}">
-            </button>
-          @endforeach
-        </div>
-      </div>
-    @endif
-    <div class="flyer-block" id="flyer-upload-preview-col" hidden>
-      <p class="flyer-label">Flyer baru <span class="flyer-hint">· klik untuk zoom</span></p>
-      <div class="flyer-previews" id="flyer-upload-preview-grid"></div>
-    </div>
-  </div>
-  @include('admin.partials.flyer-zoom')
-  @include('admin.partials.image-upload-preview', ['inputId' => 'flyer-upload', 'embedded' => true])
+  @include('admin.partials.package-media-fieldset', [
+    'cover' => old('remove_cover') ? null : $package->cover_image,
+    'flyers' => old('remove_flyer') ? [] : ($package->images ?? []),
+  ])
   <label>Judul paket<input name="title" value="{{ old('title', $package->title) }}" required></label>
   <div class="row2">
     <label>Jenis

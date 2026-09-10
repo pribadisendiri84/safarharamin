@@ -193,41 +193,86 @@ tr.is-deleted { background: #fdf6f6; }
 .thumb { width: 54px; height: 76px; object-fit: contain; border-radius: 8px; background: #eef1f6; display: block; }
 .thumb.large { width: 120px; height: 168px; margin-bottom: 0; }
 .thumb.flyer { width: 100px; max-height: 140px; height: auto; margin-bottom: 0; }
-.master-cover-field {
+.package-media-fieldset { margin-top: 0; }
+.package-media-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+.package-media-slot {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fafbfd;
+}
+.package-media-label {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3d4a63;
+}
+.package-media-frame {
+  position: relative;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.package-media-frame--landscape { aspect-ratio: 2 / 1; }
+.package-media-frame--portrait {
+  aspect-ratio: 3 / 4;
+  width: min(100%, 180px);
+}
+.package-media-preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: #fff;
+}
+.package-media-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  padding: 0 12px;
+}
+.package-media-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
-  margin: 0 0 8px;
+  margin-bottom: 6px;
 }
-.master-cover-preview {
-  flex-shrink: 0;
-  width: 176px;
-  height: 88px;
-  object-fit: cover;
-  object-position: center;
+.package-media-replace {
+  margin: 0;
+  cursor: pointer;
+}
+.package-media-remove {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
-}
-.master-cover-empty {
+  color: #a33;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
   flex-shrink: 0;
-  width: 176px;
-  height: 88px;
-  display: grid;
-  place-items: center;
-  border: 1px dashed var(--line);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
-  padding: 0 8px;
 }
-.master-cover-remove {
-  font-size: 12px;
-  margin: 0;
+.package-media-remove:hover { background: #fdeeee; border-color: #f0c8c8; }
+.package-media-hint { margin: 0; }
+@media (max-width: 720px) {
+  .package-media-grid { grid-template-columns: 1fr; }
 }
 .flyer-zoom { border: 0; padding: 0; background: none; cursor: zoom-in; border-radius: 8px; line-height: 0; display: block; }
 .flyer-zoom:hover .thumb.flyer, .flyer-zoom:focus-visible .thumb.flyer { outline: 2px solid var(--brand); outline-offset: 2px; }

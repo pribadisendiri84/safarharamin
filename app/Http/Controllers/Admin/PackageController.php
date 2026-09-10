@@ -325,6 +325,7 @@ class PackageController extends Controller
             'photos.*' => ['image', 'max:5120'],
             'cover_photo' => ['nullable', 'image', 'max:5120'],
             'remove_cover' => ['nullable', 'boolean'],
+            'remove_flyer' => ['nullable', 'boolean'],
             'facilities_text' => ['nullable', 'string'],
             'exclusions_text' => ['nullable', 'string'],
             'itinerary_departure_dates' => ['nullable', 'array'],
@@ -424,6 +425,13 @@ class PackageController extends Controller
      */
     private function collectImages(Request $request, PackageImageStore $store, string $title, array $existing = []): array
     {
+        if ($request->boolean('remove_flyer')) {
+            foreach ($existing as $path) {
+                $this->deleteStoredImage($path);
+            }
+            $existing = [];
+        }
+
         $urls = [];
 
         foreach ($request->file('photos', []) as $file) {
@@ -432,7 +440,15 @@ class PackageController extends Controller
             }
         }
 
-        return $urls !== [] ? $urls : $existing;
+        if ($urls !== []) {
+            foreach ($existing as $path) {
+                $this->deleteStoredImage($path);
+            }
+
+            return $urls;
+        }
+
+        return $existing;
     }
 
     private function collectCover(
