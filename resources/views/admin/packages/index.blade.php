@@ -163,8 +163,12 @@
             </th>
             <th class="table-icon-col" title="Beranda">⌂</th>
           @endif
-          <th>@include('admin.partials.table-sort-link', ['column' => 'title', 'label' => 'Paket', 'defaultSort' => 'updated_at', 'defaultDir' => 'desc'])</th>
-          <th>@include('admin.partials.table-sort-link', ['column' => 'departure_date', 'label' => 'Tanggal berangkat', 'defaultSort' => 'updated_at', 'defaultDir' => 'desc'])</th>
+          <th class="package-col-combined">
+            <span class="table-sort-group">
+              @include('admin.partials.table-sort-link', ['column' => 'title', 'label' => 'Paket', 'defaultSort' => 'updated_at', 'defaultDir' => 'desc'])
+              @include('admin.partials.table-sort-link', ['column' => 'departure_date', 'label' => 'Berangkat', 'defaultSort' => 'updated_at', 'defaultDir' => 'desc'])
+            </span>
+          </th>
           <th>@include('admin.partials.table-sort-link', ['column' => 'seats_left', 'label' => 'Seat', 'defaultSort' => 'updated_at', 'defaultDir' => 'desc'])</th>
           <th>@include('admin.partials.table-sort-link', ['column' => 'status', 'label' => 'Status', 'defaultSort' => 'updated_at', 'defaultDir' => 'desc'])</th>
           <th>@include('admin.partials.table-sort-link', ['column' => 'updated_at', 'label' => 'Diupdate', 'defaultSort' => 'updated_at', 'defaultDir' => 'desc'])</th>
@@ -197,6 +201,7 @@
             <td class="package-title-cell">
               <div class="package-title-line">
                 <a class="package-title-link" href="{{ route('admin.packages.edit', $package) }}">{{ $package->title }}</a>
+                <span class="package-row-date">{{ $package->departure_date?->translatedFormat('d M Y') ?? '—' }}</span>
                 <span class="package-row-badges">
                   @if($package->isPastDeparture())<span class="badge past-departure">Lewat</span>@endif
                   @if($package->isSeatsFull())<span class="badge seats-full">Penuh</span>@endif
@@ -204,7 +209,6 @@
                 </span>
               </div>
             </td>
-            <td class="nowrap">{{ $package->departure_date?->translatedFormat('d M Y') ?? '—' }}</td>
             <td class="nowrap">{{ (int) $package->seats_left }}/{{ (int) $package->seats_total }}</td>
             <td>
               @if(! $package->trashed())
@@ -233,7 +237,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="{{ request()->boolean('trashed') ? 6 : 8 }}" class="empty-state">{{ $trashed ? 'Tidak ada paket terhapus.' : 'Belum ada paket.' }}</td></tr>
+          <tr><td colspan="{{ request()->boolean('trashed') ? 5 : 7 }}" class="empty-state">{{ $trashed ? 'Tidak ada paket terhapus.' : 'Belum ada paket.' }}</td></tr>
         @endforelse
       </tbody>
     </table>

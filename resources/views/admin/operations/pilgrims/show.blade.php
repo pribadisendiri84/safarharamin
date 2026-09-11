@@ -50,8 +50,7 @@
     </div>
     <p class="sub">Hotel dan maskapai sama untuk semua jamaah di {{ $departure->program_name }}.</p>
     <dl class="ops-spec-grid">
-      <div class="ops-spec-row"><dt>Maskapai</dt><dd>{{ $departure->airline ?: '—' }}</dd></div>
-      <div class="ops-spec-row"><dt>Penerbangan</dt><dd>{{ $departure->flight_number ?: '—' }}</dd></div>
+      <div class="ops-spec-row"><dt>Maskapai</dt><dd>{{ $departure->airlineLine() }}</dd></div>
       <div class="ops-spec-row"><dt>Hotel Makkah</dt><dd>{{ $departure->hotel_makkah ?: '—' }}</dd></div>
       <div class="ops-spec-row"><dt>Hotel Madinah</dt><dd>{{ $departure->hotel_madinah ?: '—' }}</dd></div>
       @if($isHaji)

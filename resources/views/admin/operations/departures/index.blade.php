@@ -51,13 +51,12 @@
           <tr>
             <td>
               <b>{{ $departure->program_name }}</b>
-              @if($departure->flight_number)<br><small class="muted">{{ $departure->flight_number }}</small>@endif
               @if($departure->isHaji() && $departure->hijriLabel() !== '')
                 <br><small class="muted">{{ $departure->hijriLabel() }}</small>
               @endif
             </td>
             <td>{{ $departure->formattedDepartureDate() }}</td>
-            <td>{{ $departure->airline ?: '—' }}</td>
+            <td>{{ $departure->airlineLine() }}</td>
             <td><span class="badge kind-{{ $departure->program_kind }}">{{ $departure->kindLabel() }}</span></td>
             <td>{{ $departure->pilgrims_count }}</td>
             <td class="row-actions-cell">

@@ -9,10 +9,13 @@
       'page' => null,
   ]);
   $indicator = $isActive
-      ? ($currentDir === 'asc' ? 'A–Z' : 'Z–A')
+      ? ($currentDir === 'asc' ? '↑' : '↓')
       : '↕';
+  $sortLabel = $isActive
+      ? ($currentDir === 'asc' ? 'Urut naik' : 'Urut turun')
+      : 'Urutkan kolom';
 @endphp
-<a href="{{ $url }}" @class(['table-sort-link', 'is-active' => $isActive, 'is-asc' => $isActive && $currentDir === 'asc', 'is-desc' => $isActive && $currentDir === 'desc'])>
+<a href="{{ $url }}" @class(['table-sort-link', 'is-active' => $isActive, 'is-asc' => $isActive && $currentDir === 'asc', 'is-desc' => $isActive && $currentDir === 'desc']) title="{{ $sortLabel }}">
   <span>{{ $label }}</span>
   <span class="table-sort-indicator" aria-hidden="true">{{ $indicator }}</span>
 </a>

@@ -516,8 +516,10 @@ tr.sync-row-has-diff td { border-bottom-color: #f3e8c8; }
 .packages-table-compact td { padding: 8px 12px; font-size: 13px; }
 .packages-table-compact .table-icon-col { width: 42px; text-align: center; }
 .packages-table-compact .table-select { width: 42px; }
-.packages-table-compact .package-title-cell { max-width: 360px; }
-.package-title-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.packages-table-compact .package-title-cell { min-width: 220px; }
+.package-col-combined { min-width: 280px; }
+.table-sort-group { display: inline-flex; align-items: center; gap: 12px; flex-wrap: nowrap; white-space: nowrap; }
+.package-title-line { display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: nowrap; }
 .package-title-link {
   color: var(--ink);
   font-weight: 600;
@@ -526,9 +528,11 @@ tr.sync-row-has-diff td { border-bottom-color: #f3e8c8; }
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+  flex: 1 1 auto;
 }
 .package-title-link:hover { color: var(--brand); text-decoration: underline; }
-.package-row-badges { display: inline-flex; flex-wrap: wrap; gap: 4px; flex-shrink: 0; }
+.package-row-date { color: var(--muted); font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+.package-row-badges { display: inline-flex; flex-wrap: nowrap; gap: 4px; flex-shrink: 0; }
 .package-row-badges .badge { font-size: 10px; padding: 2px 6px; line-height: 1.2; }
 .packages-table-compact .status-select { min-width: 108px; padding: 6px 28px 6px 8px; font-size: 12px; }
 .nowrap { white-space: nowrap; }
@@ -547,13 +551,20 @@ tr.sync-row-has-diff td { border-bottom-color: #f3e8c8; }
 .table-sort-link:hover { color: var(--brand); }
 .table-sort-link.is-active { color: var(--brand); }
 .table-sort-indicator {
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1;
   color: var(--muted);
   letter-spacing: 0;
   text-transform: none;
 }
 .table-sort-link.is-active .table-sort-indicator { color: var(--brand); }
+.table-sort-link:not(.is-active) .table-sort-indicator { opacity: 0.45; }
+.table-sort-link:hover .table-sort-indicator { opacity: 1; color: var(--brand); }
 .btn.sm { padding: 6px 10px; font-size: 12px; }
 .btn.danger { color: #a33; }
 .row-actions-cell { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }

@@ -223,8 +223,7 @@ class PilgrimController extends Controller
         return $departures->mapWithKeys(fn (Departure $departure) => [
             $departure->id => [
                 'program_kind' => $departure->program_kind,
-                'airline' => $departure->airline,
-                'flight_number' => $departure->flight_number,
+                'airline_line' => $departure->airlineLine(),
                 'hotel_makkah' => $departure->hotel_makkah,
                 'hotel_madinah' => $departure->hotel_madinah,
                 'hotel_transit' => $departure->hotel_transit,

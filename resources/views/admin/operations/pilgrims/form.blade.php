@@ -35,8 +35,7 @@
     <p class="sub departure-info-note">Hotel dan maskapai berlaku untuk semua jamaah di program ini.</p>
     <dl class="ops-spec-grid ops-spec-grid--compact" id="departure-info-grid">
       @if($selectedDeparture)
-        <div class="ops-spec-row"><dt>Maskapai</dt><dd data-field="airline">{{ $selectedDeparture->airline ?: '—' }}</dd></div>
-        <div class="ops-spec-row"><dt>Penerbangan</dt><dd data-field="flight_number">{{ $selectedDeparture->flight_number ?: '—' }}</dd></div>
+        <div class="ops-spec-row"><dt>Maskapai</dt><dd data-field="airline_line">{{ $selectedDeparture->airlineLine() }}</dd></div>
         <div class="ops-spec-row"><dt>Hotel Makkah</dt><dd data-field="hotel_makkah">{{ $selectedDeparture->hotel_makkah ?: '—' }}</dd></div>
         <div class="ops-spec-row"><dt>Hotel Madinah</dt><dd data-field="hotel_madinah">{{ $selectedDeparture->hotel_madinah ?: '—' }}</dd></div>
         <div class="ops-spec-row departure-haji-only" @unless($isHaji) hidden @endunless><dt>Hotel Transit</dt><dd data-field="hotel_transit">{{ $selectedDeparture->hotel_transit ?: '—' }}</dd></div>

@@ -889,6 +889,6 @@ class AdminPackageBulkTest extends TestCase
             ->get(route('admin.packages.index', ['sort' => 'title', 'dir' => 'asc']))
             ->assertOk()
             ->assertSee('table-sort-link', false)
-            ->assertSee('A–Z');
+            ->assertSee('↑');
     }
 }

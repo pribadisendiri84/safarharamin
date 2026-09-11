@@ -100,6 +100,16 @@ class Departure extends Model
         return $this->departure_date?->translatedFormat('d M Y') ?? 'Jadwal menyusul';
     }
 
+    public function airlineLine(): string
+    {
+        $parts = array_values(array_filter([
+            trim((string) $this->airline),
+            trim((string) $this->flight_number),
+        ], fn (string $value) => $value !== ''));
+
+        return $parts !== [] ? implode(' · ', $parts) : '—';
+    }
+
     public function departureLabel(): string
     {
         return $this->departure_date?->translatedFormat('d F Y') ?? '';

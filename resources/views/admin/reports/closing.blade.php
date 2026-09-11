@@ -54,8 +54,12 @@
     <table class="packages-table-compact">
       <thead>
         <tr>
-          <th>@include('admin.partials.table-sort-link', ['column' => 'title', 'label' => 'Paket', 'defaultSort' => 'departure_date', 'defaultDir' => 'asc'])</th>
-          <th>@include('admin.partials.table-sort-link', ['column' => 'departure_date', 'label' => 'Tanggal berangkat', 'defaultSort' => 'departure_date', 'defaultDir' => 'asc'])</th>
+          <th class="package-col-combined">
+            <span class="table-sort-group">
+              @include('admin.partials.table-sort-link', ['column' => 'title', 'label' => 'Paket', 'defaultSort' => 'departure_date', 'defaultDir' => 'asc'])
+              @include('admin.partials.table-sort-link', ['column' => 'departure_date', 'label' => 'Berangkat', 'defaultSort' => 'departure_date', 'defaultDir' => 'asc'])
+            </span>
+          </th>
           <th>@include('admin.partials.table-sort-link', ['column' => 'sold_pax', 'label' => 'Jamaah closing', 'defaultSort' => 'departure_date', 'defaultDir' => 'asc'])</th>
           <th>@include('admin.partials.table-sort-link', ['column' => 'sold_amount', 'label' => 'Nilai closing', 'defaultSort' => 'departure_date', 'defaultDir' => 'asc'])</th>
           <th>@include('admin.partials.table-sort-link', ['column' => 'seats_left', 'label' => 'Seat tersisa', 'defaultSort' => 'departure_date', 'defaultDir' => 'asc'])</th>
@@ -65,9 +69,11 @@
         @forelse($packages as $package)
           <tr>
             <td class="package-title-cell">
-              <a class="package-title-link" href="{{ route('admin.packages.edit', $package) }}">{{ $package->title }}</a>
+              <div class="package-title-line">
+                <a class="package-title-link" href="{{ route('admin.packages.edit', $package) }}">{{ $package->title }}</a>
+                <span class="package-row-date">{{ $package->departure_date?->translatedFormat('d M Y') ?? '—' }}</span>
+              </div>
             </td>
-            <td class="nowrap">{{ $package->departure_date?->translatedFormat('d M Y') ?? '—' }}</td>
             <td class="nowrap"><b>{{ (int) $package->sold_pax }}</b> jamaah</td>
             <td class="nowrap">
               @if((int) $package->sold_amount > 0)
@@ -79,7 +85,7 @@
             <td class="nowrap">{{ (int) $package->seats_left }}/{{ (int) $package->seats_total }}</td>
           </tr>
         @empty
-          <tr><td colspan="5" class="empty-state">Belum ada closing tercatat.</td></tr>
+          <tr><td colspan="4" class="empty-state">Belum ada closing tercatat.</td></tr>
         @endforelse
       </tbody>
     </table>
