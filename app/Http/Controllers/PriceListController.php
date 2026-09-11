@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Package;
 use App\Models\PackageKind;
+use App\Support\PriceListGrouper;
 use Illuminate\Http\Request;
 
 class PriceListController extends Controller
@@ -12,10 +13,7 @@ class PriceListController extends Controller
     {
         $query = Package::query()
             ->publiclyVisible()
-            ->with('packageKind')
-            ->orderByDesc('departure_date')
-            ->orderBy('airline')
-            ->orderBy('title');
+            ->with('packageKind');
 
         if ($type = $request->string('tipe')->toString()) {
             $query->where('type', $type);
@@ -47,11 +45,7 @@ class PriceListController extends Controller
 
         $packages = $query->get();
 
-        $groups = $packages
-            ->groupBy(fn (Package $package) => $package->typeLabel())
-            ->map(fn ($typeGroup) => $typeGroup
-                ->groupBy(fn (Package $package) => $package->airline ?: 'Maskapai menyusul')
-                ->sortKeys());
+        $groups = PriceListGrouper::group($packages);
 
         return view('pages.price-list', [
             'groups' => $groups,

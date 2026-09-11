@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Airline;
 use App\Models\Package;
 use App\Models\PriceSyncRun;
+use App\Support\PriceListGrouper;
 use App\Support\PriceSyncSchedule;
 use Illuminate\Http\Request;
 
@@ -13,11 +14,7 @@ class PriceListController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Package::query()
-            ->with('packageKind')
-            ->orderByDesc('departure_date')
-            ->orderBy('airline')
-            ->orderBy('title');
+        $query = Package::query()->with('packageKind');
 
         if ($type = $request->string('type')->toString()) {
             $query->where('type', $type);
@@ -49,11 +46,7 @@ class PriceListController extends Controller
 
         $packages = $query->get();
 
-        $groups = $packages
-            ->groupBy(fn (Package $package) => $package->typeLabel())
-            ->map(fn ($typeGroup) => $typeGroup
-                ->groupBy(fn (Package $package) => $package->airline ?: 'Tanpa maskapai')
-                ->sortKeys());
+        $groups = PriceListGrouper::group($packages, 'Tanpa maskapai');
 
         $lastSync = PriceSyncRun::query()->latest()->first();
         $pendingRun = PriceSyncRun::query()
