@@ -4,6 +4,7 @@
 @section('content')
 @php
   $isHajiPackage = in_array(old('type', $package->type), \App\Models\Package::HAJI_TYPES, true);
+  $listReturnUrl = \App\Support\AdminListReturn::resolve(request('return'));
 @endphp
 <div class="page-head">
   <div>
@@ -11,12 +12,15 @@
     <p class="sub">{{ !empty($isDuplicate) ? 'Data disalin dari paket lain. Ubah lalu Simpan — belum masuk katalog sebelum disimpan.' : 'Atur cover katalog dan flyer paket di bagian Media Paket.' }}</p>
   </div>
   <div class="actions head-actions">
-    <a class="btn ghost" href="{{ route('admin.packages.index') }}">Kembali</a>
+    <a class="btn ghost" href="{{ $listReturnUrl }}">Kembali</a>
   </div>
 </div>
 <form class="form panel form-pad" method="post" enctype="multipart/form-data" action="{{ $package->exists ? route('admin.packages.update', $package) : route('admin.packages.store') }}">
   @csrf
   @if($package->exists) @method('PUT') @endif
+  @if(request('return'))
+    <input type="hidden" name="return" value="{{ request('return') }}">
+  @endif
   @include('admin.partials.package-media-fieldset', [
     'cover' => old('remove_cover') ? null : $package->cover_image,
     'flyers' => old('remove_flyer') ? [] : ($package->images ?? []),

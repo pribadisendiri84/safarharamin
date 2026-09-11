@@ -9,6 +9,7 @@ use App\Models\Package;
 use App\Models\PackageItinerary;
 use App\Services\PackageImageStore;
 use App\Services\PackageItineraryStore;
+use App\Support\AdminListReturn;
 use App\Support\PackageCardBadge;
 use App\Support\TableSort;
 use Illuminate\Http\Request;
@@ -128,21 +129,27 @@ class PackageController extends Controller
         $package->update($data);
         $this->syncItineraries($request, $package, $itineraries);
 
-        return redirect()->route('admin.packages.index')->with('ok', 'Paket diperbarui.');
+        return redirect(AdminListReturn::resolve($request->input('return')))
+            ->with('ok', 'Paket diperbarui.');
     }
 
-    public function destroy(Package $package)
+    public function destroy(Request $request, Package $package)
     {
         $package->delete();
 
-        return redirect()->route('admin.packages.index')->with('ok', 'Paket dihapus.');
+        return redirect(AdminListReturn::resolve($request->input('return')))
+            ->with('ok', 'Paket dihapus.');
     }
 
-    public function restore(Package $package)
+    public function restore(Request $request, Package $package)
     {
         $package->restore();
 
-        return redirect()->route('admin.packages.index', ['trashed' => 1])->with('ok', 'Paket dipulihkan.');
+        return redirect(AdminListReturn::resolve(
+            $request->input('return'),
+            'admin.packages.index',
+            ['trashed' => 1],
+        ))->with('ok', 'Paket dipulihkan.');
     }
 
     public function duplicate(Package $package)

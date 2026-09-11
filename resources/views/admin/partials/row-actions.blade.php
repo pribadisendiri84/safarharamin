@@ -6,6 +6,9 @@
     @if(! empty($restore) && auth()->user()?->can('manage-catalog'))
     <form method="post" action="{{ $restore }}">
       @csrf
+      @if(! empty($listReturnUrl))
+        <input type="hidden" name="return" value="{{ $listReturnUrl }}">
+      @endif
       <button class="btn gray compact" type="submit">Pulihkan</button>
     </form>
     @endif
@@ -23,6 +26,9 @@
     <form method="post" action="{{ $destroy }}" onsubmit="return confirm('{{ $confirm }}')">
       @csrf
       @method('DELETE')
+      @if(! empty($listReturnUrl))
+        <input type="hidden" name="return" value="{{ $listReturnUrl }}">
+      @endif
       <button class="btn red compact" type="submit">Hapus</button>
     </form>
     @endif

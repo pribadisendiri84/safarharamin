@@ -2,6 +2,10 @@
 
 @section('title', 'Paket')
 @section('content')
+@php
+  $listReturnUrl = \App\Support\AdminListReturn::current();
+  $packagesListPath = parse_url(route('admin.packages.index'), PHP_URL_PATH);
+@endphp
 <div class="page-head">
   <div>
     <h1>Paket keberangkatan</h1>
@@ -47,7 +51,7 @@
           <small>Posisi {{ $package->home_sort }} · {{ $package->departureLine() }} · {{ $package->formattedStartingPrice() }}</small>
         </span>
         <span class="home-sort-actions">
-          <a class="btn gray compact" href="{{ route('admin.packages.edit', $package) }}">Edit</a>
+          <a class="btn gray compact" href="{{ route('admin.packages.edit', $package) }}?return={{ urlencode($listReturnUrl) }}">Edit</a>
           <button class="btn red compact" type="button" data-package-home-remove data-id="{{ $package->id }}" data-url="{{ route('admin.packages.toggle-featured', $package) }}">Hapus</button>
         </span>
       </li>
@@ -83,7 +87,7 @@
     <button class="btn gray compact" type="button" id="package-bulk-clear">Batal</button>
   </form>
 @endif
-<div class="panel">
+<div class="panel" data-preserve-scroll="{{ $packagesListPath }}">
   <div class="panel-table-toolbar">
     <form class="table-filter-form" method="get" id="packages-filter-form">
       @if($trashed)<input type="hidden" name="trashed" value="1">@endif
@@ -200,7 +204,7 @@
             @endif
             <td class="package-title-cell">
               <div class="package-title-line">
-                <a class="package-title-link" href="{{ route('admin.packages.edit', $package) }}">{{ $package->title }}</a>
+                <a class="package-title-link" href="{{ route('admin.packages.edit', $package) }}?return={{ urlencode($listReturnUrl) }}">{{ $package->title }}</a>
                 <span class="package-row-date">{{ $package->departure_date?->translatedFormat('d M Y') ?? '—' }}</span>
                 <span class="package-row-badges">
                   @if($package->isPastDeparture())<span class="badge past-departure">Lewat</span>@endif
@@ -228,10 +232,11 @@
             <td>
               @include('admin.partials.row-actions', [
                 'item' => $package,
-                'edit' => route('admin.packages.edit', $package),
-                'duplicate' => route('admin.packages.duplicate', $package),
+                'edit' => route('admin.packages.edit', $package).'?return='.urlencode($listReturnUrl),
+                'duplicate' => route('admin.packages.duplicate', $package).'?return='.urlencode($listReturnUrl),
                 'destroy' => route('admin.packages.destroy', $package),
                 'restore' => route('admin.packages.restore', $package),
+                'listReturnUrl' => $listReturnUrl,
                 'confirm' => 'Hapus paket ini?',
               ])
             </td>
@@ -254,4 +259,5 @@
   @include('admin.partials.package-bulk-script')
 @endif
 @include('admin.partials.table-filter-script')
+@include('admin.partials.list-scroll-script')
 @endsection
