@@ -1822,22 +1822,24 @@ img { max-width: 100%; display: block; }
   .haji-detail-grid { grid-template-columns: 1fr; }
   .haji-flow-arrow { display: none; }
 }
-.price-list-layout { display: grid; grid-template-columns: 260px 1fr; gap: 24px; padding: 28px 0 56px; }
-.price-list-groups { display: grid; gap: 28px; }
-.price-list-group { display: grid; gap: 18px; }
-.price-list-type { margin: 0; font-size: 24px; color: var(--brand-dark); }
-.price-list-airline-block { display: grid; gap: 10px; }
-.price-list-airline { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 18px; color: #3d4a63; }
-.price-list-airline-logo { height: 28px; width: auto; max-width: 110px; object-fit: contain; flex-shrink: 0; }
+.price-list-layout { display: grid; grid-template-columns: 260px 1fr; gap: 24px; padding: 28px 0 56px; font-size: 13px; }
+.price-list-groups { display: grid; gap: 22px; }
+.price-list-group { display: grid; gap: 14px; }
+.price-list-type { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -.02em; color: var(--brand-dark); }
+.price-list-airline-block { display: grid; gap: 8px; }
+.price-list-airline { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15px; font-weight: 700; color: #3d4a63; }
+.price-list-airline-logo { height: 22px; width: auto; max-width: 96px; object-fit: contain; flex-shrink: 0; }
 .price-list-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
 .price-list-table { min-width: 760px; }
-.price-list-row { display: grid; grid-template-columns: minmax(180px, 1.8fr) minmax(120px, 1fr) repeat(3, minmax(90px, .9fr)) minmax(88px, .7fr); gap: 10px; align-items: center; padding: 12px 14px; border-top: 1px solid var(--line); }
+.price-list-row { display: grid; grid-template-columns: minmax(180px, 1.8fr) minmax(120px, 1fr) repeat(3, minmax(90px, .9fr)) minmax(88px, .7fr); gap: 8px 10px; align-items: center; padding: 10px 12px; border-top: 1px solid var(--line); line-height: 1.4; }
 .price-list-row:first-child { border-top: 0; }
-.price-list-row-head { background: var(--soft); font-size: 12px; font-weight: 700; color: #3d4a63; }
+.price-list-row-head { background: var(--soft); font-size: 11px; font-weight: 700; color: #3d4a63; text-transform: uppercase; letter-spacing: .03em; }
+.price-list-row:not(.price-list-row-head) { font-size: 13px; }
 .price-list-row:not(.price-list-row-head):hover { background: #f8fafc; }
-.price-list-row b { display: block; font-size: 14px; line-height: 1.35; }
-.price-list-row small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; font-weight: 500; }
-.price-list-row .btn { padding: 8px 12px; font-size: 12px; white-space: nowrap; }
+.price-list-row b { display: block; font-size: 13px; font-weight: 700; line-height: 1.35; }
+.price-list-row small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; font-weight: 500; line-height: 1.35; }
+.price-list-row:not(.price-list-row-head) > span:nth-child(n+3):nth-child(-n+5) { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.price-list-row .btn { padding: 7px 10px; font-size: 11.5px; white-space: nowrap; }
 
 @media (max-width: 960px) {
   .price-list-layout { grid-template-columns: 1fr; }

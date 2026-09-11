@@ -32,34 +32,38 @@
 @endif
 
 @if(! request()->boolean('trashed'))
-<div class="panel form-pad sort-panel">
-  <div class="sort-panel-head">
-    <h2>Urutan beranda</h2>
+<details class="collapsible-block sort-panel" id="package-home-sort-panel" data-collapse-key="packages-home-sort">
+  <summary class="collapsible-block-summary">
+    <span class="collapsible-block-title">Urutan beranda</span>
+    <span class="collapsible-block-meta">{{ $homePackages->count() }} paket</span>
+    <span class="collapsible-block-chevron" aria-hidden="true"></span>
+  </summary>
+  <div class="collapsible-block-body">
     <p class="sub">Drag untuk ubah urutan tampil di homepage (maks. {{ \App\Models\Package::homeLimit() }} paket).</p>
+    <ul class="home-sort-list" id="package-home-sort-list" data-reorder-url="{{ route('admin.packages.reorder-home') }}">
+      @forelse($homePackages as $index => $package)
+        <li class="home-sort-item" data-id="{{ $package->id }}" data-home-sort="{{ (int) ($package->home_sort ?? 0) }}">
+          <span class="drag-handle" title="Drag untuk ubah urutan">⋮⋮</span>
+          @if($package->coverImage())
+            <img class="thumb" src="{{ $package->coverImage() }}" alt="{{ $package->title }}">
+          @else
+            <span class="thumb thumb-empty">Flyer</span>
+          @endif
+          <span class="home-sort-meta">
+            <b>{{ $package->title }}</b>
+            <small>Posisi {{ $package->home_sort }} · {{ $package->departureLine() }} · {{ $package->formattedStartingPrice() }}</small>
+          </span>
+          <span class="home-sort-actions">
+            <a class="btn gray compact" href="{{ route('admin.packages.edit', $package) }}?return={{ urlencode($listReturnUrl) }}">Edit</a>
+            <button class="btn red compact" type="button" data-package-home-remove data-id="{{ $package->id }}" data-url="{{ route('admin.packages.toggle-featured', $package) }}">Hapus</button>
+          </span>
+        </li>
+      @empty
+        <li class="empty-state">Belum ada paket beranda. Centang kolom Beranda di tabel bawah.</li>
+      @endforelse
+    </ul>
   </div>
-  <ul class="home-sort-list" id="package-home-sort-list" data-reorder-url="{{ route('admin.packages.reorder-home') }}">
-    @forelse($homePackages as $index => $package)
-      <li class="home-sort-item" data-id="{{ $package->id }}" data-home-sort="{{ (int) ($package->home_sort ?? 0) }}">
-        <span class="drag-handle" title="Drag untuk ubah urutan">⋮⋮</span>
-        @if($package->coverImage())
-          <img class="thumb" src="{{ $package->coverImage() }}" alt="{{ $package->title }}">
-        @else
-          <span class="thumb thumb-empty">Flyer</span>
-        @endif
-        <span class="home-sort-meta">
-          <b>{{ $package->title }}</b>
-          <small>Posisi {{ $package->home_sort }} · {{ $package->departureLine() }} · {{ $package->formattedStartingPrice() }}</small>
-        </span>
-        <span class="home-sort-actions">
-          <a class="btn gray compact" href="{{ route('admin.packages.edit', $package) }}?return={{ urlencode($listReturnUrl) }}">Edit</a>
-          <button class="btn red compact" type="button" data-package-home-remove data-id="{{ $package->id }}" data-url="{{ route('admin.packages.toggle-featured', $package) }}">Hapus</button>
-        </span>
-      </li>
-    @empty
-      <li class="empty-state">Belum ada paket beranda. Centang kolom Beranda di tabel bawah.</li>
-    @endforelse
-  </ul>
-</div>
+</details>
 @endif
 
 @php
@@ -91,9 +95,18 @@
   <div class="panel-table-toolbar">
     <form class="table-filter-form" method="get" id="packages-filter-form">
       @if($trashed)<input type="hidden" name="trashed" value="1">@endif
-      <div class="table-filter-search">
-        <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari judul paket" data-filter-search>
+      <div class="table-filter-top-row">
+        <div class="table-filter-search">
+          <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari judul paket" data-filter-search>
+        </div>
+        <button class="btn gray compact table-filter-toggle" type="button" data-filter-toggle aria-expanded="false">
+          Filter
+          @if($hasActiveFilters ?? false)
+            <span class="filter-active-dot" aria-label="Filter aktif"></span>
+          @endif
+        </button>
       </div>
+      <div class="table-filter-drawer" data-filter-drawer>
       <div class="table-filter-chips">
         @component('admin.partials.filter-chip', [
           'label' => 'Status',
@@ -145,6 +158,7 @@
           <a class="btn ghost compact" href="{{ route('admin.packages.index', request()->boolean('trashed') ? ['trashed' => 1] : []) }}">Reset</a>
         </div>
       @endif
+      </div>
     </form>
   </div>
   @if($packages->total() > 0)
@@ -260,4 +274,5 @@
 @endif
 @include('admin.partials.table-filter-script')
 @include('admin.partials.list-scroll-script')
+@include('admin.partials.collapse-persist-script')
 @endsection

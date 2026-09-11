@@ -891,4 +891,17 @@ class AdminPackageBulkTest extends TestCase
             ->assertSee('table-sort-link', false)
             ->assertSee('↑');
     }
+
+    public function test_packages_index_has_collapsible_home_sort_and_mobile_filter_toggle(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.index'))
+            ->assertOk()
+            ->assertSee('data-collapse-key="packages-home-sort"', false)
+            ->assertSee('Urutan beranda')
+            ->assertSee('data-filter-toggle', false)
+            ->assertSee('data-filter-drawer', false);
+    }
 }
