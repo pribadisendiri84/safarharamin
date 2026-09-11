@@ -190,6 +190,13 @@ tr:last-child td { border-bottom: 0; }
 td b { display: block; }
 td small { display: block; color: var(--muted); margin-top: 3px; }
 tr.is-deleted { background: #fdf6f6; }
+tr.is-past-departure { background: #fff8ef; }
+tr.is-past-departure td { color: #6b4c2e; }
+tr.is-seats-full { background: #fff5f5; }
+tr.is-seats-full td { color: #7a3030; }
+tr.is-past-departure.is-seats-full { background: #fff0ea; }
+.badge.past-departure { background: #fde8d8; color: #9a4b12; }
+.badge.seats-full { background: #fdeeee; color: #a33; }
 .thumb { width: 54px; height: 76px; object-fit: contain; border-radius: 8px; background: #eef1f6; display: block; }
 .thumb.large { width: 120px; height: 168px; margin-bottom: 0; }
 .thumb.flyer { width: 100px; max-height: 140px; height: auto; margin-bottom: 0; }
@@ -338,6 +345,11 @@ tr.is-deleted { background: #fdf6f6; }
 }
 .stat.warn-stat { border-color: #f6dfc4; background: #fffaf3; }
 .stat.warn-stat b { color: #c56a10; }
+a.stat { text-decoration: none; color: inherit; transition: box-shadow .15s ease, transform .15s ease; }
+a.stat:hover { box-shadow: 0 8px 20px rgba(1, 49, 128, .08); transform: translateY(-1px); }
+a.stat small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 600; }
+.sync-diff-cell small { display: block; line-height: 1.45; color: #3d4a63; font-weight: 600; }
+.sync-diff-cell small + small { margin-top: 4px; }
 .btn.sm { padding: 6px 10px; font-size: 12px; }
 .btn.danger { color: #a33; }
 .row-actions-cell { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }

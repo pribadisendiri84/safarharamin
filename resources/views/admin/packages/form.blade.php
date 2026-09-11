@@ -53,6 +53,16 @@
         'placeholder' => 'Cari kota embarkasi…',
       ])
     </label>
+    <label>Tujuan penerbangan
+      <select name="arrival_city">
+        <option value="">— Pilih bandara tujuan —</option>
+        @foreach(\App\Models\Package::ARRIVAL_CITIES as $slug => $label)
+          <option value="{{ $slug }}" @selected(old('arrival_city', $package->arrival_city) === $slug)>
+            {{ $label }} — {{ \App\Models\Package::ARRIVAL_CITY_DESCRIPTIONS[$slug] ?? $label }}
+          </option>
+        @endforeach
+      </select>
+    </label>
     <label>Tanggal berangkat<input type="date" name="departure_date" value="{{ old('departure_date', optional($package->departure_date)->format('Y-m-d')) }}"></label>
     <label>Tampilan tanggal di web
       <select name="departure_date_display" id="departure-date-display">

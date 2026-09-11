@@ -79,14 +79,13 @@
 
     <div class="catalog-trip-meta{{ $departureDate === null ? ' is-single' : '' }}">
       @if($departureDate !== null)
-        <div class="catalog-trip-item">
+        <div class="catalog-trip-date">
           <i class="bi bi-calendar3" aria-hidden="true"></i>
           <span>{{ $departureDate }}</span>
         </div>
       @endif
-      <div class="catalog-trip-item">
-        <i class="bi bi-geo-alt" aria-hidden="true"></i>
-        <span>{{ $package->cityLabel() }}</span>
+      <div class="catalog-trip-route">
+        @include('partials.package-route-display', ['package' => $package])
       </div>
     </div>
 

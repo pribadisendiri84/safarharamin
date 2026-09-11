@@ -12,9 +12,11 @@
       'label' => 'Website',
       'items' => [
         ['route' => 'admin.packages.*', 'href' => route('admin.packages.index'), 'label' => 'Paket', 'icon' => 'plane', 'ability' => 'manage-catalog'],
+        ['route' => 'admin.price-sync.*', 'href' => route('admin.price-sync.index'), 'label' => 'Sync Harga', 'icon' => 'upload', 'ability' => 'manage-catalog', 'match' => ['admin.price-sync.*']],
         ['route' => 'admin.haji-plus.*', 'href' => route('admin.haji-plus.edit'), 'label' => 'Haji Plus', 'icon' => 'pin', 'ability' => 'manage-catalog'],
         ['route' => 'admin.gallery.*', 'href' => route('admin.gallery.index'), 'label' => 'Galeri', 'icon' => 'image', 'ability' => 'manage-catalog'],
         ['route' => 'admin.testimonials.*', 'href' => route('admin.testimonials.index'), 'label' => 'Testimoni', 'icon' => 'quote', 'ability' => 'manage-catalog'],
+        ['route' => 'admin.price-list.*', 'href' => route('admin.price-list.index'), 'label' => 'Price List', 'icon' => 'chart', 'ability' => 'manage-catalog'],
       ],
     ],
     [

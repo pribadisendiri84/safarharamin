@@ -12,14 +12,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 #[Fillable([
     'title',
     'slug',
+    'source_key',
     'type',
     'package_kind_id',
     'departure_city',
+    'arrival_city',
     'departure_date',
     'departure_date_end',
     'departure_date_display',
@@ -100,6 +103,22 @@ class Package extends Model
 
     /** @var list<string> */
     public const CATALOG_STATUSES = ['published', 'fullbook'];
+
+    public const EXPIRING_SOON_DAYS = 14;
+
+    public const LOW_SEATS_THRESHOLD = 5;
+
+    /** @var array<string, string> */
+    public const ARRIVAL_CITIES = [
+        'jeddah' => 'Jeddah',
+        'madinah' => 'Madinah',
+    ];
+
+    /** @var array<string, string> */
+    public const ARRIVAL_CITY_DESCRIPTIONS = [
+        'jeddah' => 'Bandara Internasional King Abdulaziz (JED)',
+        'madinah' => 'Bandara Internasional Prince Mohammad bin Abdulaziz (MED)',
+    ];
 
     public const DEPARTURE_DATE_DISPLAYS = [
         'single' => 'Tanggal tunggal',
@@ -309,6 +328,62 @@ class Package extends Model
         return $query->whereIn('status', self::CATALOG_STATUSES);
     }
 
+    public function scopeUpcomingDeparture(Builder $query): Builder
+    {
+        $today = now()->startOfDay();
+
+        return $query->where(function (Builder $builder) use ($today) {
+            $builder->whereNull('departure_date')
+                ->orWhere(function (Builder $range) use ($today) {
+                    $range->where('departure_date_display', 'range')
+                        ->whereNotNull('departure_date_end')
+                        ->where('departure_date_end', '>=', $today);
+                })
+                ->orWhere(function (Builder $single) use ($today) {
+                    $single->whereNotNull('departure_date')
+                        ->where(function (Builder $notRangeOrNoEnd) {
+                            $notRangeOrNoEnd->where('departure_date_display', '!=', 'range')
+                                ->orWhereNull('departure_date_end');
+                        })
+                        ->where('departure_date', '>=', $today);
+                });
+        });
+    }
+
+    public function scopePubliclyVisible(Builder $query): Builder
+    {
+        return $query->visibleOnCatalog()->upcomingDeparture();
+    }
+
+    public function scopeExpiringSoon(Builder $query, ?int $days = null): Builder
+    {
+        $days ??= self::EXPIRING_SOON_DAYS;
+        $today = now()->startOfDay();
+        $until = now()->addDays($days)->endOfDay();
+
+        return $query->whereNotNull('departure_date')
+            ->where(function (Builder $builder) use ($today, $until) {
+                $builder->where(function (Builder $range) use ($today, $until) {
+                    $range->where('departure_date_display', 'range')
+                        ->whereNotNull('departure_date_end')
+                        ->whereBetween('departure_date_end', [$today, $until]);
+                })->orWhere(function (Builder $single) use ($today, $until) {
+                    $single->where(function (Builder $notRangeOrNoEnd) {
+                        $notRangeOrNoEnd->where('departure_date_display', '!=', 'range')
+                            ->orWhereNull('departure_date_end');
+                    })->whereBetween('departure_date', [$today, $until]);
+                });
+            });
+    }
+
+    public function scopeLowSeatsRemaining(Builder $query, ?int $threshold = null): Builder
+    {
+        $threshold ??= self::LOW_SEATS_THRESHOLD;
+
+        return $query->where('seats_left', '>', 0)
+            ->where('seats_left', '<=', $threshold);
+    }
+
     public function scopeFeatured(Builder $query): Builder
     {
         return $query->where('is_featured', true);
@@ -318,7 +393,7 @@ class Package extends Model
     {
         $limit = HomeDisplay::packageLimit();
 
-        return $query->visibleOnCatalog()->featured()->whereBetween('home_sort', [1, $limit]);
+        return $query->publiclyVisible()->featured()->whereBetween('home_sort', [1, $limit]);
     }
 
     public static function homeLimit(): int
@@ -327,9 +402,9 @@ class Package extends Model
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, self>
+     * @return Collection<int, self>
      */
-    public static function homeItemsForAdmin(): \Illuminate\Support\Collection
+    public static function homeItemsForAdmin(): Collection
     {
         return static::query()
             ->displayedOnHome()
@@ -434,6 +509,11 @@ class Package extends Model
         return $this->status === 'fullbook';
     }
 
+    public function isSeatsFull(): bool
+    {
+        return $this->isFullbook() || (int) $this->seats_left <= 0;
+    }
+
     public function hasCardBadge(): bool
     {
         return $this->is_hot && PackageCardBadge::resolveText($this) !== '';
@@ -459,6 +539,50 @@ class Package extends Model
         return in_array($this->status, self::CATALOG_STATUSES, true);
     }
 
+    public function effectiveDepartureUntil(): ?\Illuminate\Support\Carbon
+    {
+        if ($this->departure_date_display === 'range' && $this->departure_date_end) {
+            return $this->departure_date_end->copy()->startOfDay();
+        }
+
+        return $this->departure_date?->copy()->startOfDay();
+    }
+
+    public function isPastDeparture(): bool
+    {
+        $until = $this->effectiveDepartureUntil();
+
+        return $until !== null && $until->lt(now()->startOfDay());
+    }
+
+    public function isExpiringSoon(?int $days = null): bool
+    {
+        if ($this->isPastDeparture()) {
+            return false;
+        }
+
+        $until = $this->effectiveDepartureUntil();
+        if ($until === null) {
+            return false;
+        }
+
+        $days ??= self::EXPIRING_SOON_DAYS;
+
+        return $until->lte(now()->addDays($days)->endOfDay());
+    }
+
+    public function daysUntilDeparture(): ?int
+    {
+        $until = $this->effectiveDepartureUntil();
+
+        return $until ? (int) now()->startOfDay()->diffInDays($until, false) : null;
+    }
+
+    public function isPubliclyVisible(): bool
+    {
+        return $this->isVisibleOnCatalog() && ! $this->isPastDeparture();
+    }
+
     public function typeLabel(): string
     {
         return self::TYPES[$this->type] ?? Str::headline($this->type);
@@ -467,6 +591,111 @@ class Package extends Model
     public function cityLabel(): string
     {
         return City::label($this->departure_city);
+    }
+
+    public function arrivalCityLabel(): string
+    {
+        return self::arrivalCityLabelFor($this->arrival_city);
+    }
+
+    public function arrivalCityDescription(): string
+    {
+        return self::ARRIVAL_CITY_DESCRIPTIONS[$this->arrival_city ?? ''] ?? '';
+    }
+
+    public static function arrivalCityLabelFor(?string $slug): string
+    {
+        return self::ARRIVAL_CITIES[$slug ?? ''] ?? '';
+    }
+
+    public static function arrivalCityDescriptionFor(?string $slug): string
+    {
+        return self::ARRIVAL_CITY_DESCRIPTIONS[$slug ?? ''] ?? '';
+    }
+
+    public static function formatSyncSnapshotValue(string $field, mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '—';
+        }
+
+        return match ($field) {
+            'departure_city' => City::label((string) $value) ?: (string) $value,
+            'arrival_city' => self::arrivalCityLabelFor((string) $value) ?: (string) $value,
+            'package_kind_id' => PackageKind::query()->whereKey($value)->value('name') ?? (string) $value,
+            'type' => self::TYPES[(string) $value] ?? (string) $value,
+            'price_quad', 'price_triple', 'price_double' => 'Rp'.number_format((int) $value, 0, ',', '.'),
+            'departure_date' => \Carbon\Carbon::parse((string) $value)->translatedFormat('d M Y'),
+            default => (string) $value,
+        };
+    }
+
+    public function routeLine(): string
+    {
+        $from = $this->cityLabel();
+        $to = $this->arrivalCityLabel();
+
+        if ($from !== '' && $to !== '') {
+            return $from.' → '.$to;
+        }
+
+        return $from !== '' ? $from : $to;
+    }
+
+    public function departureAirportCode(): ?string
+    {
+        return self::airportCodeForCitySlug(
+            $this->departure_city,
+            config('arminareka.origin_airports', config('arminareka.airport_cities', [])),
+        );
+    }
+
+    public function arrivalAirportCode(): ?string
+    {
+        return self::airportCodeForCitySlug(
+            $this->arrival_city,
+            config('arminareka.destination_airports', []),
+        );
+    }
+
+    /**
+     * @param  array<string, string>  $airportMap
+     */
+    public static function airportCodeForCitySlug(?string $slug, array $airportMap): ?string
+    {
+        if (! filled($slug)) {
+            return null;
+        }
+
+        foreach ($airportMap as $code => $citySlug) {
+            if ($citySlug === $slug) {
+                return $code;
+            }
+        }
+
+        return null;
+    }
+
+    public static function catalogRouteCode(?string $city, ?string $code): string
+    {
+        if (filled($code)) {
+            return $code;
+        }
+
+        $city = trim((string) $city);
+
+        return $city !== '' ? $city : '—';
+    }
+
+    /**
+     * @return array{from: string, to: string}
+     */
+    public function catalogRouteCodes(): array
+    {
+        return [
+            'from' => self::catalogRouteCode($this->cityLabel(), $this->departureAirportCode()),
+            'to' => self::catalogRouteCode($this->arrivalCityLabel(), $this->arrivalAirportCode()),
+        ];
     }
 
     public function roomLabel(): string
@@ -752,7 +981,7 @@ class Package extends Model
     {
         $date = $this->departure_date?->translatedFormat('d M Y') ?? 'Jadwal menyusul';
 
-        return $date.' · '.$this->cityLabel();
+        return $date.' · '.$this->routeLine();
     }
 
     public function whatsappMessage(): string

@@ -49,6 +49,14 @@ class PackageController extends Controller
             $query->where('title', 'like', '%'.$q.'%');
         }
 
+        if ($request->boolean('expiring_soon')) {
+            $query->visibleOnCatalog()->upcomingDeparture()->expiringSoon();
+        }
+
+        if ($request->boolean('low_seats')) {
+            $query->visibleOnCatalog()->upcomingDeparture()->lowSeatsRemaining();
+        }
+
         return view('admin.packages.index', [
             'packages' => $query->paginate(20)->withQueryString(),
             'homePackages' => $request->boolean('trashed') ? collect() : Package::homeItemsForAdmin(),
@@ -301,6 +309,7 @@ class PackageController extends Controller
                 }),
             ],
             'departure_city' => ['required', Rule::exists('cities', 'slug')->whereNull('deleted_at')],
+            'arrival_city' => ['nullable', Rule::in(array_keys(Package::ARRIVAL_CITIES))],
             'departure_date' => ['nullable', 'date', 'required_if:departure_date_display,range'],
             'departure_date_end' => ['nullable', 'date', 'required_if:departure_date_display,range', 'after_or_equal:departure_date'],
             'departure_date_display' => ['nullable', Rule::in(array_keys(Package::DEPARTURE_DATE_DISPLAYS))],
@@ -365,6 +374,9 @@ class PackageController extends Controller
             ?? 'single';
         if ($data['departure_date_display'] !== 'range') {
             $data['departure_date_end'] = null;
+        }
+        if (($data['arrival_city'] ?? '') === '') {
+            $data['arrival_city'] = null;
         }
         $data['home_sort'] = $this->resolveHomeSort($data['is_featured'], $existing);
 

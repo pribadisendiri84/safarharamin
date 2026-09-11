@@ -449,27 +449,76 @@ img { max-width: 100%; display: block; }
   border-bottom: 1px solid var(--line);
 }
 .catalog-trip-meta.is-single { grid-template-columns: 1fr; }
-.catalog-trip-item {
+.catalog-trip-date,
+.catalog-trip-route {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   min-width: 0;
-  padding: 10px 8px;
+  padding: 8px 6px;
+}
+.catalog-trip-date {
+  gap: 6px;
   color: var(--ink);
   font-size: 10px;
   font-weight: 700;
   line-height: 1.25;
   text-align: center;
 }
-.catalog-trip-item + .catalog-trip-item { border-left: 1px solid var(--line); }
-.catalog-trip-item .bi { color: var(--brand); font-size: 13px; flex-shrink: 0; }
-.catalog-trip-item span {
+.catalog-trip-date .bi { color: var(--brand); font-size: 13px; flex-shrink: 0; }
+.catalog-trip-date span {
   min-width: 0;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+.catalog-trip-date + .catalog-trip-route { border-left: 1px solid var(--line); }
+.catalog-trip-route .catalog-route {
+  width: 100%;
+  padding: 0;
+}
+.catalog-route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+}
+.catalog-route-end {
+  min-width: 0;
+}
+.catalog-route-end strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.catalog-route-end.is-arrival { text-align: right; }
+.catalog-route-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--brand);
+  flex-shrink: 0;
+}
+.catalog-route-icon .bi {
+  font-size: 12px;
+  transform: rotate(90deg);
+}
+.card-route-item {
+  grid-column: 1 / -1;
+  padding: 0 !important;
+}
+.card-route-item .catalog-route {
+  padding: 10px 0 2px;
+  border-top: 1px dashed var(--line);
+  margin-top: 4px;
 }
 .catalog-hotels {
   display: grid;
@@ -1115,6 +1164,7 @@ img { max-width: 100%; display: block; }
 .spec-grid li { padding: 0; }
 .spec-grid span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 2px; font-weight: 600; }
 .spec-grid b { font-size: 14px; font-weight: 700; color: var(--ink); line-height: 1.35; }
+.spec-grid small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; font-weight: 500; line-height: 1.35; }
 .prose h2 { margin: 0 0 8px; font-size: 20px; }
 .prose p { color: #3d4a63; line-height: 1.65; }
 .ask { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 20px; position: sticky; top: 88px; display: grid; gap: 10px; height: fit-content; }
@@ -1772,6 +1822,27 @@ img { max-width: 100%; display: block; }
   .haji-detail-grid { grid-template-columns: 1fr; }
   .haji-flow-arrow { display: none; }
 }
+.price-list-layout { display: grid; grid-template-columns: 260px 1fr; gap: 24px; padding: 28px 0 56px; }
+.price-list-groups { display: grid; gap: 28px; }
+.price-list-group { display: grid; gap: 18px; }
+.price-list-type { margin: 0; font-size: 24px; color: var(--brand-dark); }
+.price-list-airline-block { display: grid; gap: 10px; }
+.price-list-airline { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 18px; color: #3d4a63; }
+.price-list-airline-logo { height: 28px; width: auto; max-width: 110px; object-fit: contain; flex-shrink: 0; }
+.price-list-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
+.price-list-table { min-width: 760px; }
+.price-list-row { display: grid; grid-template-columns: minmax(180px, 1.8fr) minmax(120px, 1fr) repeat(3, minmax(90px, .9fr)) minmax(88px, .7fr); gap: 10px; align-items: center; padding: 12px 14px; border-top: 1px solid var(--line); }
+.price-list-row:first-child { border-top: 0; }
+.price-list-row-head { background: var(--soft); font-size: 12px; font-weight: 700; color: #3d4a63; }
+.price-list-row:not(.price-list-row-head):hover { background: #f8fafc; }
+.price-list-row b { display: block; font-size: 14px; line-height: 1.35; }
+.price-list-row small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; font-weight: 500; }
+.price-list-row .btn { padding: 8px 12px; font-size: 12px; white-space: nowrap; }
+
+@media (max-width: 960px) {
+  .price-list-layout { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 560px) {
   .grid, .why-grid, .quote-grid, .gallery-home, .gallery-home.gallery-page, .stats-row, .split-pick, .trust-row, .steps, .scheme-flow, .scheme-row, .room-prices, .haji-room-showcase, .haji-benefits-grid { grid-template-columns: 1fr; }
   .listing-layout .grid { grid-template-columns: 1fr; }

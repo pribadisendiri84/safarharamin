@@ -13,7 +13,7 @@ class PackageController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Package::query()->visibleOnCatalog()->with('packageKind');
+        $query = Package::query()->publiclyVisible()->with('packageKind');
         $type = $request->string('tipe')->toString();
         $group = $request->string('kelompok')->toString();
 
@@ -69,7 +69,7 @@ class PackageController extends Controller
             default => 'Semua paket',
         };
 
-        $chipQuery = Package::query()->published();
+        $chipQuery = Package::query()->publiclyVisible();
         if ($type !== '') {
             $chipQuery->where('type', $type);
         } elseif ($group === 'umroh') {
@@ -90,7 +90,7 @@ class PackageController extends Controller
 
     public function show(Package $package)
     {
-        abort_unless($package->isVisibleOnCatalog(), 404);
+        abort_unless($package->isPubliclyVisible(), 404);
 
         $package->loadMissing([
             'packageKind',
@@ -103,7 +103,7 @@ class PackageController extends Controller
 
         $related = Package::query()
             ->with('packageKind')
-            ->published()
+            ->publiclyVisible()
             ->where('id', '!=', $package->id)
             ->where('type', $package->type)
             ->orderBy('price')
@@ -119,7 +119,7 @@ class PackageController extends Controller
 
     public function inquire(Request $request, Package $package)
     {
-        abort_unless($package->status === 'published', 404);
+        abort_unless($package->isPubliclyVisible(), 404);
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],

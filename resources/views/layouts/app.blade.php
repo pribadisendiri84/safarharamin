@@ -29,9 +29,10 @@
     <nav class="nav" id="nav">
       <a href="{{ route('packages.index', ['kelompok' => 'umroh']) }}" class="{{ $navUmroh ? 'on' : '' }}">Umroh</a>
       <a href="{{ route('haji') }}" class="{{ $navHaji ? 'on' : '' }}">Haji</a>
-      <a href="{{ route('gallery') }}" class="{{ request()->routeIs('gallery') ? 'on' : '' }}">Gallery</a>
-      <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'on' : '' }}">Tentang kami</a>
-      <a href="{{ route('register') }}" class="{{ request()->routeIs('register') ? 'on' : '' }}">Daftar</a>
+      <a href="{{ route('gallery') }}" class="{{ request()->routeIs('gallery') ? 'on' : '' }}">Galeri</a>
+      <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'on' : '' }}">Tentang Kami</a>
+      <a href="{{ route('price-list') }}" class="{{ request()->routeIs('price-list') ? 'on' : '' }}">Daftar Harga</a>
+      <a href="{{ route('register') }}" class="{{ request()->routeIs('register') ? 'on' : '' }}">Pendaftaran</a>
     </nav>
     <a class="btn ghost" href="{{ route('go.whatsapp', ['from' => 'header']) }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i>Chat WhatsApp</a>
     <button class="nav-toggle" type="button" onclick="document.getElementById('nav').classList.toggle('open')" aria-label="Menu"><i class="bi bi-list"></i></button>
@@ -60,14 +61,15 @@
     </div>
     <div>
       <b>Tentang</b>
-      <a href="{{ route('about') }}">Tentang kami</a>
-      <a href="{{ route('gallery') }}">Gallery</a>
+      <a href="{{ route('about') }}">Tentang Kami</a>
+      <a href="{{ route('gallery') }}">Galeri</a>
       <a href="{{ route('testimonials') }}">Testimoni</a>
     </div>
     <div>
       <b>Haji &amp; layanan</b>
       <a href="{{ route('haji') }}">Haji Khusus</a>
-      <a href="{{ route('register') }}">Daftar sekarang</a>
+      <a href="{{ route('price-list') }}">Daftar Harga</a>
+      <a href="{{ route('register') }}">Pendaftaran</a>
     </div>
   </div>
   <div class="wrap copy">© {{ date('Y') }} {{ $site->name }}</div>

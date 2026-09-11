@@ -3,6 +3,7 @@
 use App\Models\User;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -22,3 +23,5 @@ Artisan::command('admin:unlock {email}', function (string $email) {
 
     return 0;
 })->purpose('Open a globally locked admin account');
+
+Schedule::command('price-sync:run-scheduled')->everyMinute();

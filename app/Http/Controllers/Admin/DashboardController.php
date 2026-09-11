@@ -32,8 +32,11 @@ class DashboardController extends Controller
             ];
         }
 
+        $catalogAlerts = $user?->can('manage-catalog') ? $this->catalogAlerts() : null;
+
         return view('admin.dashboard', [
             'published' => Package::query()->published()->count(),
+            'catalogAlerts' => $catalogAlerts,
             'pipeline' => (clone $visible)->whereIn('status', Inquiry::OPEN_STATUSES)->count(),
             'inquiries' => (clone $visible)->where('status', Inquiry::STATUS_NEW)->count(),
             'soldPax' => (int) (clone $sold)->sum('sold_pax'),
@@ -59,6 +62,32 @@ class DashboardController extends Controller
     private function closingCount(Builder $query): int
     {
         return (clone $query)->where('status', Inquiry::STATUS_SOLD)->count();
+    }
+
+    /**
+     * @return array{
+     *     expiring_soon: int,
+     *     low_seats: int,
+     *     expiring_packages: \Illuminate\Support\Collection<int, Package>,
+     *     low_seat_packages: \Illuminate\Support\Collection<int, Package>
+     * }
+     */
+    private function catalogAlerts(): array
+    {
+        $base = Package::query()->visibleOnCatalog()->upcomingDeparture();
+
+        return [
+            'expiring_soon' => (clone $base)->expiringSoon()->count(),
+            'low_seats' => (clone $base)->lowSeatsRemaining()->count(),
+            'expiring_packages' => (clone $base)->expiringSoon()
+                ->orderBy('departure_date')
+                ->limit(6)
+                ->get(['id', 'title', 'departure_date', 'departure_date_end', 'departure_date_display', 'status']),
+            'low_seat_packages' => (clone $base)->lowSeatsRemaining()
+                ->orderBy('seats_left')
+                ->limit(6)
+                ->get(['id', 'title', 'seats_left', 'seats_total', 'departure_date', 'status']),
+        ];
     }
 
     /**

@@ -24,7 +24,7 @@ class HajiPlusProgram
     public static function primary(): ?Package
     {
         return Package::query()
-            ->published()
+            ->publiclyVisible()
             ->whereIn('type', Package::HAJI_TYPES)
             ->orderByDesc('is_featured')
             ->orderBy('home_sort')

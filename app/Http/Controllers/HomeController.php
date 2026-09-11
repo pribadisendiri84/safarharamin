@@ -20,12 +20,12 @@ class HomeController extends Controller
             ->get();
 
         $counts = Package::query()
-            ->published()
+            ->publiclyVisible()
             ->selectRaw('departure_city, count(*) as total')
             ->groupBy('departure_city')
             ->pluck('total', 'departure_city');
 
-        $umrohCount = Package::query()->published()->whereIn('type', Package::UMROH_TYPES)->count();
+        $umrohCount = Package::query()->publiclyVisible()->whereIn('type', Package::UMROH_TYPES)->count();
 
         return view('home', [
             'featured' => $featured,

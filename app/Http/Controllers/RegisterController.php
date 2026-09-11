@@ -21,7 +21,7 @@ class RegisterController extends Controller
 
         return view('register', [
             'packages' => Package::query()
-                ->published()
+                ->publiclyVisible()
                 ->when($isHaji, fn ($query) => $query->whereNotIn('type', Package::HAJI_TYPES))
                 ->orderBy('departure_date')
                 ->get(),

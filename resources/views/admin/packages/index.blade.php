@@ -8,6 +8,7 @@
     <p class="sub">Centang <strong>Beranda</strong> (maks. {{ \App\Models\Package::homeLimit() }}). Drag untuk ubah urutan.</p>
   </div>
   <div class="actions head-actions">
+    <a class="btn gray" href="{{ route('admin.price-sync.index') }}">@include('admin.partials.icon', ['name' => 'upload']) Sync Harga</a>
     <a class="btn gray" href="{{ route('admin.packages.import') }}">@include('admin.partials.icon', ['name' => 'upload']) Import CSV</a>
     <a class="btn" href="{{ route('admin.packages.create') }}">@include('admin.partials.icon', ['name' => 'plus']) Tambah paket</a>
   </div>
@@ -84,7 +85,7 @@
       </thead>
       <tbody>
         @forelse($packages as $package)
-          <tr class="{{ $package->trashed() ? 'is-deleted' : '' }}">
+          <tr class="{{ collect([$package->trashed() ? 'is-deleted' : null, $package->isPastDeparture() ? 'is-past-departure' : null, $package->isSeatsFull() ? 'is-seats-full' : null])->filter()->implode(' ') }}">
             @if(! request()->boolean('trashed'))
               <td>
                 @if(! $package->trashed())
@@ -100,6 +101,12 @@
             @endif
             <td>
               <b>{{ $package->title }}</b>
+              @if($package->isPastDeparture())
+                <span class="badge past-departure">Periode lewat</span>
+              @endif
+              @if($package->isSeatsFull())
+                <span class="badge seats-full">Seat penuh</span>
+              @endif
               @if($package->needsFlyer())
                 <span class="badge draft">Perlu flyer</span>
               @endif

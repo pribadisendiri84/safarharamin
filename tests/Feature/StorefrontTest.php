@@ -104,11 +104,84 @@ class StorefrontTest extends TestCase
             ->assertDontSee('Umroh Hemat Contoh');
     }
 
+    public function test_past_departure_packages_are_hidden_from_storefront(): void
+    {
+        Package::query()->where('slug', 'umroh-hemat-contoh')->update([
+            'departure_date' => now()->subDay()->toDateString(),
+            'status' => 'published',
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSee('Umroh Hemat Contoh');
+
+        $this->get('/paket?tipe=umroh')
+            ->assertOk()
+            ->assertDontSee('Umroh Hemat Contoh');
+
+        $this->get('/daftar-harga')
+            ->assertOk()
+            ->assertDontSee('Umroh Hemat Contoh');
+
+        $this->get('/paket/umroh-hemat-contoh')
+            ->assertNotFound();
+    }
+
+    public function test_price_list_page_shows_grouped_published_packages(): void
+    {
+        Package::query()->where('slug', 'umroh-hemat-contoh')->update([
+            'airline' => 'Garuda Indonesia',
+            'title' => 'Muzdalifah JT CGK 12D JED',
+        ]);
+
+        Package::query()->create([
+            'title' => 'Mina GA CGK 9D JED',
+            'slug' => 'mina-draft-hidden',
+            'type' => 'umroh',
+            'package_kind_id' => $this->packageKindId('mina'),
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-11-30',
+            'duration_days' => 9,
+            'price' => 38800000,
+            'price_quad' => 38800000,
+            'airline' => 'Garuda Indonesia',
+            'room_type' => 'quad',
+            'seats_total' => 45,
+            'seats_left' => 45,
+            'status' => 'draft',
+            'images' => [],
+        ]);
+
+        $this->get('/daftar-harga')
+            ->assertOk()
+            ->assertSee('Daftar harga paket')
+            ->assertSee('Umroh Reguler')
+            ->assertSee('Garuda Indonesia')
+            ->assertSee('Muzdalifah JT CGK 12D JED')
+            ->assertSee('Rp 29.500.000')
+            ->assertDontSee('Mina GA CGK 9D JED');
+    }
+
+    public function test_catalog_card_shows_departure_to_arrival_route(): void
+    {
+        Setting::setValue('package_card_style', SiteProfile::CARD_STYLE_CATALOG);
+        Package::query()->where('slug', 'umroh-hemat-contoh')->update([
+            'arrival_city' => 'jeddah',
+        ]);
+
+        $this->get('/paket')
+            ->assertOk()
+            ->assertSee('catalog-route', false)
+            ->assertSee('CGK')
+            ->assertSee('JED');
+    }
+
     public function test_catalog_card_style_uses_master_logos_and_combined_title(): void
     {
         Setting::setValue('package_card_style', SiteProfile::CARD_STYLE_CATALOG);
         Package::query()->where('slug', 'umroh-hemat-contoh')->update([
             'airline' => 'Garuda Indonesia',
+            'arrival_city' => 'jeddah',
             'hotel_makkah' => 'Swissotel Makkah',
             'hotel_makkah_setaraf' => true,
             'hotel_madinah' => 'Madinah Pullman',

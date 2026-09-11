@@ -57,6 +57,60 @@
   </div>
 </div>
 
+@can('manage-catalog')
+  @if($catalogAlerts)
+    <div class="stat-row">
+      <a class="stat warn-stat" href="{{ route('admin.packages.index', ['expiring_soon' => 1]) }}">
+        <span class="bubble tone-amber">@include('admin.partials.icon', ['name' => 'calendar'])</span>
+        <div>
+          <div class="stat-label">Mau kadaluarsa</div>
+          <div class="stat-value">{{ $catalogAlerts['expiring_soon'] }}</div>
+          <small>Keberangkatan ≤ {{ \App\Models\Package::EXPIRING_SOON_DAYS }} hari</small>
+        </div>
+      </a>
+      <a class="stat warn-stat" href="{{ route('admin.packages.index', ['low_seats' => 1]) }}">
+        <span class="bubble tone-rose">@include('admin.partials.icon', ['name' => 'users'])</span>
+        <div>
+          <div class="stat-label">Seat menipis</div>
+          <div class="stat-value">{{ $catalogAlerts['low_seats'] }}</div>
+          <small>Sisa ≤ {{ \App\Models\Package::LOW_SEATS_THRESHOLD }} seat</small>
+        </div>
+      </a>
+    </div>
+
+    @if($catalogAlerts['expiring_packages']->isNotEmpty() || $catalogAlerts['low_seat_packages']->isNotEmpty())
+      <div class="two">
+        <section class="panel">
+          <div class="panel-head">@include('admin.partials.icon', ['name' => 'calendar']) Paket mau kadaluarsa</div>
+          <ul class="plain">
+            @forelse($catalogAlerts['expiring_packages'] as $package)
+              <li>
+                <a href="{{ route('admin.packages.edit', $package) }}">{{ $package->title }}</a>
+                <small>{{ $package->catalogDepartureDateLine() ?? '—' }} · {{ $package->daysUntilDeparture() }} hari lagi · {{ \App\Models\Package::STATUSES[$package->status] ?? $package->status }}</small>
+              </li>
+            @empty
+              <li class="empty">Tidak ada paket yang segera berangkat.</li>
+            @endforelse
+          </ul>
+        </section>
+        <section class="panel">
+          <div class="panel-head">@include('admin.partials.icon', ['name' => 'users']) Paket seat menipis</div>
+          <ul class="plain">
+            @forelse($catalogAlerts['low_seat_packages'] as $package)
+              <li>
+                <a href="{{ route('admin.packages.edit', $package) }}">{{ $package->title }}</a>
+                <small>{{ $package->seatsLine() }} · {{ $package->catalogDepartureDateLine() ?? 'Jadwal menyusul' }} · {{ \App\Models\Package::STATUSES[$package->status] ?? $package->status }}</small>
+              </li>
+            @empty
+              <li class="empty">Tidak ada paket dengan seat menipis.</li>
+            @endforelse
+          </ul>
+        </section>
+      </div>
+    @endif
+  @endif
+@endcan
+
 @if($traffic)
 <div class="panel">
   <div class="panel-head">@include('admin.partials.icon', ['name' => 'chart']) Trafik website</div>

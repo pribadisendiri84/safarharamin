@@ -12,6 +12,7 @@ class SeoController extends Controller
         $urls = [
             ['loc' => route('home'), 'priority' => '1.0', 'changefreq' => 'weekly'],
             ['loc' => route('packages.index'), 'priority' => '0.9', 'changefreq' => 'daily'],
+            ['loc' => route('price-list'), 'priority' => '0.9', 'changefreq' => 'daily'],
             ['loc' => route('haji'), 'priority' => '0.9', 'changefreq' => 'weekly'],
             ['loc' => route('about'), 'priority' => '0.8', 'changefreq' => 'monthly'],
             ['loc' => route('gallery'), 'priority' => '0.7', 'changefreq' => 'weekly'],
@@ -19,7 +20,7 @@ class SeoController extends Controller
             ['loc' => route('register'), 'priority' => '0.7', 'changefreq' => 'monthly'],
         ];
 
-        foreach (Package::query()->published()->orderByDesc('updated_at')->get(['slug', 'updated_at']) as $package) {
+        foreach (Package::query()->publiclyVisible()->orderByDesc('updated_at')->get(['slug', 'updated_at']) as $package) {
             $urls[] = [
                 'loc' => route('packages.show', $package),
                 'priority' => '0.8',

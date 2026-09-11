@@ -6,7 +6,7 @@
 @php
   $catalogMeta = array_values(array_filter([
       $package->catalogDepartureDateLine(),
-      $package->cityLabel(),
+      $package->routeLine(),
       $package->showsSeats() ? $package->seatsLine() : null,
   ]));
   $flyers = $package->flyerImages();
@@ -81,6 +81,16 @@
         </ul>
       @endif
       <ul class="spec-grid">
+        <li><span>Kota embarkasi</span><b>{{ $package->cityLabel() ?: '—' }}</b></li>
+        @if($package->arrivalCityLabel() !== '')
+          <li>
+            <span>Tujuan penerbangan</span>
+            <b>{{ $package->arrivalCityLabel() }}</b>
+            @if($package->arrivalCityDescription() !== '')
+              <small>{{ $package->arrivalCityDescription() }}</small>
+            @endif
+          </li>
+        @endif
         <li><span>Durasi</span><b>{{ $package->duration_days }} hari</b></li>
         <li><span>Maskapai</span><b>{{ $package->airline ?: '-' }}</b></li>
         <li><span>Hotel Makkah</span><b>{{ $package->hotelMakkahLine() }}</b></li>

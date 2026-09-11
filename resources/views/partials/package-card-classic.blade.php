@@ -53,9 +53,8 @@
           <span>{{ $departureDate }}</span>
         </li>
       @endif
-      <li>
-        <span class="meta-ico tone-green"><i class="bi bi-geo-alt"></i></span>
-        <span>{{ $package->cityLabel() }}</span>
+      <li class="card-route-item">
+        @include('partials.package-route-display', ['package' => $package])
       </li>
       <li>
         <span class="meta-ico tone-gold"><i class="bi bi-buildings"></i></span>
