@@ -164,4 +164,58 @@ class ArminarekaJadwalComparerTest extends TestCase
         $this->assertSame('2026-11-30', $change['existing_snapshot']['departure_date']);
         $this->assertSame('2026-12-07', $change['incoming_snapshot']['departure_date']);
     }
+
+    #[Test]
+    public function test_it_marks_changed_when_title_and_date_match_but_source_key_is_missing(): void
+    {
+        $kindId = $this->packageKindId('muzdalifah');
+
+        Package::query()->create([
+            'title' => 'Muzdalifah JT CGK 12D JED',
+            'slug' => 'muzdalifah-no-source-key',
+            'type' => 'umroh',
+            'package_kind_id' => $kindId,
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-12-07',
+            'duration_days' => 12,
+            'price' => 38800000,
+            'price_quad' => 38800000,
+            'price_triple' => 40300000,
+            'price_double' => 43400000,
+            'airline' => 'Lion Air',
+            'room_type' => 'quad',
+            'seats_total' => 45,
+            'seats_left' => 45,
+            'status' => 'published',
+            'images' => [],
+        ]);
+
+        $incoming = [[
+            'external_id' => '5928',
+            'source_key' => 'arminareka:5928',
+            'periode_full' => 'Muzdalifah JT CGK 12D JED (07/12/2026)',
+            'title' => 'Muzdalifah JT CGK 12D JED',
+            'type' => 'umroh',
+            'package_kind_id' => $kindId,
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-12-07',
+            'duration_days' => 12,
+            'airline' => 'Lion Air',
+            'price_quad' => 38800000,
+            'price_triple' => 40300000,
+            'price_double' => 43400000,
+            'seats_total' => 45,
+            'seats_left' => 45,
+            'status' => 'published',
+            'warnings' => [],
+            'raw' => [],
+        ]];
+
+        $change = (new ArminarekaJadwalComparer)->compare($incoming)[0];
+
+        $this->assertSame(PriceSyncChange::STATUS_CHANGED, $change['change_status']);
+        $this->assertContains('source_key', $change['diff_fields']);
+        $this->assertNull($change['existing_snapshot']['source_key']);
+        $this->assertSame('arminareka:5928', $change['incoming_snapshot']['source_key']);
+    }
 }

@@ -38,6 +38,7 @@ class ArminarekaJadwalComparer
         'price_double' => 'Harga double',
         'seats_total' => 'Quota',
         'seats_left' => 'Sisa seat',
+        'source_key' => 'ID Arminareka',
     ];
 
     /**
@@ -67,6 +68,7 @@ class ArminarekaJadwalComparer
                 $matchedPackageIds[] = $package->id;
                 $existingSnapshot = $this->snapshotFromPackage($package);
                 $diffFields = $this->diffFields($existingSnapshot, $incomingSnapshot);
+                $diffFields = $this->appendSourceKeyLinkDiff($package, $incoming, $diffFields);
 
                 $changes[] = [
                     'package_id' => $package->id,
@@ -205,6 +207,7 @@ class ArminarekaJadwalComparer
             'seats_total' => $incoming['seats_total'] ?? null,
             'seats_left' => $incoming['seats_left'] ?? null,
             'status' => $incoming['status'] ?? null,
+            'source_key' => $incoming['source_key'] ?? null,
         ];
     }
 
@@ -229,7 +232,31 @@ class ArminarekaJadwalComparer
             'seats_total' => $package->seats_total,
             'seats_left' => $package->seats_left,
             'status' => $package->status,
+            'source_key' => $package->source_key,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $incoming
+     * @param  list<string>  $diffFields
+     * @return list<string>
+     */
+    private function appendSourceKeyLinkDiff(Package $package, array $incoming, array $diffFields): array
+    {
+        if (filled($package->source_key)) {
+            return $diffFields;
+        }
+
+        $incomingSourceKey = $incoming['source_key'] ?? null;
+        if (! filled($incomingSourceKey)) {
+            return $diffFields;
+        }
+
+        if (! in_array('source_key', $diffFields, true)) {
+            $diffFields[] = 'source_key';
+        }
+
+        return $diffFields;
     }
 
     /**
