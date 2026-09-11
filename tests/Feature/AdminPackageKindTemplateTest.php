@@ -51,8 +51,8 @@ class AdminPackageKindTemplateTest extends TestCase
 
         $kind = PackageKind::query()->where('slug', 'muzdalifah')->firstOrFail();
         $kind->update([
-            'description' => 'Template sync Muzdalifah',
-            'hotel_makkah' => 'Hilton Suites Makkah',
+            'description' => 'Paket {type_short} {package_kind} {duration_days} Hari dengan hotel bintang {hotel_stars}, maskapai {airline}, dan pendampingan muthawwif berbahasa Indonesia.',
+            'hotel_makkah' => 'Hilton',
             'facilities' => ['Tiket PP', 'Visa'],
             'exclusions' => ['Paspor'],
         ]);
@@ -81,8 +81,11 @@ HTML;
             ->assertRedirect(route('admin.price-sync.show', $run));
 
         $package = Package::query()->where('source_key', 'arminareka:7001')->firstOrFail();
-        $this->assertSame('Template sync Muzdalifah', $package->description);
-        $this->assertSame('Hilton Suites Makkah', $package->hotel_makkah);
+        $this->assertSame(
+            'Paket Umroh Muzdalifah 12 Hari dengan hotel bintang 5, maskapai Lion Air, dan pendampingan muthawwif berbahasa Indonesia.',
+            $package->description,
+        );
+        $this->assertSame('Hilton', $package->hotel_makkah);
         $this->assertSame(['Tiket PP', 'Visa'], $package->facilities);
         $this->assertSame(['Paspor'], $package->exclusions);
     }

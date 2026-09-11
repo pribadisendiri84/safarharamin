@@ -54,8 +54,14 @@
   </label>
 
   <label>Deskripsi
-    <textarea name="description" rows="4">{{ old('description', $kind->description) }}</textarea>
+    <textarea name="description" rows="4" placeholder="{{ \App\Support\PackageKindContentTemplate::DEFAULT_DESCRIPTION }}">{{ old('description', $kind->description) }}</textarea>
   </label>
+  <p class="sub">Gunakan placeholder <code>{nama}</code> — nilai diisi otomatis dari data paket saat sync. Contoh: <code>Paket {type_short} {package_kind} {duration_days} Hari dengan hotel bintang {hotel_stars}, maskapai {airline}, dan pendampingan muthawwif berbahasa Indonesia.</code></p>
+  <ul class="checks template-placeholder-list">
+    @foreach(\App\Support\PackageKindContentTemplate::PLACEHOLDERS as $key => $label)
+      <li><code>{!! '{'.$key.'}' !!}</code> — {{ $label }}</li>
+    @endforeach
+  </ul>
 
   <button class="btn" type="submit">Simpan template</button>
 </form>

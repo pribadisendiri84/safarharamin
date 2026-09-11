@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\RecordsActivity;
+use App\Support\PackageKindContentTemplate;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -107,10 +108,6 @@ class PackageKind extends Model
      */
     public function mergeMissingTemplateInto(array $attributes): array
     {
-        if (blank($attributes['description'] ?? null) && filled($this->description)) {
-            $attributes['description'] = $this->description;
-        }
-
         if (blank($attributes['hotel_makkah'] ?? null) && filled($this->hotel_makkah)) {
             $attributes['hotel_makkah'] = $this->hotel_makkah;
             $attributes['hotel_makkah_setaraf'] = $this->hotel_makkah_setaraf;
@@ -127,6 +124,14 @@ class PackageKind extends Model
 
         if (! $this->hasTemplateLines($attributes['exclusions'] ?? null) && $this->hasTemplateLines($this->exclusions)) {
             $attributes['exclusions'] = $this->exclusions;
+        }
+
+        if (blank($attributes['description'] ?? null) && filled($this->description)) {
+            $attributes['description'] = PackageKindContentTemplate::render(
+                $this->description,
+                $attributes,
+                $this,
+            );
         }
 
         return $attributes;

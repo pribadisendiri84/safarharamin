@@ -16,7 +16,7 @@ class PackageKindTemplateTest extends TestCase
     {
         $kind = PackageKind::query()->where('slug', 'muzdalifah')->firstOrFail();
         $kind->update([
-            'description' => 'Paket Muzdalifah premium dengan bimbingan ibadah lengkap.',
+            'description' => 'Paket {type_short} {package_kind} {duration_days} Hari, maskapai {airline}.',
             'hotel_makkah' => 'Hilton Suites Makkah',
             'hotel_makkah_setaraf' => true,
             'hotel_madinah' => 'Front Taibah',
@@ -27,6 +27,9 @@ class PackageKindTemplateTest extends TestCase
 
         $merged = $kind->mergeMissingTemplateInto([
             'package_kind_id' => $kind->id,
+            'type' => 'umroh',
+            'duration_days' => 12,
+            'airline' => 'Lion Air',
             'description' => null,
             'hotel_makkah' => null,
             'hotel_makkah_setaraf' => false,
@@ -36,7 +39,7 @@ class PackageKindTemplateTest extends TestCase
             'exclusions' => [],
         ]);
 
-        $this->assertSame('Paket Muzdalifah premium dengan bimbingan ibadah lengkap.', $merged['description']);
+        $this->assertSame('Paket Umroh Muzdalifah 12 Hari, maskapai Lion Air.', $merged['description']);
         $this->assertSame('Hilton Suites Makkah', $merged['hotel_makkah']);
         $this->assertTrue($merged['hotel_makkah_setaraf']);
         $this->assertSame('Front Taibah', $merged['hotel_madinah']);
