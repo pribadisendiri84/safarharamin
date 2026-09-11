@@ -5,7 +5,7 @@
 <div class="page-head">
   <div>
     <h1>Master Tipe Paket</h1>
-    <p class="sub">Pilihan tipe paket (Arafah, Mina, Muzdalifah) untuk dropdown di katalog. Terpisah dari jenis Umroh/Haji.</p>
+    <p class="sub">Pilihan tipe paket (Arafah, Mina, Muzdalifah) untuk dropdown di katalog. Atur juga template konten default untuk sync Arminareka.</p>
   </div>
 </div>
 
@@ -32,6 +32,7 @@
       <thead>
         <tr>
           <th>Tipe paket</th>
+          <th>Template</th>
           <th></th>
         </tr>
       </thead>
@@ -54,6 +55,16 @@
               @endif
             </td>
             <td>
+              @if(! $kind->trashed())
+                @if($kind->hasContentTemplate())
+                  <span class="badge published">Terisi</span>
+                @else
+                  <span class="badge draft">Kosong</span>
+                @endif
+                <a class="btn gray compact" href="{{ route('admin.package-kinds.template.edit', $kind) }}">Template</a>
+              @endif
+            </td>
+            <td>
               @include('admin.partials.row-actions', [
                 'item' => $kind,
                 'destroy' => route('admin.package-kinds.destroy', $kind),
@@ -63,7 +74,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="2" class="empty-state">{{ $trashed ? 'Tidak ada tipe paket terhapus.' : 'Belum ada tipe paket.' }}</td></tr>
+          <tr><td colspan="3" class="empty-state">{{ $trashed ? 'Tidak ada tipe paket terhapus.' : 'Belum ada tipe paket.' }}</td></tr>
         @endforelse
       </tbody>
     </table>

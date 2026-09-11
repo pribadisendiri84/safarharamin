@@ -623,4 +623,122 @@ class AdminPackageBulkTest extends TestCase
                 'status' => 'draft',
             ]);
     }
+
+    public function test_home_sort_panel_lists_featured_packages_even_when_past_departure(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        Package::query()->create([
+            'title' => 'Paket Beranda Lewat',
+            'slug' => 'paket-beranda-lewat',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => now()->subWeek()->toDateString(),
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'status' => 'published',
+            'is_featured' => true,
+            'home_sort' => 1,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.index'))
+            ->assertOk()
+            ->assertSee('Urutan beranda')
+            ->assertSee('Paket Beranda Lewat')
+            ->assertSee('Edit')
+            ->assertSee('Hapus');
+    }
+
+    public function test_prune_orphan_home_slots_removes_stale_home_sort_entries(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        Package::query()->create([
+            'title' => 'Paket Stale Home Sort',
+            'slug' => 'paket-stale-home-sort',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => now()->addMonth()->toDateString(),
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'status' => 'published',
+            'is_featured' => false,
+            'home_sort' => 2,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.index'))
+            ->assertOk();
+
+        $this->assertDatabaseHas('packages', [
+            'slug' => 'paket-stale-home-sort',
+            'is_featured' => 0,
+            'home_sort' => null,
+        ]);
+    }
+
+    public function test_departure_date_filter_limits_package_list(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        Package::query()->create([
+            'title' => 'Paket Nov',
+            'slug' => 'paket-nov-filter',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-11-16',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'status' => 'published',
+        ]);
+
+        Package::query()->create([
+            'title' => 'Paket Des',
+            'slug' => 'paket-des-filter',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-12-07',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'status' => 'published',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.index', [
+                'departure_from' => '2026-11-01',
+                'departure_to' => '2026-11-30',
+            ]))
+            ->assertOk()
+            ->assertSee('Paket Nov')
+            ->assertDontSee('Paket Des');
+    }
 }

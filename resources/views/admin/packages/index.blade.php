@@ -42,7 +42,11 @@
         @endif
         <span class="home-sort-meta">
           <b>{{ $package->title }}</b>
-          <small>Posisi {{ $package->home_sort }} · {{ $package->formattedStartingPrice() }}</small>
+          <small>Posisi {{ $package->home_sort }} · {{ $package->departureLine() }} · {{ $package->formattedStartingPrice() }}</small>
+        </span>
+        <span class="home-sort-actions">
+          <a class="btn gray compact" href="{{ route('admin.packages.edit', $package) }}">Edit</a>
+          <button class="btn red compact" type="button" data-package-home-remove data-id="{{ $package->id }}" data-url="{{ route('admin.packages.toggle-featured', $package) }}">Hapus</button>
         </span>
       </li>
     @empty
@@ -66,6 +70,8 @@
     <option value="1" @selected(request('data_complete') === '1')>Lengkap</option>
     <option value="0" @selected(request('data_complete') === '0')>Belum lengkap</option>
   </select>
+  <input type="date" name="departure_from" value="{{ request('departure_from') }}" aria-label="Tanggal berangkat dari">
+  <input type="date" name="departure_to" value="{{ request('departure_to') }}" aria-label="Tanggal berangkat sampai">
   <label class="check filter-check">
     <input type="checkbox" name="featured" value="1" @checked(request()->boolean('featured'))> Beranda
   </label>

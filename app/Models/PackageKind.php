@@ -10,7 +10,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'slug', 'sort_order', 'is_active'])]
+#[Fillable([
+    'name',
+    'slug',
+    'sort_order',
+    'is_active',
+    'description',
+    'hotel_makkah',
+    'hotel_makkah_setaraf',
+    'hotel_madinah',
+    'hotel_madinah_setaraf',
+    'facilities',
+    'exclusions',
+])]
 class PackageKind extends Model
 {
     use RecordsActivity, SoftDeletes;
@@ -20,6 +32,10 @@ class PackageKind extends Model
         return [
             'is_active' => 'boolean',
             'sort_order' => 'integer',
+            'hotel_makkah_setaraf' => 'boolean',
+            'hotel_madinah_setaraf' => 'boolean',
+            'facilities' => 'array',
+            'exclusions' => 'array',
         ];
     }
 
@@ -74,5 +90,78 @@ class PackageKind extends Model
             ->orderBy('name')
             ->pluck('name', 'id')
             ->all();
+    }
+
+    public function hasContentTemplate(): bool
+    {
+        return filled($this->description)
+            || filled($this->hotel_makkah)
+            || filled($this->hotel_madinah)
+            || $this->hasTemplateLines($this->facilities)
+            || $this->hasTemplateLines($this->exclusions);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    public function mergeMissingTemplateInto(array $attributes): array
+    {
+        if (blank($attributes['description'] ?? null) && filled($this->description)) {
+            $attributes['description'] = $this->description;
+        }
+
+        if (blank($attributes['hotel_makkah'] ?? null) && filled($this->hotel_makkah)) {
+            $attributes['hotel_makkah'] = $this->hotel_makkah;
+            $attributes['hotel_makkah_setaraf'] = $this->hotel_makkah_setaraf;
+        }
+
+        if (blank($attributes['hotel_madinah'] ?? null) && filled($this->hotel_madinah)) {
+            $attributes['hotel_madinah'] = $this->hotel_madinah;
+            $attributes['hotel_madinah_setaraf'] = $this->hotel_madinah_setaraf;
+        }
+
+        if (! $this->hasTemplateLines($attributes['facilities'] ?? null) && $this->hasTemplateLines($this->facilities)) {
+            $attributes['facilities'] = $this->facilities;
+        }
+
+        if (! $this->hasTemplateLines($attributes['exclusions'] ?? null) && $this->hasTemplateLines($this->exclusions)) {
+            $attributes['exclusions'] = $this->exclusions;
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    public static function mergeMissingTemplateForKind(?int $kindId, array $attributes): array
+    {
+        if ($kindId === null) {
+            return $attributes;
+        }
+
+        $kind = static::query()->find($kindId);
+
+        return $kind ? $kind->mergeMissingTemplateInto($attributes) : $attributes;
+    }
+
+    /**
+     * @param  list<string>|null  $lines
+     */
+    private function hasTemplateLines(?array $lines): bool
+    {
+        if ($lines === null) {
+            return false;
+        }
+
+        foreach ($lines as $line) {
+            if (trim((string) $line) !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

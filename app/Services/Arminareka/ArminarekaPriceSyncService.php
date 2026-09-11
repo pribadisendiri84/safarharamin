@@ -3,6 +3,7 @@
 namespace App\Services\Arminareka;
 
 use App\Models\Package;
+use App\Models\PackageKind;
 use App\Models\PriceSyncChange;
 use App\Models\PriceSyncRun;
 use App\Support\PriceSyncSchedule;
@@ -204,6 +205,7 @@ class ArminarekaPriceSyncService
         $attributes['slug'] = Package::uniqueSlug($attributes['title']);
         $attributes['status'] = 'draft';
         $attributes['images'] = [];
+        $attributes = PackageKind::mergeMissingTemplateForKind($attributes['package_kind_id'] ?? null, $attributes);
 
         Package::query()->create($attributes);
     }
@@ -243,6 +245,15 @@ class ArminarekaPriceSyncService
         $copy->status = 'draft';
         $copy->is_featured = false;
         $copy->home_sort = null;
+        $copy->fill(PackageKind::mergeMissingTemplateForKind($copy->package_kind_id, [
+            'description' => $copy->description,
+            'hotel_makkah' => $copy->hotel_makkah,
+            'hotel_makkah_setaraf' => $copy->hotel_makkah_setaraf,
+            'hotel_madinah' => $copy->hotel_madinah,
+            'hotel_madinah_setaraf' => $copy->hotel_madinah_setaraf,
+            'facilities' => $copy->facilities ?? [],
+            'exclusions' => $copy->exclusions ?? [],
+        ]));
         $copy->syncPrimaryPrice();
         $copy->save();
     }

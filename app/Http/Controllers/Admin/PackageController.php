@@ -49,6 +49,16 @@ class PackageController extends Controller
             $query->where('title', 'like', '%'.$q.'%');
         }
 
+        if ($departureFrom = $request->date('departure_from')) {
+            $query->whereNotNull('departure_date')
+                ->whereDate('departure_date', '>=', $departureFrom);
+        }
+
+        if ($departureTo = $request->date('departure_to')) {
+            $query->whereNotNull('departure_date')
+                ->whereDate('departure_date', '<=', $departureTo);
+        }
+
         if ($request->boolean('expiring_soon')) {
             $query->visibleOnCatalog()->upcomingDeparture()->expiringSoon();
         }
@@ -244,7 +254,9 @@ class PackageController extends Controller
                 'id' => $package->id,
                 'title' => $package->title,
                 'thumb' => $package->coverImage(),
-                'meta' => $package->formattedStartingPrice(),
+                'meta' => $package->departureLine().' · '.$package->formattedStartingPrice(),
+                'edit_url' => route('admin.packages.edit', $package),
+                'remove_url' => route('admin.packages.toggle-featured', $package),
             ];
         }
 

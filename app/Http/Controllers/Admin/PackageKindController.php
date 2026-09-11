@@ -60,6 +60,22 @@ class PackageKindController extends Controller
             ->with('ok', 'Tipe paket dipulihkan.');
     }
 
+    public function editTemplate(PackageKind $packageKind)
+    {
+        return view('admin.package-kinds.template', [
+            'kind' => $packageKind,
+        ]);
+    }
+
+    public function updateTemplate(Request $request, PackageKind $packageKind)
+    {
+        $packageKind->update($this->validatedTemplate($request));
+
+        return redirect()
+            ->route('admin.package-kinds.template.edit', $packageKind)
+            ->with('ok', 'Template konten tipe paket disimpan.');
+    }
+
     /**
      * @return array{name: string, slug: string, sort_order: int, is_active: bool}
      */
@@ -88,5 +104,52 @@ class PackageKindController extends Controller
     private function isUsed(PackageKind $kind): bool
     {
         return Package::withTrashed()->where('package_kind_id', $kind->id)->exists();
+    }
+
+    /**
+     * @return array{
+     *     description: ?string,
+     *     hotel_makkah: ?string,
+     *     hotel_makkah_setaraf: bool,
+     *     hotel_madinah: ?string,
+     *     hotel_madinah_setaraf: bool,
+     *     facilities: list<string>,
+     *     exclusions: list<string>
+     * }
+     */
+    private function validatedTemplate(Request $request): array
+    {
+        $data = $request->validate([
+            'description' => ['nullable', 'string'],
+            'hotel_makkah' => ['nullable', 'string', 'max:120'],
+            'hotel_madinah' => ['nullable', 'string', 'max:120'],
+            'facilities_text' => ['nullable', 'string'],
+            'exclusions_text' => ['nullable', 'string'],
+        ]);
+
+        return [
+            'description' => filled($data['description'] ?? null) ? $data['description'] : null,
+            'hotel_makkah' => filled($data['hotel_makkah'] ?? null) ? $data['hotel_makkah'] : null,
+            'hotel_makkah_setaraf' => $request->boolean('hotel_makkah_setaraf'),
+            'hotel_madinah' => filled($data['hotel_madinah'] ?? null) ? $data['hotel_madinah'] : null,
+            'hotel_madinah_setaraf' => $request->boolean('hotel_madinah_setaraf'),
+            'facilities' => $this->lines($data['facilities_text'] ?? null),
+            'exclusions' => $this->lines($data['exclusions_text'] ?? null),
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function lines(?string $text): array
+    {
+        if (! filled($text)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(
+            fn (string $line) => trim($line),
+            preg_split('/\R/', $text) ?: [],
+        )));
     }
 }

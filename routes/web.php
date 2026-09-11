@@ -113,6 +113,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('package-kinds', [PackageKindController::class, 'index'])->name('package-kinds.index');
             Route::post('package-kinds', [PackageKindController::class, 'store'])->name('package-kinds.store');
             Route::put('package-kinds/{package_kind}', [PackageKindController::class, 'update'])->name('package-kinds.update');
+            Route::get('package-kinds/{package_kind}/template', [PackageKindController::class, 'editTemplate'])->name('package-kinds.template.edit');
+            Route::put('package-kinds/{package_kind}/template', [PackageKindController::class, 'updateTemplate'])->name('package-kinds.template.update');
             Route::delete('package-kinds/{package_kind}', [PackageKindController::class, 'destroy'])->name('package-kinds.destroy');
             Route::post('package-kinds/{package_kind}/restore', [PackageKindController::class, 'restore'])->withTrashed()->name('package-kinds.restore');
             Route::get('haji-plus', [HajiPlusPageController::class, 'edit'])->name('haji-plus.edit');

@@ -10,14 +10,17 @@
     var emptyMessage = 'Belum ada paket beranda. Centang kolom Beranda di tabel bawah.';
 
     function refreshLabels() {
-      Array.from(list.querySelectorAll('.home-sort-item')).forEach(function (el) {
+      Array.from(list.querySelectorAll('.home-sort-item')).forEach(function (el, index) {
+        var slot = index + 1;
+        el.dataset.homeSort = String(slot);
         var small = el.querySelector('.home-sort-meta small');
         if (!small) return;
         var parts = small.textContent.split(' · ');
-        var meta = parts.length > 1 ? parts.slice(1).join(' · ') : '';
-        var slot = parseInt(el.dataset.homeSort || '0', 10);
-        var prefix = slot > 0 ? 'Posisi ' + slot : '';
-        small.textContent = meta ? prefix + ' · ' + meta : prefix;
+        var meta = parts.length > 1 ? parts.slice(1).join(' · ') : (parts[0] || '');
+        if (/^Posisi \d+/.test(parts[0] || '')) {
+          meta = parts.slice(1).join(' · ');
+        }
+        small.textContent = meta ? 'Posisi ' + slot + ' · ' + meta : 'Posisi ' + slot;
       });
     }
 
@@ -32,6 +35,29 @@
     function removeEmptyState() {
       var empty = list.querySelector('.empty-state');
       if (empty) empty.remove();
+    }
+
+    function buildActions(item) {
+      var actions = document.createElement('span');
+      actions.className = 'home-sort-actions';
+
+      var edit = document.createElement('a');
+      edit.className = 'btn gray compact';
+      edit.textContent = 'Edit';
+      edit.href = item.edit_url || ('/admin/packages/' + item.id + '/edit');
+
+      var remove = document.createElement('button');
+      remove.className = 'btn red compact';
+      remove.type = 'button';
+      remove.textContent = 'Hapus';
+      remove.dataset.packageHomeRemove = '1';
+      remove.dataset.id = String(item.id);
+      remove.dataset.url = item.remove_url || '';
+
+      actions.appendChild(edit);
+      actions.appendChild(remove);
+
+      return actions;
     }
 
     function buildSortItem(item) {
@@ -62,28 +88,34 @@
       var title = document.createElement('b');
       title.textContent = item.title;
       var small = document.createElement('small');
-      small.textContent = item.meta || '';
+      var slot = parseInt(String(item.home_sort || '0'), 10);
+      var detail = item.meta || '';
+      small.textContent = slot > 0 ? 'Posisi ' + slot + (detail ? ' · ' + detail : '') : detail;
       meta.appendChild(title);
       meta.appendChild(small);
 
       li.appendChild(handle);
       li.appendChild(thumb);
       li.appendChild(meta);
+      li.appendChild(buildActions(item));
 
       return li;
+    }
+
+    function syncTableCheckbox(id, checked) {
+      var toggle = document.querySelector('[data-package-home-toggle][data-id="' + id + '"]');
+      if (toggle) toggle.checked = !!checked;
     }
 
     function syncSortList(data) {
       var id = String(data.id);
       var existing = list.querySelector('[data-id="' + id + '"]');
 
-      if (data.featured && data.item) {
+      if (data.featured) {
         removeEmptyState();
-        if (!existing) {
+        if (!existing && data.item) {
           list.appendChild(buildSortItem(data.item));
-          var added = list.querySelector('[data-id="' + id + '"]');
-          if (added) added.dataset.homeSort = String(data.home_sort || 0);
-        } else {
+        } else if (existing) {
           existing.dataset.homeSort = String(data.home_sort || 0);
         }
       } else if (existing) {
@@ -91,6 +123,7 @@
         ensureEmptyState();
       }
 
+      syncTableCheckbox(id, !!data.featured);
       refreshLabels();
     }
 
@@ -109,21 +142,24 @@
       });
     }
 
+    function submitFeaturedToggle(url, featured) {
+      return fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': token,
+        },
+        body: JSON.stringify({ is_featured: featured ? '1' : '0' }),
+      }).then(parseToggleResponse);
+    }
+
     document.querySelectorAll('[data-package-home-toggle]').forEach(function (input) {
       input.addEventListener('change', function () {
         var checked = input.checked;
         var previous = !checked;
 
-        fetch(input.dataset.url, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': token,
-          },
-          body: JSON.stringify({ is_featured: checked ? '1' : '0' }),
-        })
-          .then(parseToggleResponse)
+        submitFeaturedToggle(input.dataset.url, checked)
           .then(function (result) {
             if (!result.response.ok || result.data.ok === false) {
               throw new Error(result.data.message || 'Gagal menyimpan.');
@@ -139,19 +175,47 @@
       });
     });
 
+    list.addEventListener('click', function (event) {
+      var button = event.target.closest('[data-package-home-remove]');
+      if (!button) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      var id = String(button.dataset.id || '');
+      var url = button.dataset.url || '';
+      if (!url) return;
+
+      submitFeaturedToggle(url, false)
+        .then(function (result) {
+          if (!result.response.ok || result.data.ok === false) {
+            throw new Error(result.data.message || 'Gagal menghapus dari beranda.');
+          }
+          syncSortList(result.data);
+          flashMessage(result.data.message || 'Paket dihapus dari beranda.');
+        })
+        .catch(function (error) {
+          flashMessage(error.message || 'Gagal menghapus dari beranda.', true);
+        });
+    });
+
     if (typeof Sortable === 'undefined') return;
 
     Sortable.create(list, {
       handle: '.drag-handle',
       animation: 150,
+      filter: '.home-sort-actions, .home-sort-actions *',
+      preventOnFilter: false,
       onEnd: function () {
-        Array.from(list.querySelectorAll('.home-sort-item')).forEach(function (el, index) {
-          el.dataset.homeSort = String(index + 1);
-        });
         refreshLabels();
-        var order = Array.from(list.querySelectorAll('[data-id]')).map(function (el) {
+        var order = Array.from(list.querySelectorAll('.home-sort-item[data-id]')).map(function (el) {
           return parseInt(el.dataset.id, 10);
+        }).filter(function (id) {
+          return Number.isFinite(id) && id > 0;
         });
+
+        if (order.length === 0) return;
+
         fetch(list.dataset.reorderUrl, {
           method: 'POST',
           headers: {

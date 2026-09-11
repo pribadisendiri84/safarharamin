@@ -396,6 +396,13 @@ class Package extends Model
         return $query->publiclyVisible()->featured()->whereBetween('home_sort', [1, $limit]);
     }
 
+    public function scopeFeaturedOnHome(Builder $query): Builder
+    {
+        $limit = self::homeLimit();
+
+        return $query->featured()->whereBetween('home_sort', [1, $limit]);
+    }
+
     public static function homeLimit(): int
     {
         return HomeDisplay::packageLimit();
@@ -406,11 +413,21 @@ class Package extends Model
      */
     public static function homeItemsForAdmin(): Collection
     {
+        static::pruneOrphanHomeSlots();
+
         return static::query()
-            ->displayedOnHome()
+            ->featuredOnHome()
             ->orderBy('home_sort')
             ->orderByDesc('id')
             ->get();
+    }
+
+    public static function pruneOrphanHomeSlots(): void
+    {
+        static::query()
+            ->where('is_featured', false)
+            ->whereNotNull('home_sort')
+            ->update(['home_sort' => null]);
     }
 
     public static function displayedHomeCount(?int $exceptId = null): int

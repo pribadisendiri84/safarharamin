@@ -771,9 +771,11 @@ a.stat small { display: block; margin-top: 4px; color: var(--muted); font-size: 
   flex-shrink: 0;
 }
 .master-row-slug { color: var(--muted); font-size: 11px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
-.home-sort-meta { display: grid; gap: 2px; min-width: 0; }
+.home-sort-meta { display: grid; gap: 2px; min-width: 0; flex: 1 1 auto; }
 .home-sort-meta b { font-size: 13px; }
 .home-sort-meta small { color: var(--muted); font-size: 12px; }
+.home-sort-actions { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
+.home-sort-item .home-sort-actions .btn.compact { cursor: pointer; }
 .drag-handle { border: 0; background: var(--soft); color: var(--muted); border-radius: 8px; width: 32px; height: 32px; cursor: grab; font: inherit; font-size: 14px; letter-spacing: -2px; padding: 0; }
 .drag-handle:active { cursor: grabbing; }
 .table-hint { margin: 0 0 10px; padding: 0 4px; }
