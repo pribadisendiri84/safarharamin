@@ -26,26 +26,30 @@
 </div>
 
 @if(! request()->boolean('trashed'))
-<div class="panel form-pad sort-panel">
-  <div class="sort-panel-head">
-    <h2>Urutan beranda</h2>
+<details class="collapsible-block sort-panel" id="gallery-home-sort-panel" data-collapse-key="gallery-home-sort">
+  <summary class="collapsible-block-summary">
+    <span class="collapsible-block-title">Urutan beranda</span>
+    <span class="collapsible-block-meta">{{ $homeItems->count() }} foto</span>
+    <span class="collapsible-block-chevron" aria-hidden="true"></span>
+  </summary>
+  <div class="collapsible-block-body">
     <p class="sub">Drag untuk ubah urutan tampil di homepage (maks. {{ \App\Models\GalleryItem::homeLimit() }} foto).</p>
+    <ul class="home-sort-list" id="home-sort-list" data-reorder-url="{{ route('admin.gallery.reorder') }}">
+      @forelse($homeItems as $index => $item)
+        <li class="home-sort-item" data-id="{{ $item->id }}" data-home-sort="{{ (int) ($item->home_sort ?? 0) }}">
+          <span class="drag-handle" title="Drag untuk ubah urutan">⋮⋮</span>
+          <img class="thumb" src="{{ $item->displayImage() }}" alt="{{ $item->title }}">
+          <span class="home-sort-meta">
+            <b>{{ $item->title }}</b>
+            <small>Posisi {{ $item->home_sort }}</small>
+          </span>
+        </li>
+      @empty
+        <li class="empty-state">Belum ada foto beranda. Centang kolom Beranda di tabel bawah.</li>
+      @endforelse
+    </ul>
   </div>
-  <ul class="home-sort-list" id="home-sort-list" data-reorder-url="{{ route('admin.gallery.reorder') }}">
-    @forelse($homeItems as $index => $item)
-      <li class="home-sort-item" data-id="{{ $item->id }}" data-home-sort="{{ (int) ($item->home_sort ?? 0) }}">
-        <span class="drag-handle" title="Drag untuk ubah urutan">⋮⋮</span>
-        <img class="thumb" src="{{ $item->displayImage() }}" alt="{{ $item->title }}">
-        <span class="home-sort-meta">
-          <b>{{ $item->title }}</b>
-          <small>Posisi {{ $item->home_sort }}</small>
-        </span>
-      </li>
-    @empty
-      <li class="empty-state">Belum ada foto beranda. Centang kolom Beranda di tabel bawah.</li>
-    @endforelse
-  </ul>
-</div>
+</details>
 @endif
 
 <div class="panel">
@@ -127,5 +131,6 @@
 
 @if(! request()->boolean('trashed'))
   @include('admin.partials.gallery-sort-script')
+  @include('admin.partials.collapse-persist-script')
 @endif
 @endsection

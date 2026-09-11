@@ -683,7 +683,8 @@ class StorefrontTest extends TestCase
         $this->actingAs($user)
             ->get('/admin/gallery')
             ->assertOk()
-            ->assertSee('Manasik Depok');
+            ->assertSee('Manasik Depok')
+            ->assertSee('data-collapse-key="gallery-home-sort"', false);
 
         $this->actingAs($user)
             ->put('/admin/gallery/'.$item->id, [
