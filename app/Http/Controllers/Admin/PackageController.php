@@ -59,6 +59,10 @@ class PackageController extends Controller
                 ->whereDate('departure_date', '<=', $departureTo);
         }
 
+        if ($request->boolean('needs_flyer')) {
+            $query->needsFlyer();
+        }
+
         if ($request->boolean('expiring_soon')) {
             $query->visibleOnCatalog()->upcomingDeparture()->expiringSoon();
         }
@@ -67,9 +71,15 @@ class PackageController extends Controller
             $query->visibleOnCatalog()->upcomingDeparture()->lowSeatsRemaining();
         }
 
+        $packages = $query->paginate(50)->withQueryString();
+
         return view('admin.packages.index', [
-            'packages' => $query->paginate(20)->withQueryString(),
+            'packages' => $packages,
             'homePackages' => $request->boolean('trashed') ? collect() : Package::homeItemsForAdmin(),
+            'hasActiveFilters' => $request->hasAny([
+                'q', 'status', 'data_complete', 'departure_from', 'departure_to', 'featured', 'needs_flyer',
+                'expiring_soon', 'low_seats',
+            ]),
             ...$this->trashViewData(Package::class, $request),
         ]);
     }

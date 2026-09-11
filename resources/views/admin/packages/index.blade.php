@@ -79,7 +79,18 @@
     <input type="checkbox" name="needs_flyer" value="1" @checked(request()->boolean('needs_flyer'))> Perlu flyer
   </label>
   <button class="btn gray" type="submit">@include('admin.partials.icon', ['name' => 'search']) Filter</button>
+  @if($hasActiveFilters ?? false)
+    <a class="btn ghost" href="{{ route('admin.packages.index', request()->boolean('trashed') ? ['trashed' => 1] : []) }}">Reset</a>
+  @endif
 </form>
+@if($packages->total() > 0)
+  <p class="sub table-hint">
+    Menampilkan {{ $packages->firstItem() }}–{{ $packages->lastItem() }} dari {{ $packages->total() }} paket
+    @if($hasActiveFilters ?? false)
+      · filter aktif
+    @endif
+  </p>
+@endif
 <div class="panel">
   <div class="table-wrap">
     <table>
@@ -154,6 +165,10 @@
     </table>
   </div>
 </div>
+
+@if($packages->hasPages())
+  <div class="pager">{{ $packages->links() }}</div>
+@endif
 
 @if(! request()->boolean('trashed'))
   @include('admin.partials.package-home-sort-script')

@@ -692,6 +692,89 @@ class AdminPackageBulkTest extends TestCase
         ]);
     }
 
+    public function test_admin_package_list_is_paginated(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        for ($i = 1; $i <= 55; $i++) {
+            Package::query()->create([
+                'title' => 'Paket Paginate '.$i,
+                'slug' => 'paket-paginate-'.$i,
+                'type' => 'umroh',
+                'departure_city' => 'jakarta',
+                'departure_date' => '2026-12-'.str_pad((string) ($i % 28 + 1), 2, '0', STR_PAD_LEFT),
+                'duration_days' => 9,
+                'price' => 30000000,
+                'price_quad' => 30000000,
+                'price_triple' => 31100000,
+                'price_double' => 33400000,
+                'room_type' => 'quad',
+                'seats_total' => 40,
+                'seats_left' => 40,
+                'images' => ['/images/placeholder-kaaba.svg'],
+                'status' => 'published',
+            ]);
+        }
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.index'))
+            ->assertOk()
+            ->assertSee('Menampilkan 1–50 dari')
+            ->assertSee('page=2', false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.index', ['page' => 2]))
+            ->assertOk()
+            ->assertSee('Paket Paginate 51');
+    }
+
+    public function test_needs_flyer_filter_limits_package_list(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        Package::query()->create([
+            'title' => 'Paket Perlu Flyer',
+            'slug' => 'paket-perlu-flyer',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-12-01',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => [],
+            'status' => 'draft',
+        ]);
+
+        Package::query()->create([
+            'title' => 'Paket Sudah Ada Flyer',
+            'slug' => 'paket-sudah-flyer',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-12-02',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => ['/images/placeholder-kaaba.svg'],
+            'status' => 'published',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.index', ['needs_flyer' => 1]))
+            ->assertOk()
+            ->assertSee('Paket Perlu Flyer')
+            ->assertDontSee('Paket Sudah Ada Flyer');
+    }
+
     public function test_departure_date_filter_limits_package_list(): void
     {
         $admin = User::factory()->admin()->create();
