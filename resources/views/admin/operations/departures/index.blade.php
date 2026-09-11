@@ -49,16 +49,16 @@
       <tbody>
         @forelse($departures as $departure)
           <tr>
-            <td>
-              <b>{{ $departure->program_name }}</b>
+            <td class="col-program">
+              <b title="{{ $departure->program_name }}">{{ $departure->program_name }}</b>
               @if($departure->isHaji() && $departure->hijriLabel() !== '')
-                <br><small class="muted">{{ $departure->hijriLabel() }}</small>
+                <small class="muted">{{ $departure->hijriLabel() }}</small>
               @endif
             </td>
-            <td>{{ $departure->formattedDepartureDate() }}</td>
-            <td>{{ $departure->airlineLine() }}</td>
-            <td><span class="badge kind-{{ $departure->program_kind }}">{{ $departure->kindLabel() }}</span></td>
-            <td>{{ $departure->pilgrims_count }}</td>
+            <td class="col-date">{{ $departure->formattedDepartureDate() }}</td>
+            <td class="col-maskapai">{{ $departure->airlineLine() }}</td>
+            <td class="col-kind"><span class="badge kind-{{ $departure->program_kind }}">{{ $departure->kindLabel() }}</span></td>
+            <td class="col-jamaah">{{ $departure->pilgrims_count }}</td>
             <td class="row-actions-cell">
               <div class="row-actions">
                 @unless($trashed)
