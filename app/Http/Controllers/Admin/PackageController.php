@@ -95,7 +95,6 @@ class PackageController extends Controller
         $data['slug'] = Package::uniqueSlug($data['title']);
         $data['images'] = $this->collectImages($request, $images, $data['title']);
         $data['cover_image'] = $this->collectCover($request, $images, $data['title']);
-        $this->assertFlyerForPublish($data['images'], $data['status']);
         $data['facilities'] = $this->lines($request->input('facilities_text'));
         $data['exclusions'] = $this->lines($request->input('exclusions_text'));
 
@@ -117,7 +116,6 @@ class PackageController extends Controller
         $data = $this->validated($request, $package);
         $data['images'] = $this->collectImages($request, $images, $data['title'], $package->images ?? []);
         $data['cover_image'] = $this->collectCover($request, $images, $data['title'], $package->cover_image);
-        $this->assertFlyerForPublish($data['images'], $data['status']);
         $data['facilities'] = $this->lines($request->input('facilities_text'));
         $data['exclusions'] = $this->lines($request->input('exclusions_text'));
 
@@ -199,18 +197,37 @@ class PackageController extends Controller
             return $this->packageStatusResponse($package, '');
         }
 
-        try {
-            $this->assertFlyerForPublish($package->images ?? [], $data['status']);
-        } catch (ValidationException $exception) {
-            return $this->packageStatusRejected(
-                $package,
-                (string) ($exception->errors()['photos'][0] ?? 'Unggah flyer paket sebelum menayangkan.')
-            );
-        }
-
         $package->update(['status' => $data['status']]);
 
         return $this->packageStatusResponse($package->fresh(), 'Status paket diperbarui.');
+    }
+
+    public function bulkUpdateStatus(Request $request)
+    {
+        $data = $request->validate([
+            'package_ids' => ['required', 'array', 'min:1'],
+            'package_ids.*' => ['integer', 'exists:packages,id'],
+            'status' => ['required', Rule::in(array_keys(Package::STATUSES))],
+        ]);
+
+        $updated = 0;
+
+        Package::query()
+            ->whereIn('id', array_map('intval', $data['package_ids']))
+            ->each(function (Package $package) use ($data, &$updated) {
+                if ($package->status === $data['status']) {
+                    return;
+                }
+
+                $package->update(['status' => $data['status']]);
+                $updated++;
+            });
+
+        $label = Package::STATUSES[$data['status']] ?? $data['status'];
+
+        return redirect()
+            ->back()
+            ->with('ok', $updated.' paket diubah ke status '.$label.'.');
     }
 
     private function packageStatusResponse(Package $package, string $message)
@@ -513,22 +530,6 @@ class PackageController extends Controller
         }
 
         Storage::disk('public')->delete(ltrim(substr($path, strlen('/storage/')), '/'));
-    }
-
-    /**
-     * @param  list<string>  $images
-     */
-    private function assertFlyerForPublish(array $images, string $status): void
-    {
-        if ($status !== 'published') {
-            return;
-        }
-
-        if ($images === []) {
-            throw ValidationException::withMessages([
-                'photos' => 'Unggah flyer paket sebelum menayangkan.',
-            ]);
-        }
     }
 
     /**

@@ -207,7 +207,7 @@ class AdminPackageBulkTest extends TestCase
             ->assertDontSee('Paket sumber');
     }
 
-    public function test_draft_can_be_saved_without_flyer_but_publish_requires_flyer(): void
+    public function test_draft_and_publish_can_be_saved_without_flyer(): void
     {
         Storage::fake('public');
         $admin = User::factory()->admin()->create();
@@ -251,8 +251,12 @@ class AdminPackageBulkTest extends TestCase
         $this->actingAs($admin)
             ->from(route('admin.packages.edit', $package))
             ->put(route('admin.packages.update', $package), [...$payload, 'status' => 'published'])
-            ->assertRedirect(route('admin.packages.edit', $package))
-            ->assertSessionHasErrors('photos');
+            ->assertRedirect(route('admin.packages.index'));
+
+        $this->assertDatabaseHas('packages', [
+            'id' => $package->id,
+            'status' => 'published',
+        ]);
     }
 
     public function test_admin_can_upload_preview_and_remove_catalog_cover(): void
@@ -593,7 +597,7 @@ class AdminPackageBulkTest extends TestCase
         ]);
     }
 
-    public function test_update_status_rejects_publish_without_flyer(): void
+    public function test_update_status_allows_publish_without_flyer(): void
     {
         $admin = User::factory()->admin()->create();
         $package = Package::query()->create([
@@ -617,11 +621,63 @@ class AdminPackageBulkTest extends TestCase
 
         $this->actingAs($admin)
             ->patchJson(route('admin.packages.update-status', $package), ['status' => 'published'])
-            ->assertStatus(422)
+            ->assertOk()
             ->assertJson([
-                'ok' => false,
-                'status' => 'draft',
+                'ok' => true,
+                'status' => 'published',
             ]);
+    }
+
+    public function test_admin_can_bulk_publish_selected_packages(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $first = Package::query()->create([
+            'title' => 'Bulk Publish A',
+            'slug' => 'bulk-publish-a',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-12-01',
+            'duration_days' => 9,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => [],
+            'status' => 'draft',
+        ]);
+
+        $second = Package::query()->create([
+            'title' => 'Bulk Publish B',
+            'slug' => 'bulk-publish-b',
+            'type' => 'umroh',
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-12-02',
+            'duration_days' => 12,
+            'price' => 30000000,
+            'price_quad' => 30000000,
+            'price_triple' => 31100000,
+            'price_double' => 33400000,
+            'room_type' => 'quad',
+            'seats_total' => 40,
+            'seats_left' => 40,
+            'images' => [],
+            'status' => 'draft',
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.packages.bulk-status'), [
+                'status' => 'published',
+                'package_ids' => [$first->id, $second->id],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('ok');
+
+        $this->assertDatabaseHas('packages', ['id' => $first->id, 'status' => 'published']);
+        $this->assertDatabaseHas('packages', ['id' => $second->id, 'status' => 'published']);
     }
 
     public function test_home_sort_panel_lists_featured_packages_even_when_past_departure(): void

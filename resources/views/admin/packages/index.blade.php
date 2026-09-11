@@ -91,12 +91,28 @@
     @endif
   </p>
 @endif
+@if(! request()->boolean('trashed'))
+  <form class="bulk-bar" id="package-bulk-bar" method="post" action="{{ route('admin.packages.bulk-status') }}" hidden>
+    @csrf
+    <input type="hidden" name="status" value="published">
+    <p class="sub"><span id="package-bulk-count">0</span> paket terpilih</p>
+    <button class="btn compact" type="submit">Tayangkan terpilih</button>
+    <button class="btn gray compact" type="button" id="package-bulk-clear">Batal</button>
+  </form>
+@endif
 <div class="panel">
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          @if(! request()->boolean('trashed'))<th>Beranda</th>@endif
+          @if(! request()->boolean('trashed'))
+            <th class="table-select">
+              <label class="check table-check" title="Pilih semua di halaman ini">
+                <input type="checkbox" id="package-select-all">
+              </label>
+            </th>
+            <th>Beranda</th>
+          @endif
           <th>Paket</th><th>Berangkat</th><th>Harga</th><th>Closing</th><th>Status</th><th>Waktu</th><th></th>
         </tr>
       </thead>
@@ -104,6 +120,13 @@
         @forelse($packages as $package)
           <tr class="{{ collect([$package->trashed() ? 'is-deleted' : null, $package->isPastDeparture() ? 'is-past-departure' : null, $package->isSeatsFull() ? 'is-seats-full' : null])->filter()->implode(' ') }}">
             @if(! request()->boolean('trashed'))
+              <td class="table-select">
+                @if(! $package->trashed())
+                  <label class="check table-check" title="Pilih paket">
+                    <input type="checkbox" class="package-select" name="package_ids[]" value="{{ $package->id }}" form="package-bulk-bar">
+                  </label>
+                @endif
+              </td>
               <td>
                 @if(! $package->trashed())
                   <label class="check table-check" title="Tampilkan di beranda">
@@ -159,7 +182,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="{{ request()->boolean('trashed') ? 7 : 8 }}" class="empty-state">{{ $trashed ? 'Tidak ada paket terhapus.' : 'Belum ada paket.' }}</td></tr>
+          <tr><td colspan="{{ request()->boolean('trashed') ? 7 : 9 }}" class="empty-state">{{ $trashed ? 'Tidak ada paket terhapus.' : 'Belum ada paket.' }}</td></tr>
         @endforelse
       </tbody>
     </table>
@@ -167,11 +190,12 @@
 </div>
 
 @if($packages->hasPages())
-  <div class="pager">{{ $packages->links() }}</div>
+  <div class="pager">{{ $packages->links('vendor.pagination.admin-compact') }}</div>
 @endif
 
 @if(! request()->boolean('trashed'))
   @include('admin.partials.package-home-sort-script')
   @include('admin.partials.package-status-script')
+  @include('admin.partials.package-bulk-script')
 @endif
 @endsection

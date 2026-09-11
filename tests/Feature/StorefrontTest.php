@@ -612,7 +612,7 @@ class StorefrontTest extends TestCase
             ->assertDontSee('Hubungi kami');
     }
 
-    public function test_admin_cannot_publish_package_without_flyer(): void
+    public function test_admin_can_publish_package_without_flyer(): void
     {
         $user = User::factory()->create(['email' => 'admin@safarharamin.id']);
 
@@ -631,8 +631,9 @@ class StorefrontTest extends TestCase
                 'seats_left' => 40,
                 'status' => 'published',
             ])
-            ->assertRedirect(route('admin.packages.create'))
-            ->assertSessionHasErrors('photos');
+            ->assertRedirect(route('admin.packages.index'));
+
+        $this->assertDatabaseHas('packages', ['title' => 'Tanpa Flyer', 'status' => 'published']);
 
         $this->actingAs($user)
             ->post('/admin/packages', [

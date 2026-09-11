@@ -75,6 +75,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('packages/{package}/restore', [AdminPackageController::class, 'restore'])->withTrashed()->name('packages.restore');
             Route::patch('packages/{package}/featured', [AdminPackageController::class, 'toggleFeatured'])->name('packages.toggle-featured');
             Route::patch('packages/{package}/status', [AdminPackageController::class, 'updateStatus'])->name('packages.update-status');
+            Route::post('packages/bulk-status', [AdminPackageController::class, 'bulkUpdateStatus'])->name('packages.bulk-status');
             Route::post('packages/reorder-home', [AdminPackageController::class, 'reorderHome'])->name('packages.reorder-home');
             Route::get('price-list', [PriceListController::class, 'index'])->name('price-list.index');
             Route::get('price-sync', [PriceSyncController::class, 'index'])->name('price-sync.index');

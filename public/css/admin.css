@@ -585,7 +585,40 @@ a.stat small { display: block; margin-top: 4px; color: var(--muted); font-size: 
 .note-list p { margin: 6px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink); }
 .time-stack { display: grid; gap: 2px; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .time { color: var(--muted); font-size: 12px; white-space: nowrap; }
-.pager { display: flex; gap: 8px; margin-top: 4px; margin-bottom: 18px; }
+.pager { display: flex; justify-content: flex-end; margin-top: 8px; margin-bottom: 18px; }
+.pagination-compact { display: inline-flex; align-items: center; gap: 4px; }
+.pagination-compact .page-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+}
+.pagination-compact a.page-item:hover { background: var(--soft); }
+.pagination-compact .page-item.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+.pagination-compact .page-item.disabled { color: var(--muted); background: #fafbfd; cursor: default; }
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.bulk-bar[hidden] { display: none !important; }
+.bulk-bar .sub { margin: 0; }
+.table-select { width: 36px; }
 
 /* forms */
 .form { display: grid; gap: 14px; }
