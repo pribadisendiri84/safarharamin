@@ -27,7 +27,7 @@
          autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Ketik kode pada gambar">
   <button class="btn" type="submit">Masuk</button>
 </form>
-@include('partials.feedback-modal')
+@include('partials.feedback-modal', ['successAsToast' => true])
 @include('admin.partials.password-toggle-script')
 <script>
 document.getElementById('captcha-refresh').addEventListener('click', function () {

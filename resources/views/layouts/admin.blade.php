@@ -47,7 +47,7 @@
     </main>
   </div>
 </div>
-@include('partials.feedback-modal')
+@include('partials.feedback-modal', ['successAsToast' => true])
 <script>
 function toggleSidebar(force) {
   var side = document.getElementById('sidebar');

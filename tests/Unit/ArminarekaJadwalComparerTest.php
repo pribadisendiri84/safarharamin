@@ -333,6 +333,117 @@ class ArminarekaJadwalComparerTest extends TestCase
     }
 
     #[Test]
+    public function test_it_detects_title_change_when_source_key_matches(): void
+    {
+        $kindId = $this->packageKindId('muzdalifah');
+
+        Package::query()->create([
+            'title' => 'MUZDALIFAH JT PDG 12Hr JED',
+            'slug' => 'muzdalifah-title-change',
+            'source_key' => 'arminareka:8001',
+            'type' => 'umroh',
+            'package_kind_id' => $kindId,
+            'departure_city' => 'padang',
+            'arrival_city' => 'jeddah',
+            'departure_date' => '2026-12-07',
+            'duration_days' => 12,
+            'price' => 38800000,
+            'price_quad' => 38800000,
+            'price_triple' => 40300000,
+            'price_double' => 43400000,
+            'airline' => 'Lion Air',
+            'room_type' => 'quad',
+            'seats_total' => 45,
+            'seats_left' => 45,
+            'status' => 'published',
+            'images' => [],
+        ]);
+
+        $incoming = [[
+            'external_id' => '8001',
+            'source_key' => 'arminareka:8001',
+            'title' => 'MUZDALIFAH JT PDG 12Hr',
+            'type' => 'umroh',
+            'package_kind_id' => $kindId,
+            'departure_city' => 'padang',
+            'arrival_city' => null,
+            'departure_date' => '2026-12-07',
+            'duration_days' => 12,
+            'airline' => 'Lion Air',
+            'price_quad' => 38800000,
+            'price_triple' => 40300000,
+            'price_double' => 43400000,
+            'seats_total' => 45,
+            'seats_left' => 45,
+            'warnings' => [],
+            'raw' => [],
+        ]];
+
+        $change = (new ArminarekaJadwalComparer)->compare($incoming)[0];
+
+        $this->assertSame(PriceSyncChange::STATUS_CHANGED, $change['change_status']);
+        $this->assertContains('title', $change['diff_fields']);
+        $this->assertContains('arrival_city', $change['diff_fields']);
+        $this->assertSame('MUZDALIFAH JT PDG 12Hr JED', $change['existing_snapshot']['title']);
+        $this->assertSame('MUZDALIFAH JT PDG 12Hr', $change['incoming_snapshot']['title']);
+    }
+
+    #[Test]
+    public function test_it_detects_arrival_city_cleared_when_incoming_has_no_destination(): void
+    {
+        $kindId = $this->packageKindId('muzdalifah');
+
+        Package::query()->create([
+            'title' => 'Muzdalifah JT CGK 12D JED',
+            'slug' => 'muzdalifah-clear-arrival-compare',
+            'source_key' => 'arminareka:7002',
+            'type' => 'umroh',
+            'package_kind_id' => $kindId,
+            'departure_city' => 'jakarta',
+            'arrival_city' => 'jeddah',
+            'departure_date' => '2026-12-07',
+            'duration_days' => 12,
+            'price' => 38800000,
+            'price_quad' => 38800000,
+            'price_triple' => 40300000,
+            'price_double' => 43400000,
+            'airline' => 'Lion Air',
+            'room_type' => 'quad',
+            'seats_total' => 45,
+            'seats_left' => 45,
+            'status' => 'published',
+            'images' => [],
+        ]);
+
+        $incoming = [[
+            'external_id' => '7002',
+            'source_key' => 'arminareka:7002',
+            'title' => 'Muzdalifah JT CGK 12D JED',
+            'type' => 'umroh',
+            'package_kind_id' => $kindId,
+            'departure_city' => 'jakarta',
+            'arrival_city' => null,
+            'departure_date' => '2026-12-07',
+            'duration_days' => 12,
+            'airline' => 'Lion Air',
+            'price_quad' => 38800000,
+            'price_triple' => 40300000,
+            'price_double' => 43400000,
+            'seats_total' => 45,
+            'seats_left' => 45,
+            'warnings' => [],
+            'raw' => [],
+        ]];
+
+        $change = (new ArminarekaJadwalComparer)->compare($incoming)[0];
+
+        $this->assertSame(PriceSyncChange::STATUS_CHANGED, $change['change_status']);
+        $this->assertContains('arrival_city', $change['diff_fields']);
+        $this->assertSame('jeddah', $change['existing_snapshot']['arrival_city']);
+        $this->assertNull($change['incoming_snapshot']['arrival_city']);
+    }
+
+    #[Test]
     public function test_it_matches_trashed_package_by_source_key_instead_of_marking_new(): void
     {
         $kindId = $this->packageKindId('arafah');

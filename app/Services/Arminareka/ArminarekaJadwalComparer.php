@@ -10,6 +10,7 @@ class ArminarekaJadwalComparer
 {
     /** @var list<string> */
     private const COMPARE_FIELDS = [
+        'title',
         'departure_date',
         'type',
         'package_kind_id',

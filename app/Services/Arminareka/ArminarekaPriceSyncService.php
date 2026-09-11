@@ -247,10 +247,10 @@ class ArminarekaPriceSyncService
         $copy->departure_date_display = 'single';
         $copy->type = $incoming['type'] ?? $source->type;
         $copy->package_kind_id = $incoming['package_kind_id'] ?? $source->package_kind_id;
-        $copy->departure_city = $incoming['departure_city'] ?? $source->departure_city;
-        $copy->arrival_city = $incoming['arrival_city'] ?? $source->arrival_city;
-        $copy->duration_days = $incoming['duration_days'] ?? $source->duration_days;
-        $copy->airline = $incoming['airline'] ?? $source->airline;
+        $copy->departure_city = $this->valueFromIncoming($incoming, 'departure_city', $source->departure_city);
+        $copy->arrival_city = $this->valueFromIncoming($incoming, 'arrival_city', $source->arrival_city);
+        $copy->duration_days = $this->valueFromIncoming($incoming, 'duration_days', $source->duration_days);
+        $copy->airline = $this->valueFromIncoming($incoming, 'airline', $source->airline);
         $copy->price_quad = $incoming['price_quad'] ?? null;
         $copy->price_triple = $incoming['price_triple'] ?? null;
         $copy->price_double = $incoming['price_double'] ?? null;
@@ -301,23 +301,31 @@ class ArminarekaPriceSyncService
         $incoming = $change->incoming_snapshot ?? [];
 
         $package->fill([
-            'title' => $incoming['title'] ?? $package->title,
-            'type' => $incoming['type'] ?? $package->type,
-            'package_kind_id' => $incoming['package_kind_id'] ?? $package->package_kind_id,
-            'departure_city' => $incoming['departure_city'] ?? $package->departure_city,
-            'arrival_city' => $incoming['arrival_city'] ?? $package->arrival_city,
-            'departure_date' => $incoming['departure_date'] ?? $package->departure_date,
-            'duration_days' => $incoming['duration_days'] ?? $package->duration_days,
-            'airline' => $incoming['airline'] ?? $package->airline,
-            'price_quad' => $incoming['price_quad'] ?? null,
-            'price_triple' => $incoming['price_triple'] ?? null,
-            'price_double' => $incoming['price_double'] ?? null,
-            'seats_total' => $incoming['seats_total'] ?? $package->seats_total,
-            'seats_left' => $incoming['seats_left'] ?? $package->seats_left,
+            'title' => $this->valueFromIncoming($incoming, 'title', $package->title),
+            'type' => $this->valueFromIncoming($incoming, 'type', $package->type),
+            'package_kind_id' => $this->valueFromIncoming($incoming, 'package_kind_id', $package->package_kind_id),
+            'departure_city' => $this->valueFromIncoming($incoming, 'departure_city', $package->departure_city),
+            'arrival_city' => $this->valueFromIncoming($incoming, 'arrival_city', $package->arrival_city),
+            'departure_date' => $this->valueFromIncoming($incoming, 'departure_date', $package->departure_date),
+            'duration_days' => $this->valueFromIncoming($incoming, 'duration_days', $package->duration_days),
+            'airline' => $this->valueFromIncoming($incoming, 'airline', $package->airline),
+            'price_quad' => $this->valueFromIncoming($incoming, 'price_quad', null),
+            'price_triple' => $this->valueFromIncoming($incoming, 'price_triple', null),
+            'price_double' => $this->valueFromIncoming($incoming, 'price_double', null),
+            'seats_total' => $this->valueFromIncoming($incoming, 'seats_total', $package->seats_total),
+            'seats_left' => $this->valueFromIncoming($incoming, 'seats_left', $package->seats_left),
             'source_key' => $change->source_key ?? $package->source_key,
         ]);
         $package->syncPrimaryPrice();
         $package->save();
+    }
+
+    /**
+     * @param  array<string, mixed>  $incoming
+     */
+    private function valueFromIncoming(array $incoming, string $field, mixed $fallback): mixed
+    {
+        return array_key_exists($field, $incoming) ? $incoming[$field] : $fallback;
     }
 
     private function applyRemoved(PriceSyncChange $change): void
