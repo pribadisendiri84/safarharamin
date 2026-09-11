@@ -23,6 +23,7 @@ use Illuminate\Support\Str;
     'hotel_madinah_setaraf',
     'facilities',
     'exclusions',
+    'cover_image',
 ])]
 class PackageKind extends Model
 {
@@ -98,6 +99,7 @@ class PackageKind extends Model
         return filled($this->description)
             || filled($this->hotel_makkah)
             || filled($this->hotel_madinah)
+            || filled($this->cover_image)
             || $this->hasTemplateLines($this->facilities)
             || $this->hasTemplateLines($this->exclusions);
     }
@@ -132,6 +134,10 @@ class PackageKind extends Model
                 $attributes,
                 $this,
             );
+        }
+
+        if (blank($attributes['cover_image'] ?? null) && filled($this->cover_image)) {
+            $attributes['cover_image'] = $this->cover_image;
         }
 
         return $attributes;

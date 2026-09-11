@@ -6,7 +6,9 @@ use App\Http\Controllers\Admin\Concerns\FiltersTrashed;
 use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Models\PackageKind;
+use App\Services\PackageImageStore;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -67,9 +69,17 @@ class PackageKindController extends Controller
         ]);
     }
 
-    public function updateTemplate(Request $request, PackageKind $packageKind)
+    public function updateTemplate(Request $request, PackageKind $packageKind, PackageImageStore $images)
     {
-        $packageKind->update($this->validatedTemplate($request));
+        $data = $this->validatedTemplate($request);
+        $data['cover_image'] = $this->collectCover(
+            $request,
+            $images,
+            $packageKind->name,
+            $packageKind->cover_image,
+        );
+
+        $packageKind->update($data);
 
         return redirect()
             ->route('admin.package-kinds.template.edit', $packageKind)
@@ -114,7 +124,8 @@ class PackageKindController extends Controller
      *     hotel_madinah: ?string,
      *     hotel_madinah_setaraf: bool,
      *     facilities: list<string>,
-     *     exclusions: list<string>
+     *     exclusions: list<string>,
+     *     cover_image: ?string
      * }
      */
     private function validatedTemplate(Request $request): array
@@ -151,5 +162,36 @@ class PackageKindController extends Controller
             fn (string $line) => trim($line),
             preg_split('/\R/', $text) ?: [],
         )));
+    }
+
+    private function collectCover(
+        Request $request,
+        PackageImageStore $store,
+        string $title,
+        ?string $existing = null,
+    ): ?string {
+        if ($request->boolean('remove_cover')) {
+            $this->deleteStoredImage($existing);
+
+            return null;
+        }
+
+        $file = $request->file('cover_photo');
+        if ($file && $file->isValid()) {
+            $this->deleteStoredImage($existing);
+
+            return $store->storeCover($file, $title);
+        }
+
+        return $existing;
+    }
+
+    private function deleteStoredImage(?string $path): void
+    {
+        if (! $path || ! str_starts_with($path, '/storage/')) {
+            return;
+        }
+
+        Storage::disk('public')->delete(ltrim(substr($path, strlen('/storage/')), '/'));
     }
 }

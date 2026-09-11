@@ -8,7 +8,9 @@ use App\Models\PriceSyncChange;
 use App\Models\PriceSyncRun;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -41,6 +43,25 @@ class AdminPackageKindTemplateTest extends TestCase
     }
 
     #[Test]
+    public function test_admin_can_upload_default_catalog_cover_on_kind_template(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+        $kind = PackageKind::query()->where('slug', 'arafah')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->put(route('admin.package-kinds.template.update', $kind), [
+                'cover_photo' => UploadedFile::fake()->image('arafah-cover.jpg', 1200, 600),
+            ])
+            ->assertRedirect(route('admin.package-kinds.template.edit', $kind));
+
+        $kind->refresh();
+        $this->assertNotNull($kind->cover_image);
+        $this->assertStringStartsWith('/storage/packages/covers/', $kind->cover_image);
+        $this->assertTrue($kind->hasContentTemplate());
+    }
+
+    #[Test]
     public function test_sync_new_product_applies_kind_template_when_content_missing(): void
     {
         config([
@@ -55,6 +76,7 @@ class AdminPackageKindTemplateTest extends TestCase
             'hotel_makkah' => 'Hilton',
             'facilities' => ['Tiket PP', 'Visa'],
             'exclusions' => ['Paspor'],
+            'cover_image' => '/images/catalog-cover-sample.svg',
         ]);
 
         $html = <<<'HTML'
@@ -88,5 +110,6 @@ HTML;
         $this->assertSame('Hilton', $package->hotel_makkah);
         $this->assertSame(['Tiket PP', 'Visa'], $package->facilities);
         $this->assertSame(['Paspor'], $package->exclusions);
+        $this->assertSame('/images/catalog-cover-sample.svg', $package->cover_image);
     }
 }

@@ -375,6 +375,9 @@ tr.is-past-departure.is-seats-full { background: #fff0ea; }
   gap: 16px;
   margin-top: 8px;
 }
+.package-media-grid--single {
+  grid-template-columns: minmax(0, 360px);
+}
 .package-media-slot {
   min-width: 0;
   padding: 12px;

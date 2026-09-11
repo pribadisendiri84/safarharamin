@@ -23,6 +23,7 @@ class PackageKindTemplateTest extends TestCase
             'hotel_madinah_setaraf' => false,
             'facilities' => ['Tiket PP', 'Visa', 'Makan 3x'],
             'exclusions' => ['Paspor', 'Kursi roda'],
+            'cover_image' => '/images/catalog-cover-sample.svg',
         ]);
 
         $merged = $kind->mergeMissingTemplateInto([
@@ -37,6 +38,7 @@ class PackageKindTemplateTest extends TestCase
             'hotel_madinah_setaraf' => false,
             'facilities' => [],
             'exclusions' => [],
+            'cover_image' => null,
         ]);
 
         $this->assertSame('Paket Umroh Muzdalifah 12 Hari, maskapai Lion Air.', $merged['description']);
@@ -45,6 +47,7 @@ class PackageKindTemplateTest extends TestCase
         $this->assertSame('Front Taibah', $merged['hotel_madinah']);
         $this->assertSame(['Tiket PP', 'Visa', 'Makan 3x'], $merged['facilities']);
         $this->assertSame(['Paspor', 'Kursi roda'], $merged['exclusions']);
+        $this->assertSame('/images/catalog-cover-sample.svg', $merged['cover_image']);
     }
 
     #[Test]

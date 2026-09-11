@@ -270,6 +270,7 @@ class ArminarekaPriceSyncService
             'hotel_madinah_setaraf' => $copy->hotel_madinah_setaraf,
             'facilities' => $copy->facilities ?? [],
             'exclusions' => $copy->exclusions ?? [],
+            'cover_image' => $copy->cover_image,
         ]));
         if (filled($change->source_key)) {
             $conflict = Package::withTrashed()

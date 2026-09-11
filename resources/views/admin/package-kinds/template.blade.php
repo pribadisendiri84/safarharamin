@@ -5,16 +5,20 @@
 <div class="page-head">
   <div>
     <h1>Template konten: {{ $kind->name }}</h1>
-    <p class="sub">Default deskripsi, hotel, fasilitas, dan tidak termasuk untuk paket baru dari sync Arminareka jika field tersebut masih kosong.</p>
+    <p class="sub">Default cover katalog, deskripsi, hotel, fasilitas, dan tidak termasuk untuk paket baru dari sync Arminareka jika field tersebut masih kosong.</p>
   </div>
   <div class="actions head-actions">
     <a class="btn gray" href="{{ route('admin.package-kinds.index') }}">Kembali ke Tipe Paket</a>
   </div>
 </div>
 
-<form class="panel form-pad form-narrow" method="post" action="{{ route('admin.package-kinds.template.update', $kind) }}">
+<form class="panel form-pad form-narrow" method="post" enctype="multipart/form-data" action="{{ route('admin.package-kinds.template.update', $kind) }}">
   @csrf
   @method('PUT')
+
+  @include('admin.partials.catalog-cover-upload', [
+    'cover' => old('remove_cover') ? null : $kind->cover_image,
+  ])
 
   <div class="row2">
     <div>
