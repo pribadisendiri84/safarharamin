@@ -83,6 +83,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('price-sync', [PriceSyncController::class, 'store'])->name('price-sync.store');
             Route::get('price-sync/{priceSyncRun}', [PriceSyncController::class, 'show'])->name('price-sync.show');
             Route::post('price-sync/{priceSyncRun}/apply', [PriceSyncController::class, 'apply'])->name('price-sync.apply');
+            Route::delete('price-sync/{priceSyncRun}', [PriceSyncController::class, 'destroy'])->name('price-sync.destroy');
             Route::resource('gallery', GalleryController::class)->except(['show']);
             Route::patch('gallery/{gallery}/home', [GalleryController::class, 'toggleHome'])->name('gallery.toggle-home');
             Route::post('gallery/reorder', [GalleryController::class, 'reorder'])->name('gallery.reorder');

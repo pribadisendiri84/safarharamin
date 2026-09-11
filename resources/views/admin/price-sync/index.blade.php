@@ -56,7 +56,16 @@
             </td>
             <td>{{ $run->total_applied }}</td>
             <td>{{ $run->created_at?->translatedFormat('d M Y H:i') }}</td>
-            <td><a class="btn gray compact" href="{{ route('admin.price-sync.show', $run) }}">View Changes</a></td>
+            <td>
+              <div class="row-actions">
+                <a class="btn gray compact" href="{{ route('admin.price-sync.show', $run) }}">View Changes</a>
+                <form method="post" action="{{ route('admin.price-sync.destroy', $run) }}" onsubmit="return confirm('Hapus riwayat sync {{ $run->reference() }}?')">
+                  @csrf
+                  @method('DELETE')
+                  <button class="btn red compact" type="submit">Hapus</button>
+                </form>
+              </div>
+            </td>
           </tr>
         @empty
           <tr><td colspan="7" class="empty-state">Belum ada riwayat sync.</td></tr>

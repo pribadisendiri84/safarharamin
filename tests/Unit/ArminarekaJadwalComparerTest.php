@@ -276,4 +276,59 @@ class ArminarekaJadwalComparerTest extends TestCase
         $this->assertSame('arminareka:999', $change['incoming_snapshot']['source_key']);
         $this->assertSame('arminareka:999', $change['source_key']);
     }
+
+    #[Test]
+    public function test_it_detects_departure_date_change_when_source_key_matches(): void
+    {
+        $kindId = $this->packageKindId('muzdalifah');
+
+        Package::query()->create([
+            'title' => 'Muzdalifah JT CGK 12D JED',
+            'slug' => 'muzdalifah-manual-date-change',
+            'source_key' => 'arminareka:5924',
+            'type' => 'umroh',
+            'package_kind_id' => $kindId,
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-12-20',
+            'duration_days' => 12,
+            'price' => 38800000,
+            'price_quad' => 38800000,
+            'price_triple' => 40300000,
+            'price_double' => 43400000,
+            'airline' => 'Lion Air',
+            'room_type' => 'quad',
+            'seats_total' => 45,
+            'seats_left' => 45,
+            'status' => 'published',
+            'images' => [],
+        ]);
+
+        $incoming = [[
+            'external_id' => '5924',
+            'source_key' => 'arminareka:5924',
+            'periode_full' => 'Muzdalifah JT CGK 12D JED (30/11/2026)',
+            'title' => 'Muzdalifah JT CGK 12D JED',
+            'type' => 'umroh',
+            'package_kind_id' => $kindId,
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-11-30',
+            'duration_days' => 12,
+            'airline' => 'Lion Air',
+            'price_quad' => 38800000,
+            'price_triple' => 40300000,
+            'price_double' => 43400000,
+            'seats_total' => 45,
+            'seats_left' => 45,
+            'status' => 'published',
+            'warnings' => [],
+            'raw' => [],
+        ]];
+
+        $change = (new ArminarekaJadwalComparer)->compare($incoming)[0];
+
+        $this->assertSame(PriceSyncChange::STATUS_CHANGED, $change['change_status']);
+        $this->assertContains('departure_date', $change['diff_fields']);
+        $this->assertSame('2026-12-20', $change['existing_snapshot']['departure_date']);
+        $this->assertSame('2026-11-30', $change['incoming_snapshot']['departure_date']);
+    }
 }

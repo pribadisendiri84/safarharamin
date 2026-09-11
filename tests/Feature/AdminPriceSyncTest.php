@@ -201,6 +201,34 @@ HTML;
     }
 
     #[Test]
+    public function test_admin_can_delete_sync_history(): void
+    {
+        config([
+            'arminareka.jadwal.request_delay_ms' => 0,
+            'arminareka.jadwal.page_size' => 15,
+            'arminareka.jadwal.max_pages' => 2,
+        ]);
+
+        Http::fake(['*' => Http::response('<table><tbody></tbody></table>', 200)]);
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->post(route('admin.price-sync.store'))
+            ->assertRedirect();
+
+        $run = PriceSyncRun::query()->firstOrFail();
+
+        $this->actingAs($admin)
+            ->delete(route('admin.price-sync.destroy', $run))
+            ->assertRedirect(route('admin.price-sync.index'))
+            ->assertSessionHas('ok');
+
+        $this->assertDatabaseMissing('price_sync_runs', ['id' => $run->id]);
+        $this->assertDatabaseMissing('price_sync_changes', ['price_sync_run_id' => $run->id]);
+    }
+
+    #[Test]
     public function test_sync_history_page_is_accessible(): void
     {
         $admin = User::factory()->admin()->create();

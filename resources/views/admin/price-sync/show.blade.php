@@ -33,6 +33,11 @@
         <button class="btn ghost" type="submit">Sync ulang</button>
       </form>
     @endif
+    <form method="post" action="{{ route('admin.price-sync.destroy', $run) }}" onsubmit="return confirm('Hapus riwayat sync {{ $run->reference() }}?')">
+      @csrf
+      @method('DELETE')
+      <button class="btn red" type="submit">Hapus riwayat</button>
+    </form>
   </div>
 </div>
 

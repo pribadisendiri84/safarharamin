@@ -84,4 +84,13 @@ class PriceSyncController extends Controller
             ->route('admin.price-sync.show', $priceSyncRun)
             ->with('ok', $applied.' perubahan berhasil diterapkan.');
     }
+
+    public function destroy(PriceSyncRun $priceSyncRun)
+    {
+        $priceSyncRun->delete();
+
+        return redirect()
+            ->route('admin.price-sync.index')
+            ->with('ok', 'Riwayat sync '.$priceSyncRun->reference().' berhasil dihapus.');
+    }
 }
