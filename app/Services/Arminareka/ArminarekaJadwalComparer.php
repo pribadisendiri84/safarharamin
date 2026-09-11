@@ -243,12 +243,12 @@ class ArminarekaJadwalComparer
      */
     private function appendSourceKeyLinkDiff(Package $package, array $incoming, array $diffFields): array
     {
-        if (filled($package->source_key)) {
+        $incomingSourceKey = $incoming['source_key'] ?? null;
+        if (! filled($incomingSourceKey)) {
             return $diffFields;
         }
 
-        $incomingSourceKey = $incoming['source_key'] ?? null;
-        if (! filled($incomingSourceKey)) {
+        if ((string) $package->source_key === (string) $incomingSourceKey) {
             return $diffFields;
         }
 

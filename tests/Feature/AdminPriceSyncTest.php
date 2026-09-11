@@ -142,6 +142,65 @@ HTML;
     }
 
     #[Test]
+    public function test_admin_can_apply_replacement_source_key_when_rescheduled_on_arminareka(): void
+    {
+        config([
+            'arminareka.jadwal.request_delay_ms' => 0,
+            'arminareka.jadwal.page_size' => 15,
+            'arminareka.jadwal.max_pages' => 2,
+        ]);
+
+        $package = Package::query()->create([
+            'title' => 'Muzdalifah JT CGK 12D JED',
+            'slug' => 'muzdalifah-rescheduled-id',
+            'source_key' => 'arminareka:100',
+            'type' => 'umroh',
+            'package_kind_id' => $this->packageKindId('muzdalifah'),
+            'departure_city' => 'jakarta',
+            'departure_date' => '2026-12-07',
+            'duration_days' => 12,
+            'price' => 38800000,
+            'price_quad' => 38800000,
+            'price_triple' => 40300000,
+            'price_double' => 43400000,
+            'airline' => 'Lion Air',
+            'room_type' => 'quad',
+            'seats_total' => 45,
+            'seats_left' => 45,
+            'status' => 'published',
+            'images' => [],
+        ]);
+
+        $html = <<<'HTML'
+<table><tbody>
+<tr data-key="999"><td>1</td><td>Muzdalifah JT CGK 12D JED (07/12/2026)</td><td>7 Dec 2026</td><td>38.800.000</td><td>40.300.000</td><td>43.400.000</td><td>45</td><td>45</td></tr>
+</tbody></table>
+HTML;
+
+        Http::fake(['*' => Http::response($html, 200)]);
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->post(route('admin.price-sync.store'))
+            ->assertRedirect();
+
+        $run = PriceSyncRun::query()->firstOrFail();
+        $change = $run->changes()->where('change_status', PriceSyncChange::STATUS_CHANGED)->firstOrFail();
+        $this->assertContains('source_key', $change->diff_fields);
+        $this->assertSame('arminareka:999', $change->source_key);
+
+        $this->actingAs($admin)
+            ->post(route('admin.price-sync.apply', $run), [
+                'change_ids' => [$change->id],
+            ])
+            ->assertRedirect(route('admin.price-sync.show', $run));
+
+        $this->assertSame('arminareka:999', $package->fresh()->source_key);
+        $this->assertSame(0, $run->fresh()->changes()->where('change_status', PriceSyncChange::STATUS_REMOVED)->count());
+    }
+
+    #[Test]
     public function test_sync_history_page_is_accessible(): void
     {
         $admin = User::factory()->admin()->create();
