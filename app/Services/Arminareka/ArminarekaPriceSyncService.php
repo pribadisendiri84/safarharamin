@@ -190,6 +190,22 @@ class ArminarekaPriceSyncService
 
     private function applyNew(PriceSyncChange $change): void
     {
+        if (filled($change->source_key)) {
+            $existing = Package::withTrashed()
+                ->where('source_key', $change->source_key)
+                ->first();
+
+            if ($existing !== null) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                }
+
+                $this->applyIncomingToPackage($existing, $change);
+
+                return;
+            }
+        }
+
         $incoming = $change->incoming_snapshot ?? [];
         $normalized = array_merge($incoming, [
             'external_id' => $change->external_id,
@@ -254,16 +270,37 @@ class ArminarekaPriceSyncService
             'facilities' => $copy->facilities ?? [],
             'exclusions' => $copy->exclusions ?? [],
         ]));
+        if (filled($change->source_key)) {
+            $conflict = Package::withTrashed()
+                ->where('source_key', $change->source_key)
+                ->whereKeyNot($copy->id ?? 0)
+                ->first();
+
+            if ($conflict !== null) {
+                if ($conflict->trashed()) {
+                    $conflict->restore();
+                }
+
+                $this->applyIncomingToPackage($conflict, $change);
+
+                return;
+            }
+        }
+
         $copy->syncPrimaryPrice();
         $copy->save();
     }
 
     private function applyChanged(PriceSyncChange $change): void
     {
-        $package = $this->resolvePackage($change);
+        $this->applyIncomingToPackage($this->resolvePackage($change), $change);
+    }
+
+    private function applyIncomingToPackage(Package $package, PriceSyncChange $change): void
+    {
         $incoming = $change->incoming_snapshot ?? [];
 
-        $updates = [
+        $package->fill([
             'title' => $incoming['title'] ?? $package->title,
             'type' => $incoming['type'] ?? $package->type,
             'package_kind_id' => $incoming['package_kind_id'] ?? $package->package_kind_id,
@@ -278,9 +315,7 @@ class ArminarekaPriceSyncService
             'seats_total' => $incoming['seats_total'] ?? $package->seats_total,
             'seats_left' => $incoming['seats_left'] ?? $package->seats_left,
             'source_key' => $change->source_key ?? $package->source_key,
-        ];
-
-        $package->fill($updates);
+        ]);
         $package->syncPrimaryPrice();
         $package->save();
     }

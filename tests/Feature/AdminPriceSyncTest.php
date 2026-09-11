@@ -201,6 +201,78 @@ HTML;
     }
 
     #[Test]
+    public function test_apply_new_restores_trashed_package_when_source_key_already_exists(): void
+    {
+        $kindId = $this->packageKindId('arafah');
+
+        $package = Package::query()->create([
+            'title' => 'AROFAH A GA CGK 9D MED',
+            'slug' => 'arofah-trashed-apply',
+            'source_key' => 'arminareka:5905',
+            'type' => 'umroh',
+            'package_kind_id' => $kindId,
+            'departure_city' => 'jakarta',
+            'arrival_city' => 'madinah',
+            'departure_date' => '2026-09-30',
+            'duration_days' => 9,
+            'price' => 43100000,
+            'price_quad' => 43100000,
+            'price_triple' => 45400000,
+            'price_double' => 50000000,
+            'airline' => 'Garuda Indonesia',
+            'room_type' => 'quad',
+            'seats_total' => 45,
+            'seats_left' => 4,
+            'status' => 'published',
+            'images' => [],
+        ]);
+        $package->delete();
+
+        $run = PriceSyncRun::query()->create([
+            'trigger' => PriceSyncRun::TRIGGER_MANUAL,
+            'status' => PriceSyncRun::STATUS_WAITING,
+            'started_at' => now(),
+        ]);
+
+        $change = $run->changes()->create([
+            'change_status' => PriceSyncChange::STATUS_NEW,
+            'source_key' => 'arminareka:5905',
+            'external_id' => '5905',
+            'incoming_snapshot' => [
+                'title' => 'AROFAH A GA CGK 9D MED',
+                'type' => 'umroh',
+                'package_kind_id' => $kindId,
+                'departure_city' => 'jakarta',
+                'arrival_city' => 'madinah',
+                'departure_date' => '2026-09-30',
+                'duration_days' => 9,
+                'airline' => 'Garuda Indonesia',
+                'price_quad' => 44000000,
+                'price_triple' => 46000000,
+                'price_double' => 51000000,
+                'seats_total' => 45,
+                'seats_left' => 3,
+            ],
+            'diff_fields' => [],
+        ]);
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->post(route('admin.price-sync.apply', $run), [
+                'change_ids' => [$change->id],
+            ])
+            ->assertRedirect(route('admin.price-sync.show', $run));
+
+        $restored = Package::query()->where('source_key', 'arminareka:5905')->firstOrFail();
+        $this->assertSame($package->id, $restored->id);
+        $this->assertNull($restored->deleted_at);
+        $this->assertSame(44000000, (int) $restored->price_quad);
+        $this->assertSame(3, (int) $restored->seats_left);
+        $this->assertSame(1, Package::withTrashed()->where('source_key', 'arminareka:5905')->count());
+    }
+
+    #[Test]
     public function test_admin_can_delete_sync_history(): void
     {
         config([

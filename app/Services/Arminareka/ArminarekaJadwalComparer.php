@@ -56,7 +56,7 @@ class ArminarekaJadwalComparer
      */
     public function compare(array $incomingRows): array
     {
-        $packages = Package::query()->get();
+        $packages = Package::withTrashed()->get();
         $bySourceKey = $packages->filter(fn (Package $package) => filled($package->source_key))->keyBy('source_key');
         $matchedPackageIds = [];
         $changes = [];
@@ -115,6 +115,10 @@ class ArminarekaJadwalComparer
         }
 
         foreach ($packages as $package) {
+            if ($package->trashed()) {
+                continue;
+            }
+
             if (! filled($package->source_key) || ! str_starts_with((string) $package->source_key, 'arminareka:')) {
                 continue;
             }

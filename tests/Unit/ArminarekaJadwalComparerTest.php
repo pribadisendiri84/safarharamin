@@ -331,4 +331,61 @@ class ArminarekaJadwalComparerTest extends TestCase
         $this->assertSame('2026-12-20', $change['existing_snapshot']['departure_date']);
         $this->assertSame('2026-11-30', $change['incoming_snapshot']['departure_date']);
     }
+
+    #[Test]
+    public function test_it_matches_trashed_package_by_source_key_instead_of_marking_new(): void
+    {
+        $kindId = $this->packageKindId('arafah');
+
+        $package = Package::query()->create([
+            'title' => 'AROFAH A GA CGK 9D MED',
+            'slug' => 'arofah-trashed-sync',
+            'source_key' => 'arminareka:5905',
+            'type' => 'umroh',
+            'package_kind_id' => $kindId,
+            'departure_city' => 'jakarta',
+            'arrival_city' => 'madinah',
+            'departure_date' => '2026-09-30',
+            'duration_days' => 9,
+            'price' => 43100000,
+            'price_quad' => 43100000,
+            'price_triple' => 45400000,
+            'price_double' => 50000000,
+            'airline' => 'Garuda Indonesia',
+            'room_type' => 'quad',
+            'seats_total' => 45,
+            'seats_left' => 4,
+            'status' => 'published',
+            'images' => [],
+        ]);
+        $package->delete();
+
+        $incoming = [[
+            'external_id' => '5905',
+            'source_key' => 'arminareka:5905',
+            'periode_full' => 'AROFAH A GA CGK 9D MED (30/09/2026)',
+            'title' => 'AROFAH A GA CGK 9D MED',
+            'type' => 'umroh',
+            'package_kind_id' => $kindId,
+            'departure_city' => 'jakarta',
+            'arrival_city' => 'madinah',
+            'departure_date' => '2026-09-30',
+            'duration_days' => 9,
+            'airline' => 'Garuda Indonesia',
+            'price_quad' => 44000000,
+            'price_triple' => 46000000,
+            'price_double' => 51000000,
+            'seats_total' => 45,
+            'seats_left' => 3,
+            'status' => 'published',
+            'warnings' => [],
+            'raw' => [],
+        ]];
+
+        $change = (new ArminarekaJadwalComparer)->compare($incoming)[0];
+
+        $this->assertSame($package->id, $change['package_id']);
+        $this->assertSame(PriceSyncChange::STATUS_CHANGED, $change['change_status']);
+        $this->assertContains('price_quad', $change['diff_fields']);
+    }
 }
