@@ -8,6 +8,7 @@
     <p class="sub">Ambil jadwal terbaru, bandingkan dengan paket existing, lalu pilih data yang akan diperbarui.</p>
   </div>
   <div class="actions head-actions">
+    <a class="btn gray" href="{{ route('admin.price-sync.report') }}">Riwayat perubahan</a>
     <a class="btn gray" href="{{ route('admin.price-list.index') }}">Price List</a>
     <a class="btn gray" href="{{ route('admin.price-sync.schedule.edit') }}">Sync Schedule</a>
     <form method="post" action="{{ route('admin.price-sync.store') }}">

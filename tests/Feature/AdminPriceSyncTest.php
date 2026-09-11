@@ -70,6 +70,9 @@ HTML;
             ->get(route('admin.price-sync.show', $run))
             ->assertOk()
             ->assertSee('Preview Changes')
+            ->assertSee('Periode (DB)')
+            ->assertSee('Bedanya')
+            ->assertDontSee('Harga web')
             ->assertSee('Update harga');
 
         $this->actingAs($admin)
@@ -83,6 +86,7 @@ HTML;
         $this->assertSame(40, (int) $package->seats_left);
         $this->assertSame('published', $package->status);
         $this->assertNotNull($change->fresh()->applied_at);
+        $this->assertSame($package->id, $change->fresh()->package_id);
     }
 
     #[Test]

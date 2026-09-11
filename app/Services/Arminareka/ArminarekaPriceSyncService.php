@@ -223,7 +223,8 @@ class ArminarekaPriceSyncService
         $attributes['images'] = [];
         $attributes = PackageKind::mergeMissingTemplateForKind($attributes['package_kind_id'] ?? null, $attributes);
 
-        Package::query()->create($attributes);
+        $package = Package::query()->create($attributes);
+        $this->linkChangeToPackage($change, $package);
     }
 
     private function applyNewDeparture(PriceSyncChange $change): void
@@ -289,6 +290,7 @@ class ArminarekaPriceSyncService
 
         $copy->syncPrimaryPrice();
         $copy->save();
+        $this->linkChangeToPackage($change, $copy);
     }
 
     private function applyChanged(PriceSyncChange $change): void
@@ -318,6 +320,14 @@ class ArminarekaPriceSyncService
         ]);
         $package->syncPrimaryPrice();
         $package->save();
+        $this->linkChangeToPackage($change, $package);
+    }
+
+    private function linkChangeToPackage(PriceSyncChange $change, Package $package): void
+    {
+        if ((int) $change->package_id !== (int) $package->id) {
+            $change->update(['package_id' => $package->id]);
+        }
     }
 
     /**
@@ -335,6 +345,8 @@ class ArminarekaPriceSyncService
         if ($package->status !== 'hide') {
             $package->update(['status' => 'hide']);
         }
+
+        $this->linkChangeToPackage($change, $package);
     }
 
     private function resolvePackage(PriceSyncChange $change): Package

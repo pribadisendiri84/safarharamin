@@ -880,4 +880,15 @@ class AdminPackageBulkTest extends TestCase
             ->assertSee('Paket Nov')
             ->assertDontSee('Paket Des');
     }
+
+    public function test_packages_index_supports_column_sort_links(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.packages.index', ['sort' => 'title', 'dir' => 'asc']))
+            ->assertOk()
+            ->assertSee('table-sort-link', false)
+            ->assertSee('A–Z');
+    }
 }

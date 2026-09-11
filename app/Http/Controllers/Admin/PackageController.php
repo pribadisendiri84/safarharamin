@@ -10,6 +10,7 @@ use App\Models\PackageItinerary;
 use App\Services\PackageImageStore;
 use App\Services\PackageItineraryStore;
 use App\Support\PackageCardBadge;
+use App\Support\TableSort;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -22,12 +23,17 @@ class PackageController extends Controller
     public function index(Request $request)
     {
         $query = $this->applyTrashFilter(
-            Package::query()
-                ->with(['creator', 'packageKind'])
-                ->withSum(['inquiries as sold_pax' => fn ($q) => $q->where('status', Inquiry::STATUS_SOLD)], 'sold_pax')
-                ->latest(),
+            Package::query()->with(['packageKind']),
             $request
         );
+
+        TableSort::apply($query, $request, [
+            'title' => 'title',
+            'departure_date' => 'departure_date',
+            'seats_left' => 'seats_left',
+            'status' => 'status',
+            'updated_at' => 'updated_at',
+        ], 'updated_at', 'desc');
 
         if ($status = $request->string('status')->toString()) {
             $query->where('status', $status);

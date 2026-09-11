@@ -286,13 +286,13 @@ Sama dengan [Cepat — sudah git pull?](#cepat--sudah-git-pull) di atas, plus pu
 cd /var/www/safarharamin
 git fetch origin
 git pull origin main
-composer install --no-dev --optimize-autoloader
-php artisan migrate --force
-php artisan optimize:clear
-php artisan optimize
-chown -R www-data:www-data storage bootstrap/cache
-chmod -R ug+rwx storage bootstrap/cache
-systemctl reload php8.4-fpm
+    composer install --no-dev --optimize-autoloader
+    php artisan migrate --force
+    php artisan optimize:clear
+    php artisan optimize
+    chown -R www-data:www-data storage bootstrap/cache
+    chmod -R ug+rwx storage bootstrap/cache
+    systemctl reload php8.4-fpm
 ```
 
 | Perintah | Kapan |

@@ -8,6 +8,8 @@
     <p class="sub">Centang <strong>Beranda</strong> (maks. {{ \App\Models\Package::homeLimit() }}). Drag untuk ubah urutan.</p>
   </div>
   <div class="actions head-actions">
+    <a class="btn gray" href="{{ route('admin.price-sync.report') }}">Riwayat sync</a>
+    <a class="btn gray" href="{{ route('admin.reports.closing') }}">Closing</a>
     <a class="btn gray" href="{{ route('admin.price-sync.index') }}">@include('admin.partials.icon', ['name' => 'upload']) Sync Harga</a>
     <a class="btn gray" href="{{ route('admin.packages.import') }}">@include('admin.partials.icon', ['name' => 'upload']) Import CSV</a>
     <a class="btn" href="{{ route('admin.packages.create') }}">@include('admin.partials.icon', ['name' => 'plus']) Tambah paket</a>
@@ -56,41 +58,22 @@
 </div>
 @endif
 
-<form class="filter-bar" method="get">
-  @if($trashed)<input type="hidden" name="trashed" value="1">@endif
-  <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari judul paket">
-  <select name="status">
-    <option value="">Semua status</option>
-    @foreach(\App\Models\Package::STATUSES as $key => $label)
-      <option value="{{ $key }}" @selected(request('status') === $key)>{{ $label }}</option>
-    @endforeach
-  </select>
-  <select name="data_complete">
-    <option value="">Kelengkapan data</option>
-    <option value="1" @selected(request('data_complete') === '1')>Lengkap</option>
-    <option value="0" @selected(request('data_complete') === '0')>Belum lengkap</option>
-  </select>
-  <input type="date" name="departure_from" value="{{ request('departure_from') }}" aria-label="Tanggal berangkat dari">
-  <input type="date" name="departure_to" value="{{ request('departure_to') }}" aria-label="Tanggal berangkat sampai">
-  <label class="check filter-check">
-    <input type="checkbox" name="featured" value="1" @checked(request()->boolean('featured'))> Beranda
-  </label>
-  <label class="check filter-check">
-    <input type="checkbox" name="needs_flyer" value="1" @checked(request()->boolean('needs_flyer'))> Perlu flyer
-  </label>
-  <button class="btn gray" type="submit">@include('admin.partials.icon', ['name' => 'search']) Filter</button>
-  @if($hasActiveFilters ?? false)
-    <a class="btn ghost" href="{{ route('admin.packages.index', request()->boolean('trashed') ? ['trashed' => 1] : []) }}">Reset</a>
-  @endif
-</form>
-@if($packages->total() > 0)
-  <p class="sub table-hint">
-    Menampilkan {{ $packages->firstItem() }}–{{ $packages->lastItem() }} dari {{ $packages->total() }} paket
-    @if($hasActiveFilters ?? false)
-      · filter aktif
-    @endif
-  </p>
-@endif
+@php
+  $statusFilter = request('status');
+  $statusFilterLabel = filled($statusFilter) ? (\App\Models\Package::STATUSES[$statusFilter] ?? $statusFilter) : null;
+  $dataCompleteFilter = request('data_complete');
+  $dataCompleteLabel = match ($dataCompleteFilter) {
+    '1' => 'Lengkap',
+    '0' => 'Belum lengkap',
+    default => null,
+  };
+  $departureFrom = request('departure_from');
+  $departureTo = request('departure_to');
+  $departureFilterActive = filled($departureFrom) || filled($departureTo);
+  $departureFilterLabel = $departureFilterActive
+    ? trim(($departureFrom ?: '…').' – '.($departureTo ?: '…'), ' –')
+    : null;
+@endphp
 @if(! request()->boolean('trashed'))
   <form class="bulk-bar" id="package-bulk-bar" method="post" action="{{ route('admin.packages.bulk-status') }}" hidden>
     @csrf
@@ -101,8 +84,75 @@
   </form>
 @endif
 <div class="panel">
+  <div class="panel-table-toolbar">
+    <form class="table-filter-form" method="get" id="packages-filter-form">
+      @if($trashed)<input type="hidden" name="trashed" value="1">@endif
+      <div class="table-filter-search">
+        <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari judul paket" data-filter-search>
+      </div>
+      <div class="table-filter-chips">
+        @component('admin.partials.filter-chip', [
+          'label' => 'Status',
+          'active' => filled($statusFilter),
+          'value' => $statusFilterLabel,
+        ])
+          <select name="status">
+            <option value="">Semua status</option>
+            @foreach(\App\Models\Package::STATUSES as $key => $label)
+              <option value="{{ $key }}" @selected($statusFilter === $key)>{{ $label }}</option>
+            @endforeach
+          </select>
+        @endcomponent
+
+        @component('admin.partials.filter-chip', [
+          'label' => 'Data',
+          'active' => filled($dataCompleteFilter),
+          'value' => $dataCompleteLabel,
+        ])
+          <select name="data_complete">
+            <option value="">Semua</option>
+            <option value="1" @selected($dataCompleteFilter === '1')>Lengkap</option>
+            <option value="0" @selected($dataCompleteFilter === '0')>Belum lengkap</option>
+          </select>
+        @endcomponent
+
+        @component('admin.partials.filter-chip', [
+          'label' => 'Tanggal',
+          'active' => $departureFilterActive,
+          'value' => $departureFilterLabel,
+        ])
+          <label for="departure_from">Dari</label>
+          <input type="date" id="departure_from" name="departure_from" value="{{ $departureFrom }}">
+          <label for="departure_to">Sampai</label>
+          <input type="date" id="departure_to" name="departure_to" value="{{ $departureTo }}">
+        @endcomponent
+
+        <label class="filter-toggle">
+          <input type="checkbox" name="featured" value="1" @checked(request()->boolean('featured'))>
+          <span>Beranda</span>
+        </label>
+        <label class="filter-toggle">
+          <input type="checkbox" name="needs_flyer" value="1" @checked(request()->boolean('needs_flyer'))>
+          <span>Perlu flyer</span>
+        </label>
+      </div>
+      @if($hasActiveFilters ?? false)
+        <div class="table-filter-actions">
+          <a class="btn ghost compact" href="{{ route('admin.packages.index', request()->boolean('trashed') ? ['trashed' => 1] : []) }}">Reset</a>
+        </div>
+      @endif
+    </form>
+  </div>
+  @if($packages->total() > 0)
+    <p class="table-filter-meta">
+      Menampilkan {{ $packages->firstItem() }}–{{ $packages->lastItem() }} dari {{ $packages->total() }} paket
+      @if($hasActiveFilters ?? false)
+        · filter aktif
+      @endif
+    </p>
+  @endif
   <div class="table-wrap">
-    <table>
+    <table class="packages-table-compact">
       <thead>
         <tr>
           @if(! request()->boolean('trashed'))
@@ -111,9 +161,14 @@
                 <input type="checkbox" id="package-select-all">
               </label>
             </th>
-            <th>Beranda</th>
+            <th class="table-icon-col" title="Beranda">⌂</th>
           @endif
-          <th>Paket</th><th>Berangkat</th><th>Harga</th><th>Closing</th><th>Status</th><th>Waktu</th><th></th>
+          <th>@include('admin.partials.table-sort-link', ['column' => 'title', 'label' => 'Paket', 'defaultSort' => 'updated_at', 'defaultDir' => 'desc'])</th>
+          <th>@include('admin.partials.table-sort-link', ['column' => 'departure_date', 'label' => 'Tanggal berangkat', 'defaultSort' => 'updated_at', 'defaultDir' => 'desc'])</th>
+          <th>@include('admin.partials.table-sort-link', ['column' => 'seats_left', 'label' => 'Seat', 'defaultSort' => 'updated_at', 'defaultDir' => 'desc'])</th>
+          <th>@include('admin.partials.table-sort-link', ['column' => 'status', 'label' => 'Status', 'defaultSort' => 'updated_at', 'defaultDir' => 'desc'])</th>
+          <th>@include('admin.partials.table-sort-link', ['column' => 'updated_at', 'label' => 'Diupdate', 'defaultSort' => 'updated_at', 'defaultDir' => 'desc'])</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -127,7 +182,7 @@
                   </label>
                 @endif
               </td>
-              <td>
+              <td class="table-icon-col">
                 @if(! $package->trashed())
                   <label class="check table-check" title="Tampilkan di beranda">
                     <input type="checkbox"
@@ -139,22 +194,18 @@
                 @endif
               </td>
             @endif
-            <td>
-              <b>{{ $package->title }}</b>
-              @if($package->isPastDeparture())
-                <span class="badge past-departure">Periode lewat</span>
-              @endif
-              @if($package->isSeatsFull())
-                <span class="badge seats-full">Seat penuh</span>
-              @endif
-              @if($package->needsFlyer())
-                <span class="badge draft">Perlu flyer</span>
-              @endif
-              <small>{{ $package->catalogTypeLine() }} · {{ $package->duration_days }} hari</small>
+            <td class="package-title-cell">
+              <div class="package-title-line">
+                <a class="package-title-link" href="{{ route('admin.packages.edit', $package) }}">{{ $package->title }}</a>
+                <span class="package-row-badges">
+                  @if($package->isPastDeparture())<span class="badge past-departure">Lewat</span>@endif
+                  @if($package->isSeatsFull())<span class="badge seats-full">Penuh</span>@endif
+                  @if($package->needsFlyer())<span class="badge draft">Flyer</span>@endif
+                </span>
+              </div>
             </td>
-            <td>{{ $package->departureLine() }}</td>
-            <td>{{ $package->formattedStartingPrice() }}<small>{{ $package->seatsLine() }}</small></td>
-            <td>{{ (int) $package->sold_pax }} jamaah</td>
+            <td class="nowrap">{{ $package->departure_date?->translatedFormat('d M Y') ?? '—' }}</td>
+            <td class="nowrap">{{ (int) $package->seats_left }}/{{ (int) $package->seats_total }}</td>
             <td>
               @if(! $package->trashed())
                 <select class="status-select {{ $package->status }}"
@@ -169,7 +220,7 @@
                 <span class="badge {{ $package->status }}">{{ \App\Models\Package::STATUSES[$package->status] ?? $package->status }}</span>
               @endif
             </td>
-            <td>@include('admin.partials.timestamps', ['model' => $package])</td>
+            <td class="nowrap muted-compact">{{ $package->updated_at?->format('d M Y H:i') ?? '—' }}</td>
             <td>
               @include('admin.partials.row-actions', [
                 'item' => $package,
@@ -182,7 +233,7 @@
             </td>
           </tr>
         @empty
-          <tr><td colspan="{{ request()->boolean('trashed') ? 7 : 9 }}" class="empty-state">{{ $trashed ? 'Tidak ada paket terhapus.' : 'Belum ada paket.' }}</td></tr>
+          <tr><td colspan="{{ request()->boolean('trashed') ? 6 : 8 }}" class="empty-state">{{ $trashed ? 'Tidak ada paket terhapus.' : 'Belum ada paket.' }}</td></tr>
         @endforelse
       </tbody>
     </table>
@@ -198,4 +249,5 @@
   @include('admin.partials.package-status-script')
   @include('admin.partials.package-bulk-script')
 @endif
+@include('admin.partials.table-filter-script')
 @endsection

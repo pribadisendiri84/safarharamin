@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PriceSyncChange;
 use App\Models\PriceSyncRun;
 use App\Services\Arminareka\ArminarekaPriceSyncService;
+use App\Support\TableSort;
 use Illuminate\Http\Request;
 use Throwable;
 
@@ -92,5 +93,39 @@ class PriceSyncController extends Controller
         return redirect()
             ->route('admin.price-sync.index')
             ->with('ok', 'Riwayat sync '.$priceSyncRun->reference().' berhasil dihapus.');
+    }
+
+    public function report(Request $request)
+    {
+        $query = PriceSyncChange::query()
+            ->whereNotNull('applied_at')
+            ->with(['package', 'run.user'])
+            ->when($q = trim((string) $request->input('q')), function ($builder) use ($q) {
+                $builder->where(function ($inner) use ($q) {
+                    $inner->where('source_key', 'like', '%'.$q.'%')
+                        ->orWhereHas('package', fn ($package) => $package->where('title', 'like', '%'.$q.'%'));
+                });
+            })
+            ->when($field = $request->string('field')->toString(), fn ($builder) => $builder->whereJsonContains('diff_fields', $field));
+
+        if ($request->string('sort')->toString() === 'title') {
+            $direction = $request->string('dir')->toString() === 'asc' ? 'asc' : 'desc';
+            $query->leftJoin('packages', 'price_sync_changes.package_id', '=', 'packages.id')
+                ->orderBy('packages.title', $direction)
+                ->orderByDesc('price_sync_changes.applied_at')
+                ->select('price_sync_changes.*');
+        } else {
+            TableSort::apply($query, $request, [
+                'applied_at' => 'applied_at',
+            ], 'applied_at', 'desc');
+        }
+
+        $changes = $query->paginate(50)->withQueryString();
+
+        return view('admin.price-sync.report', [
+            'changes' => $changes,
+            'fieldOptions' => \App\Services\Arminareka\ArminarekaJadwalComparer::FIELD_LABELS,
+            'hasActiveFilters' => $request->hasAny(['q', 'field']),
+        ]);
     }
 }
