@@ -569,6 +569,23 @@ tr.sync-row-has-diff td { border-bottom-color: #f3e8c8; }
 .btn.danger { color: #a33; }
 .row-actions-cell { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
 .row-actions-cell form { display: inline; margin: 0; }
+.departures-table .row-actions-cell {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.departures-table .row-actions {
+  flex-wrap: nowrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.departures-table .row-actions form {
+  display: inline-flex;
+  margin: 0;
+}
+.departures-table th:last-child,
+.departures-table .row-actions-cell {
+  width: 1%;
+}
 .empty-cell { color: var(--muted); text-align: center; padding: 18px 12px; }
 .filter-bar--wide { flex-wrap: wrap; }
 .eyebrow { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 4px; }

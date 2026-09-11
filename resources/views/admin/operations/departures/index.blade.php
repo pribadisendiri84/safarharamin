@@ -35,7 +35,7 @@
 
 <div class="panel">
   <div class="table-wrap">
-    <table>
+    <table class="departures-table">
       <thead>
         <tr>
           <th>Program</th>
@@ -60,20 +60,22 @@
             <td><span class="badge kind-{{ $departure->program_kind }}">{{ $departure->kindLabel() }}</span></td>
             <td>{{ $departure->pilgrims_count }}</td>
             <td class="row-actions-cell">
-              @unless($trashed)
-                <a class="btn gray sm" href="{{ route('admin.operations.grouping.index', $departure) }}">Grouping</a>
-                <a class="btn gray sm" href="{{ route('admin.operations.recap.show', $departure) }}">Rekap</a>
-                <a class="btn gray sm" href="{{ route('admin.operations.departures.edit', $departure) }}">Edit</a>
-                <form method="post" action="{{ route('admin.operations.departures.destroy', $departure) }}" onsubmit="return confirm('Hapus keberangkatan ini?')">
-                  @csrf @method('DELETE')
-                  <button class="btn gray sm danger" type="submit">Hapus</button>
-                </form>
-              @else
-                <form method="post" action="{{ route('admin.operations.departures.restore', $departure->id) }}">
-                  @csrf
-                  <button class="btn gray sm" type="submit">Pulihkan</button>
-                </form>
-              @endunless
+              <div class="row-actions">
+                @unless($trashed)
+                  <a class="btn gray compact" href="{{ route('admin.operations.grouping.index', $departure) }}">Group</a>
+                  <a class="btn gray compact" href="{{ route('admin.operations.recap.show', $departure) }}">Rekap</a>
+                  <a class="btn gray compact" href="{{ route('admin.operations.departures.edit', $departure) }}">Edit</a>
+                  <form method="post" action="{{ route('admin.operations.departures.destroy', $departure) }}" onsubmit="return confirm('Hapus keberangkatan ini?')">
+                    @csrf @method('DELETE')
+                    <button class="btn red compact" type="submit">Hapus</button>
+                  </form>
+                @else
+                  <form method="post" action="{{ route('admin.operations.departures.restore', $departure->id) }}">
+                    @csrf
+                    <button class="btn gray compact" type="submit">Pulihkan</button>
+                  </form>
+                @endunless
+              </div>
             </td>
           </tr>
         @empty
